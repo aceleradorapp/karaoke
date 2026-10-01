@@ -145,6 +145,31 @@ describe('worker job routes', () => {
       ]);
     });
 
+    it('stores the lyrics offset the worker found by listening to the vocals', async () => {
+      const { job, song } = await createJobFixture({ status: 'RUNNING', songStatus: 'PROCESSING' });
+
+      await complete(job.id, { ...COMPLETE_BODY, lyricsOffsetMs: 15410 });
+
+      expect(await storedSong(song.id)).toMatchObject({ lyricsOffsetMs: 15410 });
+    });
+
+    it('keeps the offset the user already set when the worker sends none', async () => {
+      const { job, song } = await createJobFixture({ status: 'RUNNING', songStatus: 'PROCESSING' });
+      await prisma.song.update({ where: { id: song.id }, data: { lyricsOffsetMs: 700 } });
+
+      await complete(job.id);
+
+      expect(await storedSong(song.id)).toMatchObject({ lyricsOffsetMs: 700 });
+    });
+
+    it('rejects an offset beyond the allowed limit', async () => {
+      const { job } = await createJobFixture({ status: 'RUNNING', songStatus: 'PROCESSING' });
+
+      const response = await complete(job.id, { ...COMPLETE_BODY, lyricsOffsetMs: 60001 });
+
+      expect(response.statusCode).toBe(400);
+    });
+
     it('deletes the original file after processing', async () => {
       const { job, sourcePath } = await createJobFixture({ status: 'RUNNING', withOriginFile: true });
 

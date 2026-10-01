@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
+import { LYRICS_OFFSET_LIMIT_MS } from '@caraoke/shared';
 import { z } from 'zod';
 import { claimNextJob } from './service.js';
 import { completeJob, failJob, recordProgress } from './workerService.js';
@@ -28,6 +29,7 @@ const completeBodySchema = z.object({
   hasMelody: z.boolean(),
   lyricsSource: z.enum(['NONE', 'LRCLIB', 'PLAIN', 'ALIGNED', 'TRANSCRIBED', 'MANUAL']),
   lyricsNeedsReview: z.boolean(),
+  lyricsOffsetMs: z.number().int().min(-LYRICS_OFFSET_LIMIT_MS).max(LYRICS_OFFSET_LIMIT_MS).optional(),
 });
 
 const failBodySchema = z.object({

@@ -92,6 +92,10 @@
 | F3-09 | ✅ 2026-10-01 | `PlayerPage`: overlay "quem canta", controles, atalhos, ajuste de atraso da letra, tela cheia | T-07 §7.1 §7.7 | 🟡 |
 | F3-10 | ✅ 2026-10-01 | API de performances (criar/finalizar sem nota) — registra o histórico | T-04 §4.6 Apresentações | 🟢 |
 | F3-11 | ✅ 2026-10-01 (61 checagens no Chromium, áudio real) | ✔ Verificação: cantar uma música inteira na TV; voz guia liga/desliga sem engasgo; letra sincronizada; histórico gravado | — | 🟡 |
+| F3-12 | ✅ 2026-10-01 | Sincronização automática: o worker acha onde a voz começa (faixa de voz) e grava o atraso da letra; limite do atraso sobe para ±60 s | T-05 | 🟡 |
+| F3-13 | ✅ 2026-10-01 | Biblioteca de análise da voz no front (envelope + início da voz) | T-06 | 🟡 |
+| F3-14 | ✅ 2026-10-01 | Tela "Sincronizar a letra" (/musica/:id/sincronizar): linha do tempo com a voz, arrastar a letra, ouvir e marcar, passos de ajuste, auto-save | T-06 | 🔴 |
+| F3-15 | ✅ 2026-10-01 (44 checagens no Chromium) | ✔ Verificação real da sincronização no navegador | — | 🟡 |
 
 ## Fase 4 — Playlists, favoritas e histórico
 | ID | Status | Tarefa | Docs | Modelo |

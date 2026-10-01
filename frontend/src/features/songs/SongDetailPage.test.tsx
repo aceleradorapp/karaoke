@@ -97,6 +97,20 @@ describe('SongDetailPage', () => {
       expect(await screen.findByRole('link', { name: 'Cantar' })).toHaveAttribute('href', '/player/s1');
     });
 
+    it('offers to synchronize the lyrics of a ready song that has lyrics', async () => {
+      renderDetail({ ...songRoute(buildDetailedSong()), [`GET ${LYRICS_URL}`]: { body: LYRICS } });
+      expect(await screen.findByRole('link', { name: 'Sincronizar a letra' })).toHaveAttribute(
+        'href',
+        '/musica/s1/sincronizar',
+      );
+    });
+
+    it('does not offer to synchronize when there are no lyrics or the song is not ready', async () => {
+      renderDetail({ ...songRoute(buildDetailedSong({ lyricsUrl: null })) });
+      await screen.findByRole('link', { name: 'Cantar' });
+      expect(screen.queryByRole('link', { name: 'Sincronizar a letra' })).not.toBeInTheDocument();
+    });
+
     it('does not let the user sing a song that is still being processed', async () => {
       renderDetail({ ...songRoute(buildProcessingSong({ id: 's1' })) });
 
