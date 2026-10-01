@@ -84,8 +84,8 @@
 | F3-01 | ✅ 2026-10-01 | (`/media` estático já existe, feito na F2) API de músicas: listar/buscar, detalhe, editar, excluir, `SongDTO` com URLs; `/media` estático | T-04 §4.6 Músicas, §4.2 | 🟡 |
 | F3-02 | ✅ 2026-10-01 | API `GET /songs/home` (fileiras) | T-04 §4.6, T-06 §6.6 Início | 🟡 |
 | F3-03 | ✅ 2026-10-01 | `SongCard` (capa/gradiente, hover, status de processamento) + `SongRow` (rolagem horizontal) | T-06 §6.6 SongCard | 🟡 |
-| F3-04 | 🟨 | Tela Início (hero + fileiras + estado vazio) | T-06 §6.6 Início | 🟡 |
-| F3-05 | ⬜ | `/biblioteca` (busca, filtros, rolagem infinita) | T-06 §6.6 Biblioteca | 🟢 |
+| F3-04 | ✅ 2026-10-01 | Tela Início (hero + fileiras + estado vazio) | T-06 §6.6 Início | 🟡 |
+| F3-05 | 🟨 | `/biblioteca` (busca, filtros, rolagem infinita) | T-06 §6.6 Biblioteca | 🟢 |
 | F3-06 | ⬜ | `/musica/:id` (detalhe + ações) | T-06 §6.6 Detalhe | 🟢 |
 | F3-07 | ⬜ | `KaraokeEngine` (Web Audio, sincronia, voz guia, seek, volume) | T-07 §7.2 | 🔴 |
 | F3-08 | ⬜ | `LyricsView` (linha atual/próxima, preenchimento, contagem, PLAIN/NONE) + `findLineIndex` com testes | T-07 §7.3 | 🔴 |

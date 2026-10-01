@@ -1,7 +1,8 @@
 import { Route, Routes } from 'react-router';
 import { ThemeSync } from './components/ThemeSync';
 import { ToastViewport } from './components/ToastViewport';
-import { HealthPage } from './features/health/HealthPage';
+import { HomePage } from './features/home/HomePage';
+import { NotFoundPage } from './features/home/NotFoundPage';
 import { ManageProfilesPage } from './features/profiles/ManageProfilesPage';
 import { StageLayout } from './features/layout/StageLayout';
 import { SettingsPage } from './features/settings/SettingsPage';
@@ -24,7 +25,8 @@ export function App() {
             <Route path="/youtube" element={<YoutubePage />} />
             <Route path="/enviar" element={<UploadPage />} />
             <Route path="/fila" element={<QueuePage />} />
-            <Route path="*" element={<HealthPage />} />
+            <Route path="/" element={<HomePage />} />
+            <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Route>
       </Routes>
