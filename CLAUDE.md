@@ -36,7 +36,7 @@ Roda em um PC da casa, na rede local.
 - Conversa e documentação em **português**; textos da UI em pt-BR.
 - Não adicionar dependências fora das listadas no documento técnico sem registrar o porquê.
 - Não tomar decisões de arquitetura sozinho: propor → discutir → ADR.
-- **Git**: ver "Fluxo de branches" abaixo. Commit e push das branches de trabalho estão autorizados pelo Michael; merge em `develop` e em `main` só ao fim de uma fase, depois de ele aprovar.
+- **Git**: ver "Fluxo de branches" abaixo. Commit, push e merge de fim de fase estão autorizados pelo Michael (ele pediu para não pedir aprovações).
 - Permissões (`.claude/settings.json`): permissão total liberada pelo Michael (sem lista de confirmação). Não peça aprovação para executar tarefas; use bom senso em ações destrutivas e force-push.
 - Nunca commitar segredos (`.env`). Nunca tocar nos outros bancos do XAMPP (`family_manager_dev`, `furabucho_db`, `tissflow_db`).
 
@@ -46,7 +46,7 @@ Remote: `origin` = https://github.com/aceleradorapp/karaoke.git
 - `develop`: integração; toda branch de trabalho nasce dela.
 - `feature/f<N>-<nome-curto>`: uma branch por **fase** (ex.: `feature/f1-perfis-e-temas`), criada a partir de `develop`. Tarefas muito grandes ou arriscadas podem ter branch própria: `feature/f2-04-jobs`.
 - Um **commit por tarefa** do roadmap, em português, no formato Conventional Commits, com rodapé `Tarefa: F1-03`. Faça push da branch a cada tarefa concluída.
-- Ao fim da fase: rodar typecheck e testes, perguntar ao Michael, e então mergear em `develop` (`--no-ff`) e depois `develop` em `main`; push das duas.
+- Ao fim da fase: rodar typecheck, testes e a verificação da fase (F*-08 etc.); estando tudo verde, mergear em `develop` (`--no-ff`) e depois `develop` em `main`, dar push das duas, resumir ao Michael e perguntar se pode seguir para a próxima fase (a nova branch nasce de `develop`).
 - Nunca commitar direto em `main` ou `develop` (exceto o merge de fim de fase).
 
 ## Ambiente

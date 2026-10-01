@@ -20,25 +20,25 @@ export function TopBar() {
 
   return (
     <header className="sticky top-0 z-30 border-b border-surface-2 bg-bg/90 backdrop-blur">
-      <div className="mx-auto flex max-w-screen-2xl flex-wrap items-center gap-1 px-3 py-2 sm:px-4 lg:gap-4">
+      <div className="mx-auto flex max-w-screen-2xl flex-wrap items-center gap-1 px-2 py-2 sm:px-4 xl:gap-3">
         <button
           type="button"
           aria-label={isMenuOpen ? 'Fechar menu' : 'Abrir menu'}
           aria-expanded={isMenuOpen}
           onClick={() => setIsMenuOpen((open) => !open)}
-          className={clsx(ICON_BUTTON_CLASSES, 'lg:hidden')}
+          className={clsx(ICON_BUTTON_CLASSES, 'xl:hidden')}
         >
           {isMenuOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
         </button>
 
-        <Link to="/" className="mr-2 font-display text-3xl text-primary">
+        <Link to="/" className="mr-1 font-display text-2xl text-primary sm:mr-2 sm:text-3xl">
           Karaokê
         </Link>
 
         <nav
           aria-label="Navegação principal"
           className={clsx(
-            'order-last w-full flex-col gap-1 lg:order-none lg:flex lg:w-auto lg:flex-row',
+            'order-last w-full flex-col gap-1 xl:order-none xl:flex xl:w-auto xl:flex-row',
             isMenuOpen ? 'flex' : 'hidden',
           )}
         >
@@ -49,7 +49,7 @@ export function TopBar() {
               end={item.end}
               className={({ isActive }) =>
                 clsx(
-                  'inline-flex min-h-11 items-center rounded-lg px-4 text-base hover:bg-surface-2',
+                  'inline-flex min-h-11 items-center rounded-lg px-3 text-base hover:bg-surface-2',
                   isActive ? 'font-semibold text-primary' : 'text-text',
                 )
               }
@@ -68,7 +68,7 @@ export function TopBar() {
           aria-label="Buscar músicas"
           aria-expanded={isSearchOpen}
           onClick={() => setIsSearchOpen((open) => !open)}
-          className={clsx(ICON_BUTTON_CLASSES, 'lg:hidden')}
+          className={clsx(ICON_BUTTON_CLASSES, 'xl:hidden')}
         >
           <Search aria-hidden="true" />
         </button>
@@ -82,7 +82,7 @@ export function TopBar() {
           disabled
           aria-label="QR code de acesso (em breve)"
           title="Em breve"
-          className={clsx(ICON_BUTTON_CLASSES, 'hidden disabled:opacity-40 sm:inline-flex')}
+          className={clsx(ICON_BUTTON_CLASSES, 'max-sm:hidden disabled:opacity-40')}
         >
           <Smartphone aria-hidden="true" />
         </button>

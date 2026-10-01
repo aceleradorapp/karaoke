@@ -33,8 +33,8 @@ export function ProfileMenu() {
         className="inline-flex min-h-11 items-center gap-2 rounded-lg px-1 hover:bg-surface-2 sm:px-2"
       >
         <Avatar avatarId={profile.avatar} size="sm" />
-        <span className="hidden max-w-32 truncate text-base sm:inline">{profile.name}</span>
-        <ChevronDown aria-hidden="true" className="hidden size-4 sm:block" />
+        <span className="hidden max-w-32 truncate text-base 2xl:inline">{profile.name}</span>
+        <ChevronDown aria-hidden="true" className="hidden size-4 2xl:block" />
       </button>
 
       {isOpen && (

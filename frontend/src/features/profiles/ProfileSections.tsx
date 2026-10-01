@@ -1,8 +1,7 @@
 import type { ProfileDTO } from '@caraoke/shared';
 import { AddProfileTile, ProfileTile } from './ProfileTile';
 
-const TILE_GRID_CLASSES =
-  'grid w-full grid-cols-2 justify-items-center gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5';
+const TILE_ROW_CLASSES = 'flex w-full flex-wrap justify-center gap-4';
 
 export type NewProfileKind = 'family' | 'guest';
 
@@ -19,7 +18,7 @@ export function ProfileSections({ profiles, onSelect, onAdd, isDisabled }: Profi
 
   return (
     <>
-      <section aria-label="Perfis da família" className={TILE_GRID_CLASSES}>
+      <section aria-label="Perfis da família" className={TILE_ROW_CLASSES}>
         {family.map((profile) => (
           <ProfileTile
             key={profile.id}
@@ -37,7 +36,7 @@ export function ProfileSections({ profiles, onSelect, onAdd, isDisabled }: Profi
         <h2 id="guests-heading" className="border-b border-surface-2 pb-2 text-xl text-muted">
           Convidados
         </h2>
-        <div className={TILE_GRID_CLASSES}>
+        <div className={TILE_ROW_CLASSES}>
           {guests.map((profile) => (
             <ProfileTile
               key={profile.id}
