@@ -24,3 +24,19 @@ export function formatTimeAgo(isoDate: string, now: number = Date.now()): string
   const days = Math.floor(elapsedSeconds / SECONDS_PER_DAY);
   return days === 1 ? 'há 1 dia' : `há ${days} dias`;
 }
+
+const MILLISECONDS_PER_SECOND = 1000;
+
+export function formatOffsetSeconds(offsetMs: number): string {
+  const seconds = Math.abs(offsetMs) / MILLISECONDS_PER_SECOND;
+  const text = seconds.toFixed(2).replace('.', ',');
+  if (offsetMs === 0) return `${text} s`;
+  return `${offsetMs > 0 ? '+' : '−'}${text} s`;
+}
+
+export function formatPreciseTime(totalSeconds: number): string {
+  const tenths = Math.round(Math.max(0, totalSeconds) * 10);
+  const minutes = Math.floor(tenths / (SECONDS_PER_MINUTE * 10));
+  const seconds = (tenths % (SECONDS_PER_MINUTE * 10)) / 10;
+  return `${minutes}:${seconds.toFixed(1).padStart(4, '0').replace('.', ',')}`;
+}

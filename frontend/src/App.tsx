@@ -12,6 +12,7 @@ import { SongDetailPage } from './features/songs/SongDetailPage';
 import { UploadPage } from './features/upload/UploadPage';
 import { YoutubePage } from './features/youtube/YoutubePage';
 import { PlayerPage } from './features/player/PlayerPage';
+import { LyricsSyncPage } from './features/sync/LyricsSyncPage';
 import { ProfilesPage } from './features/profiles/ProfilesPage';
 import { RequireProfile } from './features/profiles/RequireProfile';
 
@@ -32,6 +33,7 @@ export function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/biblioteca" element={<LibraryPage />} />
             <Route path="/musica/:id" element={<SongDetailPage />} />
+            <Route path="/musica/:id/sincronizar" element={<LyricsSyncPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Route>

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatDuration, formatTimeAgo } from './format';
+import { formatDuration, formatOffsetSeconds, formatPreciseTime, formatTimeAgo } from './format';
 
 describe('formatDuration', () => {
   it.each([
@@ -36,5 +36,25 @@ describe('formatTimeAgo', () => {
 
   it('never goes negative for dates slightly in the future', () => {
     expect(formatTimeAgo(ago(-10), now)).toBe('agora');
+  });
+});
+
+describe('formatOffsetSeconds', () => {
+  it('shows the sign, two decimals and a decimal comma', () => {
+    expect(formatOffsetSeconds(15410)).toBe('+15,41 s');
+    expect(formatOffsetSeconds(-7500)).toBe('−7,50 s');
+  });
+
+  it('shows no sign at zero', () => {
+    expect(formatOffsetSeconds(0)).toBe('0,00 s');
+  });
+});
+
+describe('formatPreciseTime', () => {
+  it('shows minutes, seconds and tenths with a decimal comma', () => {
+    expect(formatPreciseTime(34.65)).toBe('0:34,7');
+    expect(formatPreciseTime(19.24)).toBe('0:19,2');
+    expect(formatPreciseTime(125.04)).toBe('2:05,0');
+    expect(formatPreciseTime(0)).toBe('0:00,0');
   });
 });

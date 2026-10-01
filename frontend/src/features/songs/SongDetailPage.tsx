@@ -1,5 +1,5 @@
 import type { SongDTO } from '@caraoke/shared';
-import { Play, Trash2 } from 'lucide-react';
+import { AudioWaveform, Play, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { ApiError } from '../../api/client';
@@ -125,6 +125,15 @@ export function SongDetailPage() {
                 className="inline-flex min-h-12 items-center rounded-lg bg-surface-2 px-5 font-semibold"
               >
                 Ainda não está pronta · ver a fila
+              </Link>
+            )}
+            {isReady && song.lyricsUrl && (
+              <Link
+                to={`/musica/${song.id}/sincronizar`}
+                className="inline-flex min-h-12 items-center gap-2 rounded-lg bg-surface-2 px-5 text-lg font-semibold"
+              >
+                <AudioWaveform aria-hidden="true" className="size-5" />
+                Sincronizar a letra
               </Link>
             )}
           </div>

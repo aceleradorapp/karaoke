@@ -44,7 +44,10 @@ def find_onset(envelope: np.ndarray) -> float | None:
     sustained = np.flatnonzero(counts >= window * SUSTAIN_MIN_FRACTION)
     if sustained.size == 0:
         return None
-    return float(sustained[0] * HOP_SECONDS)
+    first = int(sustained[0])
+    while not loud[first]:
+        first += 1
+    return first * HOP_SECONDS
 
 
 def decode_samples(path: Path) -> np.ndarray | None:
