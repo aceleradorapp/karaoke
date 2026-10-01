@@ -123,6 +123,7 @@
 | F6-02 | ⬜ | API: `PUT lyrics`, `lyrics/search`, `lyrics/align` (jobs só de letra) | T-04 §4.6 Músicas | 🟡 |
 | F6-03 | ⬜ | Editor de letra (texto, sincronização por toque, ajuste fino) | T-07 §7.4 | 🔴 |
 | F6-04 | ⬜ | Exibição palavra a palavra quando houver `words` | T-07 §7.3 | 🟡 |
+| F6-06 | ⬜ | **Página avançada de sincronização** pedida pelo Michael (SPEC-001): ajuste por linha, marcar tocando, ímã nos inícios de voz, desfazer, melhorar o alinhamento automático (RF11). Discutir o design antes | SPEC-001 | 🔴 |
 | F6-05 | ⬜ | ✔ Verificação com 3 músicas brasileiras sem letra sincronizada no LRCLIB | — | 🟡 |
 
 ## Fase 7 — Pontuação e ranking
