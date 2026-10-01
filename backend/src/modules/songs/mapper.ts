@@ -33,7 +33,7 @@ export function toJobDTO(job: Job, song: SongSummary): JobDTO {
   };
 }
 
-export function toSongDTO(song: Song, job?: Job | null): SongDTO {
+export function toSongDTO(song: Song, job?: Job | null, isFavorite?: boolean): SongDTO {
   return {
     id: song.id,
     title: song.title,
@@ -53,5 +53,6 @@ export function toSongDTO(song: Song, job?: Job | null): SongDTO {
     playCount: song.playCount,
     createdAt: song.createdAt.toISOString(),
     ...(job !== undefined ? { job: job ? toJobDTO(job, song) : null } : {}),
+    ...(isFavorite !== undefined ? { isFavorite } : {}),
   };
 }

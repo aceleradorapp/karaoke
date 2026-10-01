@@ -63,3 +63,15 @@ export const importYoutubeSchema = z.object({
 });
 
 export type ImportYoutubeInput = z.infer<typeof importYoutubeSchema>;
+
+export const LYRICS_OFFSET_LIMIT_MS = 5000;
+
+export const updateSongSchema = z
+  .object({
+    title: z.string().trim().min(1, 'Informe o título').max(SONG_TEXT_MAX_LENGTH).optional(),
+    artist: z.string().trim().min(1, 'Informe o artista').max(SONG_TEXT_MAX_LENGTH).optional(),
+    lyricsOffsetMs: z.number().int().min(-LYRICS_OFFSET_LIMIT_MS).max(LYRICS_OFFSET_LIMIT_MS).optional(),
+  })
+  .refine((changes) => Object.keys(changes).length > 0, 'Nenhuma alteração informada');
+
+export type UpdateSongInput = z.infer<typeof updateSongSchema>;
