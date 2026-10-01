@@ -2,6 +2,13 @@
 
 > Entradas mais recentes no topo. Use `/fim-sessao` para registrar.
 
+## 2026-10-01 (noite, 4) — Fase 3 concluída
+**Feito:** F3-01 a F3-11 — API de músicas (busca por tokens, filtros, ordenações, cursor), Início estilo Netflix (destaque + fileiras), Biblioteca com busca/filtros, detalhe com editor (auto-save) e letra, engine de áudio (Web Audio: instrumental + voz guia em sincronia), letra sincronizada com preenchimento por palavra e contagem regressiva, player com atalhos, atraso da letra salvo sozinho, histórico de apresentações, confirmação ao remover da fila.
+**Verificado:** typecheck, testes (shared, backend 200, frontend 380, worker 121), build e Prettier. No Chromium real com a música "À Sua Maneira": 61 checagens (áudio rodando e com som, voz guia desligada por padrão e liga/desliga sem engasgo, letra acompanhando o tempo em 9 amostras, pausa/seek/atalhos, atraso salvo, fim da música, "Cantar de novo", sair no meio, áudio liberado, sem rolagem horizontal em 375/768/1366/1920 px).
+**Bug achado só no navegador (corrigido):** setas de rolagem das fileiras ficavam meio fora do contêiner e geravam 6–7 px de rolagem horizontal no Início em 768 e 1366 px.
+**Pendências/atenções:** músicas de teste seguem na biblioteca (usar "Excluir" no detalhe); revisar com Opus as tarefas 🔴 (F2-04, F2-07, F3-07, F3-08); depois de "Atualizar yt-dlp" reiniciar o sistema.
+**Próximos passos:** Fase 4 (playlists, favoritas e histórico), em nova branch a partir de develop.
+
 ## 2026-10-01 (noite, 3) — Fase 2 concluída
 **Feito:** F2-01 a F2-15 — parser de títulos e de LRC (shared), busca e importação do YouTube, upload e monitor da pasta, gerenciamento da fila e rotas do worker, worker com download (yt-dlp), separação (Demucs), letra (LRCLIB) e capa, tempo real (Socket.IO), telas de YouTube, envio, fila e botão de atualizar yt-dlp. Também: /media estático e API tolerante a corpo JSON vazio.
 **Verificado com conteúdo real:** vídeo do YouTube baixado e separado na CPU (≈1,5× a duração), cancelar durante a separação (processos do Demucs encerrados em segundos) e tentar de novo, vídeo indisponível tratado, upload pela pasta e pela página, ordem da fila respeitada. 33 checagens no navegador (Playwright) + 24 testes shared, 155 backend, 196 frontend, 121 worker.

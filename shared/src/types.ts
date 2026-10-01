@@ -119,3 +119,19 @@ export interface ImportResultDTO {
   song: SongDTO;
   alreadyExists: boolean;
 }
+
+export interface SongListResponse {
+  items: SongDTO[];
+  nextCursor: string | null;
+}
+
+export interface HomeRow {
+  id: string;
+  title: string;
+  items: SongDTO[];
+}
+
+export interface HomeResponse {
+  hero: SongDTO | null;
+  rows: HomeRow[];
+}

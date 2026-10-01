@@ -101,3 +101,35 @@
     outline-offset: 2px;
   }
 }
+
+.lyric-fill {
+  background: linear-gradient(
+    90deg,
+    var(--lyric-sung) calc(var(--p, 0) * 100%),
+    var(--lyric-unsung) calc(var(--p, 0) * 100%)
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@keyframes lyric-enter {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.lyric-enter {
+  animation: lyric-enter 250ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lyric-enter {
+    animation: none;
+  }
+}

@@ -75,3 +75,19 @@ export async function createJobFixture(options: JobFixtureOptions = {}): Promise
 
   return { song, job, sourcePath };
 }
+
+export async function createSong(
+  overrides: Partial<Parameters<typeof prisma.song.create>[0]['data']> = {},
+): Promise<Song> {
+  return prisma.song.create({
+    data: {
+      title: 'Song',
+      artist: 'Artist',
+      source: 'UPLOAD',
+      status: 'READY',
+      hasInstrumental: true,
+      hasVocals: true,
+      ...overrides,
+    },
+  });
+}
