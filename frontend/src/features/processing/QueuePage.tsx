@@ -1,7 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import type { JobDTO } from '@caraoke/shared';
 import { RotateCcw, Trash2, X } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import {
   useCancelJobMutation,
@@ -12,6 +12,7 @@ import {
 } from '../../api/jobs';
 import { useSystemInfoQuery } from '../../api/system';
 import { Button } from '../../components/Button';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { Spinner } from '../../components/Spinner';
 import { applyJobsReordered } from '../../realtime/cacheUpdates';
 import { toast } from '../../stores/useToastStore';
@@ -32,6 +33,23 @@ function errorMessage(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
 }
 
+type PendingAction = { kind: 'cancel' | 'remove'; job: JobDTO };
+
+const ACTION_DIALOGS = {
+  cancel: {
+    title: 'Cancelar processamento',
+    confirmLabel: 'Cancelar música',
+    message: (title: string) =>
+      `Cancelar “${title}”? O que já foi processado será perdido, mas você poderá tentar de novo depois.`,
+  },
+  remove: {
+    title: 'Remover da lista',
+    confirmLabel: 'Remover',
+    message: (title: string) =>
+      `Remover “${title}” da lista de concluídas? Isso só tira o registro daqui; a música continua na biblioteca.`,
+  },
+} as const;
+
 export function QueuePage() {
   const queryClient = useQueryClient();
   const active = useJobsQuery('active');
@@ -41,6 +59,7 @@ export function QueuePage() {
   const retryJob = useRetryJobMutation();
   const deleteJob = useDeleteJobMutation();
   const reorderJobs = useReorderJobsMutation();
+  const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
 
   const running = active.data?.filter((job) => job.status === 'RUNNING') ?? [];
   const pending = active.data?.filter((job) => job.status === 'PENDING') ?? [];
@@ -74,6 +93,15 @@ export function QueuePage() {
       onError: (error) => toast.error(errorMessage(error, 'Não foi possível remover')),
     });
   }
+
+  function confirmPendingAction() {
+    if (!pendingAction) return;
+    if (pendingAction.kind === 'cancel') handleCancel(pendingAction.job);
+    else handleRemove(pendingAction.job);
+    setPendingAction(null);
+  }
+
+  const dialog = pendingAction ? ACTION_DIALOGS[pendingAction.kind] : null;
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-8">
@@ -118,7 +146,7 @@ export function QueuePage() {
                   actions={
                     <Button
                       variant="secondary"
-                      onClick={() => handleCancel(job)}
+                      onClick={() => setPendingAction({ kind: 'cancel', job })}
                       aria-label={`Cancelar ${job.song.title}`}
                     >
                       <X aria-hidden="true" className="size-5" />
@@ -134,7 +162,11 @@ export function QueuePage() {
 
       {pending.length > 0 && (
         <Section title="Na fila">
-          <PendingList jobs={pending} onReorder={handleReorder} onCancel={handleCancel} />
+          <PendingList
+            jobs={pending}
+            onReorder={handleReorder}
+            onCancel={(job) => setPendingAction({ kind: 'cancel', job })}
+          />
         </Section>
       )}
 
@@ -159,7 +191,7 @@ export function QueuePage() {
                       )}
                       <Button
                         variant="ghost"
-                        onClick={() => handleRemove(job)}
+                        onClick={() => setPendingAction({ kind: 'remove', job })}
                         aria-label={`Remover ${job.song.title} da lista`}
                       >
                         <Trash2 aria-hidden="true" className="size-5" />
@@ -173,6 +205,16 @@ export function QueuePage() {
           </ul>
         </Section>
       )}
+
+      <ConfirmDialog
+        isOpen={pendingAction !== null}
+        title={dialog?.title ?? ''}
+        message={pendingAction && dialog ? dialog.message(pendingAction.job.song.title) : ''}
+        confirmLabel={dialog?.confirmLabel ?? ''}
+        dismissLabel="Voltar"
+        onConfirm={confirmPendingAction}
+        onCancel={() => setPendingAction(null)}
+      />
 
       <p role="status" className={isWorkerOnline ? 'text-sm text-muted' : 'text-sm text-danger'}>
         {workerLabel(system.data?.worker)}
