@@ -14,8 +14,8 @@
 | 2 | Importação e processamento | ✅ |
 | 3 | Biblioteca e player | ✅ |
 | 4 | Playlists, favoritas e histórico | ✅ |
-| 5 | Celular e QR code | ⬜ (próxima) |
-| 6 | Letras inteligentes | ⬜ |
+| 5 | Celular e QR code | ⬜ (depois da 6) |
+| 6 | Letras inteligentes | ⬜ (próxima, prioridade do Michael) |
 | 7 | Pontuação e ranking | ⬜ |
 | 8 | Publicação (futuro) | ⬜ |
 
