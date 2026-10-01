@@ -7,6 +7,7 @@ import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { Modal } from '../../components/Modal';
 import { SaveIndicator } from '../../components/SaveIndicator';
 import { useAutoSave } from '../../lib/useAutoSave';
+import { useThemePreview } from '../../lib/useThemePreview';
 import { useProfileStore } from '../../stores/useProfileStore';
 import { toast } from '../../stores/useToastStore';
 import { AvatarPicker } from './AvatarPicker';
@@ -49,6 +50,8 @@ function ProfileEditorForm({ profile, onClose }: ProfileEditorFormProps) {
   });
   const [isNameBeingTyped, setIsNameBeingTyped] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+
+  useThemePreview(draft.theme, true);
 
   async function save(value: ProfileDraft) {
     const changes = updateProfileSchema.parse(value);

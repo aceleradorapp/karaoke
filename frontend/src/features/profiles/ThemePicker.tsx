@@ -4,11 +4,12 @@ import clsx from 'clsx';
 interface ThemePickerProps {
   value: string;
   onChange: (themeId: string) => void;
+  label?: string;
 }
 
-export function ThemePicker({ value, onChange }: ThemePickerProps) {
+export function ThemePicker({ value, onChange, label = 'Tema' }: ThemePickerProps) {
   return (
-    <div role="radiogroup" aria-label="Tema" className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+    <div role="radiogroup" aria-label={label} className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       {THEMES.map((theme) => {
         const isSelected = theme.id === value;
         return (
