@@ -1,0 +1,42 @@
+# Dependências
+node_modules/
+
+# Builds
+dist/
+build/
+coverage/
+
+# Ambiente / segredos
+.env
+.env.*
+!.env.example
+
+# Arquivos gerados pelo app (áudios, letras, capas)
+storage/
+
+# Python (worker)
+worker/.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# Logs
+*.log
+npm-debug.log*
+
+# SO / editores
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+
+# Claude Code (configurações locais/pessoais)
+.claude/settings.local.json
+
+# Obsidian (estado local do app)
+vault/.obsidian/workspace*.json
+vault/.obsidian/cache
+vault/.trash/
+
+storage-test/

@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Edit",
+      "Write",
+      "Glob",
+      "Grep",
+      "Bash",
+      "PowerShell",
+      "WebFetch",
+      "WebSearch"
+    ],
+    "ask": [
+      "Bash(git push*)",
+      "Bash(git reset --hard*)",
+      "Bash(git clean*)",
+      "Bash(git checkout -- *)",
+      "Bash(rm -rf*)",
+      "Bash(rm -r *)",
+      "PowerShell(git push*)",
+      "PowerShell(git reset --hard*)",
+      "PowerShell(git clean*)",
+      "PowerShell(Remove-Item*-Recurse*)"
+    ],
+    "deny": []
+  }
+}
