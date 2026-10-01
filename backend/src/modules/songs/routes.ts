@@ -1,8 +1,9 @@
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
-import { updateSongSchema } from '@caraoke/shared';
+import { saveLyricsSchema, updateSongSchema } from '@caraoke/shared';
 import { z } from 'zod';
 import { buildHome } from './home.js';
+import { getOriginalLyrics, restoreOriginalLyrics, saveLyrics } from './lyrics.js';
 import { deleteSong, getSong, listSongs, updateSong } from './service.js';
 
 const NO_CONTENT = 204;
@@ -44,6 +45,20 @@ export async function songRoutes(app: FastifyInstance): Promise<void> {
     '/songs/:id',
     { schema: { params: idParamsSchema, body: updateSongSchema } },
     async (request) => updateSong(request.params.id, request.body),
+  );
+
+  typedApp.put(
+    '/songs/:id/lyrics',
+    { schema: { params: idParamsSchema, body: saveLyricsSchema } },
+    async (request) => saveLyrics(request.params.id, request.body),
+  );
+
+  typedApp.get('/songs/:id/lyrics/original', { schema: { params: idParamsSchema } }, async (request) =>
+    getOriginalLyrics(request.params.id),
+  );
+
+  typedApp.post('/songs/:id/lyrics/restore', { schema: { params: idParamsSchema } }, async (request) =>
+    restoreOriginalLyrics(request.params.id),
   );
 
   typedApp.delete('/songs/:id', { schema: { params: idParamsSchema } }, async (request, reply) => {
