@@ -70,8 +70,8 @@
 | F2-08 | ✅ 2026-10-01 | Worker: etapa LYRICS (LRCLIB → letra.json/lrc; PLAIN/NONE) | T-05 §5.7 | 🟡 |
 | F2-09 | ✅ 2026-10-01 | Worker: etapa COVER | T-05 §5.9 | 🟢 |
 | F2-10 | ✅ 2026-10-01 | Front: `realtime/` (socket + `useRealtimeSync`) | T-04 §4.7, T-06 §6.7 | 🟡 |
-| F2-11 | 🟨 | Front: `/youtube` (busca, prévia embutida, modal de confirmar importação) | T-06 §6.6 YouTube | 🟡 |
-| F2-12 | ⬜ | Front: `/enviar` (arrastar e soltar + progresso) | T-06 §6.6 Enviar | 🟢 |
+| F2-11 | ✅ 2026-10-01 | Front: `/youtube` (busca, prévia embutida, modal de confirmar importação) | T-06 §6.6 YouTube | 🟡 |
+| F2-12 | 🟨 | Front: `/enviar` (arrastar e soltar + progresso) | T-06 §6.6 Enviar | 🟢 |
 | F2-13 | ⬜ | Front: `/fila` (em tempo real, reordenar, cancelar, retry) + indicador na barra superior | T-06 §6.6 Fila | 🟡 |
 | F2-14 | ⬜ | Configurações: dispositivo com info detectada, modelo Demucs, "Atualizar yt-dlp" | T-06 §6.6 Config, T-04 §4.6 Sistema | 🟢 |
 | F2-15 | ⬜ | ✔ Verificação: importar 1 do YouTube + 1 upload (arquivo copiado na pasta) + 1 upload pela página; as 3 ficam prontas; origens apagadas; cancelar funciona | — | 🟡 |

@@ -1,4 +1,4 @@
-import { MAX_VIDEO_DURATION_SECONDS, parseYoutubeTitle } from '@caraoke/shared';
+import { MAX_VIDEO_DURATION_SECONDS, parseYoutubeTitle, type YoutubeSearchResult } from '@caraoke/shared';
 import { prisma } from '../../db.js';
 import { searchYoutubeEntries, type YtdlpSearchEntry } from '../../services/ytdlp.js';
 
@@ -6,18 +6,7 @@ const CACHE_TTL_MS = 10 * 60 * 1000;
 const MAX_CACHE_ENTRIES = 50;
 const LIVE_STATUSES = new Set(['is_live', 'is_upcoming']);
 
-export interface YoutubeSearchItem {
-  youtubeId: string;
-  title: string;
-  channel: string;
-  durationSec: number;
-  thumbnailUrl: string;
-  suggested: { artist: string; title: string };
-}
-
-export interface YoutubeSearchResult extends YoutubeSearchItem {
-  existingSongId: string | null;
-}
+type YoutubeSearchItem = Omit<YoutubeSearchResult, 'existingSongId'>;
 
 interface CacheEntry {
   expiresAt: number;

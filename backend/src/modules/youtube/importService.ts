@@ -1,15 +1,12 @@
 import { Prisma } from '@prisma/client';
-import { MAX_VIDEO_DURATION_SECONDS, type ImportYoutubeInput, type SongDTO } from '@caraoke/shared';
+import { MAX_VIDEO_DURATION_SECONDS, type ImportResultDTO, type ImportYoutubeInput } from '@caraoke/shared';
 import { prisma } from '../../db.js';
 import { emitToAll } from '../../realtime.js';
 import { AppError, notFound } from '../../utils/errors.js';
 import { enqueueJob } from '../jobs/service.js';
 import { toJobDTO, toSongDTO } from '../songs/mapper.js';
 
-export interface ImportResult {
-  song: SongDTO;
-  alreadyExists: boolean;
-}
+type ImportResult = ImportResultDTO;
 
 function assertDurationAllowed(durationSec: number | undefined): void {
   if (durationSec !== undefined && durationSec > MAX_VIDEO_DURATION_SECONDS) {
