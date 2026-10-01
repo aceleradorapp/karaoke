@@ -93,12 +93,15 @@ describe('ThemeSync', () => {
     expect(document.documentElement.dataset.theme).toBe('neon');
   });
 
-  it('uses the default theme on the profile selection screen', async () => {
+  it('uses the default theme from the settings on the profile selection screen', async () => {
     useProfileStore.setState({ currentProfile: ANA });
-    mockApi({ 'GET /api/profiles': { body: { items: [ANA] } } });
+    mockApi({
+      'GET /api/profiles': { body: { items: [ANA] } },
+      'GET /api/settings': { body: { 'ui.defaultTheme': 'retro' } },
+    });
     renderAt('/perfis');
 
     await screen.findByText('Escolha o perfil');
-    expect(document.documentElement.dataset.theme).toBe('cinema');
+    await waitFor(() => expect(document.documentElement.dataset.theme).toBe('retro'));
   });
 });

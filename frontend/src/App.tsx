@@ -4,6 +4,7 @@ import { ToastViewport } from './components/ToastViewport';
 import { HealthPage } from './features/health/HealthPage';
 import { ManageProfilesPage } from './features/profiles/ManageProfilesPage';
 import { StageLayout } from './features/layout/StageLayout';
+import { SettingsPage } from './features/settings/SettingsPage';
 import { ProfilesPage } from './features/profiles/ProfilesPage';
 import { RequireProfile } from './features/profiles/RequireProfile';
 
@@ -16,6 +17,7 @@ export function App() {
         <Route path="/perfis/gerenciar" element={<ManageProfilesPage />} />
         <Route element={<RequireProfile />}>
           <Route element={<StageLayout />}>
+            <Route path="/configuracoes" element={<SettingsPage />} />
             <Route path="*" element={<HealthPage />} />
           </Route>
         </Route>

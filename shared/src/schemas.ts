@@ -31,3 +31,22 @@ export const updateProfileSchema = z
 
 export type CreateProfileInput = z.infer<typeof createProfileSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
+
+export const appSettingsSchema = z.object({
+  'processing.device': z.enum(['auto', 'gpu', 'cpu']),
+  'processing.demucsModel': z.enum(['htdemucs', 'htdemucs_ft']),
+  'processing.whisperModel': z.enum(['base', 'small', 'medium']),
+  'processing.autoAlign': z.boolean(),
+  'scoring.mode': z.enum(['pitch+audience', 'pitch', 'audience', 'off']),
+  'scoring.audienceWeight': z.number().min(0).max(1),
+  'scoring.voteSeconds': z.number().int().min(5).max(120),
+  'scoring.micLatencyMs': z.number().int().min(0).max(1000),
+  'scoring.micDeviceId': z.string().nullable(),
+  'ui.defaultTheme': themeSchema,
+});
+
+export const updateSettingsSchema = appSettingsSchema
+  .partial()
+  .refine((changes) => Object.keys(changes).length > 0, 'Nenhuma alteração informada');
+
+export type UpdateSettingsInput = z.infer<typeof updateSettingsSchema>;
