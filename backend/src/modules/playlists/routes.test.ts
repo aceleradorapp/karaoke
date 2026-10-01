@@ -175,10 +175,10 @@ describe('playlist routes', () => {
 
     it('reorders the songs', async () => {
       const { playlist, songs } = await setup();
+      for (const song of songs) await addSong(playlist.id, song.id);
       const [a, b, c] = songs.map((song) => song.id) as [string, string, string];
-      const [a, b, c] = songs as [{ id: string }, { id: string }, { id: string }];
+
       expect((await reorder(playlist.id, [c, a, b])).statusCode).toBe(204);
-      expect((await reorder(playlist.id, [c.id, a.id, b.id])).statusCode).toBe(204);
 
       expect(titlesOf(await detail(playlist.id))).toEqual(['C', 'A', 'B']);
     });
