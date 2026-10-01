@@ -9,6 +9,7 @@ import { ThemePicker } from '../profiles/ThemePicker';
 import { deviceHint } from './deviceHint';
 import { SelectField, SettingsSection, ToggleField } from './fields';
 import { MyThemeField } from './MyThemeField';
+import { YtdlpUpdater } from './YtdlpUpdater';
 
 const DEVICE_OPTIONS = [
   { value: 'auto', label: 'Automático' },
@@ -97,6 +98,7 @@ function SettingsForm({ initialSettings }: SettingsFormProps) {
           checked={draft['processing.autoAlign']}
           onChange={(checked) => change('processing.autoAlign', checked)}
         />
+        <YtdlpUpdater />
       </SettingsSection>
     </div>
   );

@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { prisma } from '../../db.js';
 import { REPO_ROOT } from '../../env.js';
 import { diskUsage } from '../../services/storage.js';
+import { updateYtdlp } from '../../services/ytdlp.js';
 import { getWorkerInfo } from '../../services/workerStatus.js';
 
 function readAppVersion(): string {
@@ -34,4 +35,6 @@ export async function systemRoutes(app: FastifyInstance): Promise<void> {
       storage: { usedBytes: usage.usedBytes, songs },
     };
   });
+
+  app.post('/system/ytdlp/update', async () => ({ version: await updateYtdlp() }));
 }

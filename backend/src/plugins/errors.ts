@@ -18,6 +18,13 @@ export function registerErrorHandler(app: FastifyInstance): void {
       return reply.status(400).send(body);
     }
 
+    const statusCode = (error as { statusCode?: number }).statusCode;
+    if (statusCode !== undefined && statusCode >= 400 && statusCode < 500) {
+      const code = (error as { code?: string }).code ?? 'BAD_REQUEST';
+      const body: ErrorResponseBody = { error: { code, message: 'Requisição inválida' } };
+      return reply.status(statusCode).send(body);
+    }
+
     request.log.error(error);
     const body: ErrorResponseBody = {
       error: { code: 'INTERNAL_ERROR', message: 'Erro interno do servidor' },

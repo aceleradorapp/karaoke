@@ -2,6 +2,14 @@
 
 > Entradas mais recentes no topo. Use `/fim-sessao` para registrar.
 
+## 2026-10-01 (noite, 3) — Fase 2 concluída
+**Feito:** F2-01 a F2-15 — parser de títulos e de LRC (shared), busca e importação do YouTube, upload e monitor da pasta, gerenciamento da fila e rotas do worker, worker com download (yt-dlp), separação (Demucs), letra (LRCLIB) e capa, tempo real (Socket.IO), telas de YouTube, envio, fila e botão de atualizar yt-dlp. Também: /media estático e API tolerante a corpo JSON vazio.
+**Verificado com conteúdo real:** vídeo do YouTube baixado e separado na CPU (≈1,5× a duração), cancelar durante a separação (processos do Demucs encerrados em segundos) e tentar de novo, vídeo indisponível tratado, upload pela pasta e pela página, ordem da fila respeitada. 33 checagens no navegador (Playwright) + 24 testes shared, 155 backend, 196 frontend, 121 worker.
+**Bugs achados na verificação real (e corrigidos):** barra de download do modelo lida como progresso da separação; `Content-Type: application/json` com corpo vazio rejeitado pelo Fastify (agora aceito); capas 404 por falta de /media; padrão de erro "confirm your age" traduzido como login; vazamento de .part ao estourar o limite de arquivos; `moveToError('')` poderia mover a pasta atual (agora recusa vazio e fora do storage).
+**Decisões:** ADR-007 (cancelamento e recuperação). Prévia do YouTube em modal (não painel lateral). Menu ganhou "Enviar"; nome do perfil só a partir de 2xl.
+**Pendências/atenções:** (1) as músicas de teste continuam na biblioteca porque o Claude Code bloqueou a limpeza com rm -rf; dá para excluir pelo app quando a F3-01 trouxer o botão Excluir (ou apagar storage/biblioteca/* e a tabela songs à mão). (2) Depois de "Atualizar yt-dlp" é preciso reiniciar o sistema para o worker usar a nova versão. (3) Tarefas 🔴 F2-04 e F2-07 foram feitas com Sonnet e testes extras: vale uma revisão com Opus.
+**Próximos passos:** Fase 3 (biblioteca e player): API de músicas, Início estilo Netflix, player com voz guia e letra.
+
 ## 2026-10-01 (noite, 2) — Fase 1 concluída
 **Feito:** F1-01 a F1-08 — API de perfis, componentes base responsivos e hook useAutoSave, tela "Quem vai cantar?", gerenciar perfis com auto-save, guarda de rota + ThemeSync, layout do palco com barra superior responsiva, API de configurações e tela /configuracoes. Branches main/develop criadas e publicadas; fase desenvolvida em feature/f1-perfis-e-temas.
 **Verificado:** 45 testes backend, 73 frontend, 10 worker; typecheck, build e Prettier ok. Verificação ponta a ponta em navegador real (Playwright/Chromium instalado só na pasta temporária, fora do repositório) com 55 checagens: criação de perfis pela interface, tema por perfil, persistência após recarregar, auto-save, sem rolagem horizontal em 375/768/1366/1920 px, hambúrguer, modal em tela cheia no celular.

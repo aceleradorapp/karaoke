@@ -1,3 +1,4 @@
+import type { Job, Prisma } from '@prisma/client';
 import type { JobStep, SongSource } from '@caraoke/shared';
 import { prisma } from '../../db.js';
 import { songDir, storagePaths } from '../../services/storage.js';
@@ -71,4 +72,21 @@ export async function claimNextJob(): Promise<ClaimedJob | null> {
     if (result !== 'retry') return result;
   }
   return null;
+}
+
+export async function nextQueuePosition(transaction: Prisma.TransactionClient): Promise<number> {
+  const { _max } = await transaction.job.aggregate({
+    where: { status: { in: ['PENDING', 'RUNNING'] } },
+    _max: { position: true },
+  });
+  return (_max.position ?? 0) + 1;
+}
+
+export async function enqueueJob(
+  transaction: Prisma.TransactionClient,
+  songId: string,
+  sourcePath: string | null,
+): Promise<Job> {
+  const position = await nextQueuePosition(transaction);
+  return transaction.job.create({ data: { songId, position, sourcePath } });
 }

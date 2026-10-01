@@ -1,7 +1,8 @@
 import clsx from 'clsx';
-import { ListMusic, Menu, Search, Smartphone, X } from 'lucide-react';
+import { Menu, Search, Smartphone, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router';
+import { QueueIndicator } from '../processing/QueueIndicator';
 import { NAV_ITEMS } from './navItems';
 import { ProfileMenu } from './ProfileMenu';
 import { SearchBox } from './SearchBox';
@@ -73,9 +74,7 @@ export function TopBar() {
           <Search aria-hidden="true" />
         </button>
 
-        <Link to="/fila" aria-label="Fila de processamento" className={ICON_BUTTON_CLASSES}>
-          <ListMusic aria-hidden="true" />
-        </Link>
+        <QueueIndicator />
 
         <button
           type="button"

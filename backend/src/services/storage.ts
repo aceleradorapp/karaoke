@@ -47,12 +47,14 @@ export async function deleteSongDir(songId: string): Promise<void> {
 }
 
 export async function moveToError(filePath: string): Promise<string | null> {
+  if (!filePath || !isInsideStorage(filePath)) return null;
+
   const source = path.resolve(filePath);
-  const exists = await fs.stat(source).then(
-    () => true,
+  const isFile = await fs.stat(source).then(
+    (stats) => stats.isFile(),
     () => false,
   );
-  if (!exists) return null;
+  if (!isFile) return null;
   const target = path.join(storagePaths.errorDir, `${Date.now()}-${path.basename(source)}`);
   await fs.rename(source, target);
   return target;
@@ -64,6 +66,7 @@ export function safeFilename(name: string): string {
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
     .replace(/[^a-zA-Z0-9._-]+/g, '-')
+    .replace(/-{2,}/g, '-')
     .replace(/^-+|-+$/g, '')
     .slice(0, SAFE_FILENAME_MAX_LENGTH);
   const extension = parsed.ext.toLowerCase().replace(/[^a-z0-9.]/g, '');
@@ -85,4 +88,14 @@ async function directorySize(dir: string): Promise<number> {
 
 export async function diskUsage(): Promise<{ usedBytes: number }> {
   return { usedBytes: await directorySize(storagePaths.libraryDir) };
+}
+
+export function isInsideStorage(filePath: string): boolean {
+  const relative = path.relative(storagePaths.root, path.resolve(filePath));
+  return !relative.startsWith('..') && !path.isAbsolute(relative);
+}
+
+export async function deleteOriginFile(filePath: string | null): Promise<void> {
+  if (!filePath || !isInsideStorage(filePath)) return;
+  await fs.rm(filePath, { force: true });
 }

@@ -5,6 +5,7 @@ const ONLINE_THRESHOLD_MS = 30_000;
 const WATCHDOG_INTERVAL_MS = 5_000;
 
 export interface WorkerHeartbeat {
+  instanceId: string;
   device: string;
   cudaAvailable: boolean;
   gpuName: string | null;
@@ -45,11 +46,15 @@ function announceStatus(now: number): void {
   emitToRoom('stage', 'worker:status', { online, device, gpuName });
 }
 
-export function recordHeartbeat(heartbeat: WorkerHeartbeat, now: number = Date.now()): void {
-  const deviceChanged = lastHeartbeat?.device !== heartbeat.device;
+export function recordHeartbeat(heartbeat: WorkerHeartbeat, now: number = Date.now()): boolean {
+  const previous = lastHeartbeat;
+  const deviceChanged = previous?.device !== heartbeat.device;
+  const hasRestarted = previous !== null && previous.instanceId !== heartbeat.instanceId;
+
   lastHeartbeat = heartbeat;
   lastSeenAt = now;
   if (!announcedOnline || deviceChanged) announceStatus(now);
+  return hasRestarted;
 }
 
 export function startWorkerWatchdog(): NodeJS.Timeout {
