@@ -61,8 +61,8 @@
 | ID | Status | Tarefa | Docs | Modelo |
 |---|---|---|---|---|
 | F2-01 | ✅ 2026-10-01 | `shared`: `parseYoutubeTitle` + `lyrics.ts` (`LyricsDoc`, `parseLrc`, `toLrc`) com testes | T-05 §5.7, T-09 §9.3 | 🟡 |
-| F2-02 | 🟨 | Backend: busca no YouTube via yt-dlp (+ cache) | T-04 §4.9, §4.6 YouTube | 🟡 |
-| F2-03 | ⬜ | Backend: import do YouTube (cria Song + Job, duplicidade, limite de 12 min) | T-04 §4.6 YouTube, T-03 §3.4 | 🟡 |
+| F2-02 | ✅ 2026-10-01 | Backend: busca no YouTube via yt-dlp (+ cache) | T-04 §4.9, §4.6 YouTube | 🟡 |
+| F2-03 | 🟨 | Backend: import do YouTube (cria Song + Job, duplicidade, limite de 12 min) | T-04 §4.6 YouTube, T-03 §3.4 | 🟡 |
 | F2-04 | ⬜ | Backend: jobs (listar, reordenar, cancelar, retry, remover) + rotas internas progress/complete/fail + recuperação ao iniciar + eventos | T-04 §4.6 Jobs/Interno, T-03 §3.4 | 🔴 |
 | F2-05 | ⬜ | Backend: upload (multipart + meta.json) + watcher chokidar | T-04 §4.6 Uploads, §4.8 | 🟡 |
 | F2-06 | ⬜ | Worker: etapa DOWNLOAD | T-05 §5.5 | 🟢 |

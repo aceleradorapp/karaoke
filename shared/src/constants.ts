@@ -1,1 +1,2 @@
 export const MIN_VRAM_FOR_AUTO_GPU_MB = 3500;
+export const MAX_VIDEO_DURATION_SECONDS = 12 * 60;

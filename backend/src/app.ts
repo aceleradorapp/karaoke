@@ -5,6 +5,7 @@ import { jobsInternalRoutes } from './modules/jobs/internalRoutes.js';
 import { profileRoutes } from './modules/profiles/routes.js';
 import { settingsRoutes } from './modules/settings/routes.js';
 import { systemInternalRoutes } from './modules/system/internalRoutes.js';
+import { youtubeRoutes } from './modules/youtube/routes.js';
 import { systemRoutes } from './modules/system/routes.js';
 import { registerAccessControl } from './plugins/access.js';
 import { registerErrorHandler } from './plugins/errors.js';
@@ -32,6 +33,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   await app.register(systemRoutes, { prefix: '/api' });
   await app.register(profileRoutes, { prefix: '/api' });
   await app.register(settingsRoutes, { prefix: '/api' });
+  await app.register(youtubeRoutes, { prefix: '/api' });
   await app.register(systemInternalRoutes, { prefix: '/api' });
   await app.register(jobsInternalRoutes, { prefix: '/api' });
 
