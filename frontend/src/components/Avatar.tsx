@@ -1,7 +1,7 @@
 import { findAvatar } from '@caraoke/shared';
 import clsx from 'clsx';
 
-type AvatarSize = 'sm' | 'md' | 'lg' | 'xl';
+export type AvatarSize = 'sm' | 'md' | 'lg' | 'xl';
 
 interface AvatarProps {
   avatarId: string;
@@ -10,7 +10,7 @@ interface AvatarProps {
   className?: string;
 }
 
-const SIZE_CLASSES: Record<AvatarSize, string> = {
+export const AVATAR_SIZE_CLASSES: Record<AvatarSize, string> = {
   sm: 'size-10 text-xl rounded-lg',
   md: 'size-16 text-3xl rounded-xl',
   lg: 'size-24 text-5xl rounded-xl sm:size-28',
@@ -27,7 +27,7 @@ export function Avatar({ avatarId, size = 'md', label, className }: AvatarProps)
       style={{ backgroundColor: avatar.background }}
       className={clsx(
         'inline-flex shrink-0 items-center justify-center select-none',
-        SIZE_CLASSES[size],
+        AVATAR_SIZE_CLASSES[size],
         className,
       )}
     >

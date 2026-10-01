@@ -1,11 +1,8 @@
 import { THEMES } from '@caraoke/shared';
 import { useHealthQuery } from '../../api/health';
 import { useSystemInfoQuery } from '../../api/system';
+import { applyTheme } from '../../lib/theme';
 import { workerLabel } from './workerLabel';
-
-function applyTheme(themeId: string): void {
-  document.documentElement.dataset.theme = themeId;
-}
 
 function serverLabel(isLoading: boolean, isError: boolean, version?: string): string {
   if (isLoading) return 'Verificando o servidor…';
