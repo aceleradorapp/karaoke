@@ -12,3 +12,15 @@ export function formatDuration(totalSeconds: number): string {
   const seconds = safeSeconds % SECONDS_PER_MINUTE;
   return hours > 0 ? `${hours}:${pad(minutes)}:${pad(seconds)}` : `${minutes}:${pad(seconds)}`;
 }
+
+const SECONDS_PER_DAY = 86_400;
+const JUST_NOW_SECONDS = 45;
+
+export function formatTimeAgo(isoDate: string, now: number = Date.now()): string {
+  const elapsedSeconds = Math.max(0, Math.floor((now - new Date(isoDate).getTime()) / 1000));
+  if (elapsedSeconds < JUST_NOW_SECONDS) return 'agora';
+  if (elapsedSeconds < SECONDS_PER_HOUR) return `há ${Math.round(elapsedSeconds / SECONDS_PER_MINUTE)} min`;
+  if (elapsedSeconds < SECONDS_PER_DAY) return `há ${Math.floor(elapsedSeconds / SECONDS_PER_HOUR)} h`;
+  const days = Math.floor(elapsedSeconds / SECONDS_PER_DAY);
+  return days === 1 ? 'há 1 dia' : `há ${days} dias`;
+}
