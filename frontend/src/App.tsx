@@ -8,6 +8,7 @@ import { ManageProfilesPage } from './features/profiles/ManageProfilesPage';
 import { StageLayout } from './features/layout/StageLayout';
 import { SettingsPage } from './features/settings/SettingsPage';
 import { QueuePage } from './features/processing/QueuePage';
+import { SongDetailPage } from './features/songs/SongDetailPage';
 import { UploadPage } from './features/upload/UploadPage';
 import { YoutubePage } from './features/youtube/YoutubePage';
 import { ProfilesPage } from './features/profiles/ProfilesPage';
@@ -28,6 +29,7 @@ export function App() {
             <Route path="/fila" element={<QueuePage />} />
             <Route path="/" element={<HomePage />} />
             <Route path="/biblioteca" element={<LibraryPage />} />
+            <Route path="/musica/:id" element={<SongDetailPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Route>
