@@ -104,3 +104,18 @@ export interface WorkerStatus {
   device: string | null;
   gpuName: string | null;
 }
+
+export interface YoutubeSearchResult {
+  youtubeId: string;
+  title: string;
+  channel: string;
+  durationSec: number;
+  thumbnailUrl: string;
+  suggested: { artist: string; title: string };
+  existingSongId: string | null;
+}
+
+export interface ImportResultDTO {
+  song: SongDTO;
+  alreadyExists: boolean;
+}

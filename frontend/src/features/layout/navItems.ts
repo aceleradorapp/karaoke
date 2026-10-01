@@ -8,6 +8,7 @@ export const NAV_ITEMS: NavItem[] = [
   { to: '/', label: 'Início', end: true },
   { to: '/biblioteca', label: 'Biblioteca' },
   { to: '/youtube', label: 'YouTube' },
+  { to: '/enviar', label: 'Enviar' },
   { to: '/playlists', label: 'Playlists' },
   { to: '/ranking', label: 'Ranking' },
 ];

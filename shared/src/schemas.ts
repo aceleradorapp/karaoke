@@ -50,3 +50,16 @@ export const updateSettingsSchema = appSettingsSchema
   .refine((changes) => Object.keys(changes).length > 0, 'Nenhuma alteração informada');
 
 export type UpdateSettingsInput = z.infer<typeof updateSettingsSchema>;
+
+export const YOUTUBE_ID_PATTERN = /^[A-Za-z0-9_-]{11}$/;
+const SONG_TEXT_MAX_LENGTH = 200;
+
+export const importYoutubeSchema = z.object({
+  youtubeId: z.string().regex(YOUTUBE_ID_PATTERN, 'Vídeo inválido'),
+  title: z.string().trim().min(1, 'Informe o título').max(SONG_TEXT_MAX_LENGTH),
+  artist: z.string().trim().min(1, 'Informe o artista').max(SONG_TEXT_MAX_LENGTH),
+  durationSec: z.number().int().positive().optional(),
+  profileId: z.string().min(1).optional(),
+});
+
+export type ImportYoutubeInput = z.infer<typeof importYoutubeSchema>;

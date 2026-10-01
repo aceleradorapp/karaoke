@@ -3,6 +3,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router';
 import { App } from './App';
+import { RealtimeSync } from './realtime/RealtimeSync';
 import './styles/index.css';
 
 const queryClient = new QueryClient({
@@ -15,6 +16,7 @@ if (!container) throw new Error('Root element not found');
 createRoot(container).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
+      <RealtimeSync />
       <BrowserRouter>
         <App />
       </BrowserRouter>

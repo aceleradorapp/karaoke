@@ -175,7 +175,7 @@ Regras: rejeitar vídeos com mais de **12 min** (`VIDEO_TOO_LONG`). Título e ar
 ### Uploads
 | Método | Rota | Descrição |
 |---|---|---|
-| POST | `/api/uploads` | multipart, campo `files` (1..10). Extensões: `.mp3 .m4a .wav .flac .ogg .webm .opus .aac`. Salva em `entrada/upload/` com nome seguro (`<timestamp>-<nome-sanitizado>`). **Quem cria a Song/Job é o watcher** (único caminho). Resposta `{ received: [{ filename }] }`. Campo opcional `profileId` |
+| POST | `/api/uploads` | multipart, campo `files` (1..10). Extensões: `.mp3 .m4a .wav .flac .ogg .webm .opus .aac`. Salva em `entrada/upload/` com nome seguro (`<timestamp>-<nome-sanitizado>`). **Quem cria a Song/Job é o watcher** (único caminho). Resposta `201 { received: [{ filename }], rejected: [{ filename, reason }] }` (`reason`: `UNSUPPORTED_TYPE` ou `FILE_TOO_LARGE`); `400 UNSUPPORTED_FILE` se nenhum for aceito, `400 TOO_MANY_FILES` acima de 10. O arquivo é gravado como `.part` e só vira definitivo depois do sidecar. Campo opcional `profileId` |
 
 > Para associar o `profileId` ao arquivo enviado pela página, grave um arquivo lateral `<nome>.meta.json` com `{ profileId, title?, artist? }`; o watcher lê e apaga. Arquivos copiados à mão não têm meta.
 
@@ -191,7 +191,7 @@ Regras: rejeitar vídeos com mais de **12 min** (`VIDEO_TOO_LONG`). Título e ar
 ### Interno (worker) — header `X-Worker-Token`
 | Método | Rota | Body | Resposta |
 |---|---|---|---|
-| POST | `/api/internal/worker/heartbeat` | `{ device, cudaAvailable, gpuName, vramMb, ytdlpVersion }` | `{ ok }`. Guarda em memória; `online` = último heartbeat há menos de 30 s |
+| POST | `/api/internal/worker/heartbeat` | `{ instanceId, device, cudaAvailable, gpuName, vramMb, ytdlpVersion }` | `{ ok }`. Guarda em memória; `online` = último heartbeat há menos de 30 s. Se o `instanceId` mudar (worker reiniciou com o back-end no ar), os jobs RUNNING órfãos voltam para a fila antes de responder |
 | GET | `/api/internal/settings` | — | `AppSettings` (o worker usa `processing.*`) |
 | POST | `/api/internal/jobs/claim` | — | `204` se vazio, ou `{ job: { id, steps: JobStep[], sourcePath, song: { id, title, artist, source, youtubeId } }, paths: { storageDir, songDir, tmpDir } }` |
 | PATCH | `/api/internal/jobs/:id/progress` | `{ step, progress, message, device? }` | `{ cancel: boolean }` |

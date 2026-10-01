@@ -13,3 +13,4 @@ Architecture Decision Records — uma decisão por arquivo. Crie com `/nova-deci
 | ADR-004 | [Processamento assíncrono de músicas (fila + worker)](ADR-004-processamento-assincrono.md) | aceita |
 | ADR-005 | [Stack detalhada](ADR-005-stack-detalhada.md) | aceita |
 | ADR-006 | [Pontuação: afinação + bônus da plateia](ADR-006-pontuacao.md) | aceita |
+| ADR-007 | [Cancelamento e recuperação de jobs](ADR-007-cancelamento-e-recuperacao.md) | aceita |

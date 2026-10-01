@@ -5,16 +5,20 @@ export interface MockRoute {
   body?: unknown;
 }
 
-export type MockRoutes = Record<string, MockRoute | (() => MockRoute)>;
+export type MockHandler = MockRoute | (() => MockRoute | Promise<MockRoute>);
+
+export type MockRoutes = Record<string, MockHandler>;
 
 export function mockApi(routes: MockRoutes) {
   const fetchMock = vi.fn((url: string, init?: RequestInit) => {
     const method = init?.method ?? 'GET';
     const handler = routes[`${method} ${url}`];
     const route = typeof handler === 'function' ? handler() : (handler ?? { status: 500 });
-    const status = route.status ?? 200;
-    const body = status === 204 ? null : JSON.stringify(route.body ?? {});
-    return Promise.resolve(new Response(body, { status }));
+    return Promise.resolve(route).then((resolved) => {
+      const status = resolved.status ?? 200;
+      const body = status === 204 ? null : JSON.stringify(resolved.body ?? {});
+      return new Response(body, { status });
+    });
   });
   vi.stubGlobal('fetch', fetchMock);
   return fetchMock;

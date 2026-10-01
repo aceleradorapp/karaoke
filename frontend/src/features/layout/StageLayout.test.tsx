@@ -1,8 +1,10 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ProfileDTO } from '@caraoke/shared';
 import { useProfileStore } from '../../stores/useProfileStore';
+import { mockApi } from '../../test/mockApi';
 import { StageLayout } from './StageLayout';
 
 const ANA: ProfileDTO = {
@@ -21,14 +23,17 @@ function CurrentLocation() {
 }
 
 function renderLayout(path = '/') {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
-    <MemoryRouter initialEntries={[path]}>
-      <Routes>
-        <Route element={<StageLayout />}>
-          <Route path="*" element={<CurrentLocation />} />
-        </Route>
-      </Routes>
-    </MemoryRouter>,
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={[path]}>
+        <Routes>
+          <Route element={<StageLayout />}>
+            <Route path="*" element={<CurrentLocation />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>,
   );
 }
 
@@ -37,6 +42,11 @@ const currentLocation = () => screen.getByTestId('location').textContent;
 describe('StageLayout', () => {
   beforeEach(() => {
     useProfileStore.setState({ currentProfile: ANA });
+    mockApi({ 'GET /api/jobs?scope=active': { body: { items: [] } } });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it('shows the main navigation and the page content', () => {

@@ -11,8 +11,8 @@
 |---|---|---|
 | 0 | Fundação e ambiente | ✅ |
 | 1 | Perfis, temas e base visual | ✅ |
-| 2 | Importação e processamento | ⬜ (próxima) |
-| 3 | Biblioteca e player | ⬜ |
+| 2 | Importação e processamento | ✅ |
+| 3 | Biblioteca e player | ⬜ (próxima) |
 | 4 | Playlists, favoritas e histórico | ⬜ |
 | 5 | Celular e QR code | ⬜ |
 | 6 | Letras inteligentes | ⬜ |
@@ -60,28 +60,28 @@
 
 | ID | Status | Tarefa | Docs | Modelo |
 |---|---|---|---|---|
-| F2-01 | ⬜ | `shared`: `parseYoutubeTitle` + `lyrics.ts` (`LyricsDoc`, `parseLrc`, `toLrc`) com testes | T-05 §5.7, T-09 §9.3 | 🟡 |
-| F2-02 | ⬜ | Backend: busca no YouTube via yt-dlp (+ cache) | T-04 §4.9, §4.6 YouTube | 🟡 |
-| F2-03 | ⬜ | Backend: import do YouTube (cria Song + Job, duplicidade, limite de 12 min) | T-04 §4.6 YouTube, T-03 §3.4 | 🟡 |
-| F2-04 | ⬜ | Backend: jobs (listar, reordenar, cancelar, retry, remover) + rotas internas progress/complete/fail + recuperação ao iniciar + eventos | T-04 §4.6 Jobs/Interno, T-03 §3.4 | 🔴 |
-| F2-05 | ⬜ | Backend: upload (multipart + meta.json) + watcher chokidar | T-04 §4.6 Uploads, §4.8 | 🟡 |
-| F2-06 | ⬜ | Worker: etapa DOWNLOAD | T-05 §5.5 | 🟢 |
-| F2-07 | ⬜ | Worker: etapa SEPARATE (Demucs, progresso, cancelamento, fallback GPU→CPU) | T-05 §5.4 §5.6 | 🔴 |
-| F2-08 | ⬜ | Worker: etapa LYRICS (LRCLIB → letra.json/lrc; PLAIN/NONE) | T-05 §5.7 | 🟡 |
-| F2-09 | ⬜ | Worker: etapa COVER | T-05 §5.9 | 🟢 |
-| F2-10 | ⬜ | Front: `realtime/` (socket + `useRealtimeSync`) | T-04 §4.7, T-06 §6.7 | 🟡 |
-| F2-11 | ⬜ | Front: `/youtube` (busca, prévia embutida, modal de confirmar importação) | T-06 §6.6 YouTube | 🟡 |
-| F2-12 | ⬜ | Front: `/enviar` (arrastar e soltar + progresso) | T-06 §6.6 Enviar | 🟢 |
-| F2-13 | ⬜ | Front: `/fila` (em tempo real, reordenar, cancelar, retry) + indicador na barra superior | T-06 §6.6 Fila | 🟡 |
-| F2-14 | ⬜ | Configurações: dispositivo com info detectada, modelo Demucs, "Atualizar yt-dlp" | T-06 §6.6 Config, T-04 §4.6 Sistema | 🟢 |
-| F2-15 | ⬜ | ✔ Verificação: importar 1 do YouTube + 1 upload (arquivo copiado na pasta) + 1 upload pela página; as 3 ficam prontas; origens apagadas; cancelar funciona | — | 🟡 |
+| F2-01 | ✅ 2026-10-01 | `shared`: `parseYoutubeTitle` + `lyrics.ts` (`LyricsDoc`, `parseLrc`, `toLrc`) com testes | T-05 §5.7, T-09 §9.3 | 🟡 |
+| F2-02 | ✅ 2026-10-01 | Backend: busca no YouTube via yt-dlp (+ cache) | T-04 §4.9, §4.6 YouTube | 🟡 |
+| F2-03 | ✅ 2026-10-01 | Backend: import do YouTube (cria Song + Job, duplicidade, limite de 12 min) | T-04 §4.6 YouTube, T-03 §3.4 | 🟡 |
+| F2-04 | ✅ 2026-10-01 | Backend: jobs (listar, reordenar, cancelar, retry, remover) + rotas internas progress/complete/fail + recuperação ao iniciar + eventos | T-04 §4.6 Jobs/Interno, T-03 §3.4 | 🔴 |
+| F2-05 | ✅ 2026-10-01 | Backend: upload (multipart + meta.json) + watcher chokidar | T-04 §4.6 Uploads, §4.8 | 🟡 |
+| F2-06 | ✅ 2026-10-01 | Worker: etapa DOWNLOAD | T-05 §5.5 | 🟢 |
+| F2-07 | ✅ 2026-10-01 | Worker: etapa SEPARATE (Demucs, progresso, cancelamento, fallback GPU→CPU) | T-05 §5.4 §5.6 | 🔴 |
+| F2-08 | ✅ 2026-10-01 | Worker: etapa LYRICS (LRCLIB → letra.json/lrc; PLAIN/NONE) | T-05 §5.7 | 🟡 |
+| F2-09 | ✅ 2026-10-01 | Worker: etapa COVER | T-05 §5.9 | 🟢 |
+| F2-10 | ✅ 2026-10-01 | Front: `realtime/` (socket + `useRealtimeSync`) | T-04 §4.7, T-06 §6.7 | 🟡 |
+| F2-11 | ✅ 2026-10-01 | Front: `/youtube` (busca, prévia embutida, modal de confirmar importação) | T-06 §6.6 YouTube | 🟡 |
+| F2-12 | ✅ 2026-10-01 | Front: `/enviar` (arrastar e soltar + progresso) | T-06 §6.6 Enviar | 🟢 |
+| F2-13 | ✅ 2026-10-01 | Front: `/fila` (em tempo real, reordenar, cancelar, retry) + indicador na barra superior | T-06 §6.6 Fila | 🟡 |
+| F2-14 | ✅ 2026-10-01 | Configurações: dispositivo com info detectada, modelo Demucs, "Atualizar yt-dlp" | T-06 §6.6 Config, T-04 §4.6 Sistema | 🟢 |
+| F2-15 | ✅ 2026-10-01 | ✔ Verificação: importar 1 do YouTube + 1 upload (arquivo copiado na pasta) + 1 upload pela página; as 3 ficam prontas; origens apagadas; cancelar funciona | — | 🟡 |
 
 ## Fase 3 — Biblioteca e player  ⭐ *primeira versão "cantável"*
 **Objetivo:** escolher uma música estilo Netflix e cantar com a letra e a voz guia.
 
 | ID | Status | Tarefa | Docs | Modelo |
 |---|---|---|---|---|
-| F3-01 | ⬜ | API de músicas: listar/buscar, detalhe, editar, excluir, `SongDTO` com URLs; `/media` estático | T-04 §4.6 Músicas, §4.2 | 🟡 |
+| F3-01 | ⬜ | (`/media` estático já existe, feito na F2) API de músicas: listar/buscar, detalhe, editar, excluir, `SongDTO` com URLs; `/media` estático | T-04 §4.6 Músicas, §4.2 | 🟡 |
 | F3-02 | ⬜ | API `GET /songs/home` (fileiras) | T-04 §4.6, T-06 §6.6 Início | 🟡 |
 | F3-03 | ⬜ | `SongCard` (capa/gradiente, hover, status de processamento) + `SongRow` (rolagem horizontal) | T-06 §6.6 SongCard | 🟡 |
 | F3-04 | ⬜ | Tela Início (hero + fileiras + estado vazio) | T-06 §6.6 Início | 🟡 |

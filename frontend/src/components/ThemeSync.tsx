@@ -12,10 +12,11 @@ export function ThemeSync() {
   const defaultTheme = useSettingsQuery().data?.['ui.defaultTheme'] ?? DEFAULT_THEME_ID;
   const profileTheme = useProfileStore((state) => state.currentProfile?.theme);
   const isProfileScreen = pathname.startsWith(PROFILE_SCREENS_PREFIX);
+  const effectiveTheme = isProfileScreen || !profileTheme ? defaultTheme : profileTheme;
 
   useEffect(() => {
-    applyTheme(isProfileScreen || !profileTheme ? defaultTheme : profileTheme);
-  }, [isProfileScreen, profileTheme, defaultTheme]);
+    applyTheme(effectiveTheme);
+  }, [effectiveTheme]);
 
   return null;
 }
