@@ -1,0 +1,11 @@
+node_modules
+dist
+build
+coverage
+storage
+worker/.venv
+backend/prisma/migrations
+package-lock.json
+vault
+docs
+*.md

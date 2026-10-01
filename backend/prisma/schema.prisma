@@ -1,0 +1,193 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Profile {
+  id         String   @id @default(cuid())
+  name       String   @db.VarChar(40)
+  avatar     String   @db.VarChar(40)
+  theme      String   @default("cinema") @db.VarChar(20)
+  isGuest    Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  lastUsedAt DateTime @default(now())
+
+  playlists    Playlist[]
+  favorites    Favorite[]
+  performances Performance[]
+  songsAdded   Song[]        @relation("SongAddedBy")
+
+  @@map("profiles")
+}
+
+enum SongSource {
+  YOUTUBE
+  UPLOAD
+}
+
+enum SongStatus {
+  QUEUED
+  PROCESSING
+  READY
+  ERROR
+}
+
+enum LyricsSource {
+  NONE
+  LRCLIB
+  PLAIN
+  ALIGNED
+  TRANSCRIBED
+  MANUAL
+}
+
+model Song {
+  id                String       @id @default(cuid())
+  title             String       @db.VarChar(200)
+  artist            String       @db.VarChar(200)
+  durationSec       Int?
+  source            SongSource
+  youtubeId         String?      @unique @db.VarChar(20)
+  originalFilename  String?      @db.VarChar(255)
+  status            SongStatus   @default(QUEUED)
+  hasInstrumental   Boolean      @default(false)
+  hasVocals         Boolean      @default(false)
+  hasCover          Boolean      @default(false)
+  hasMelody         Boolean      @default(false)
+  lyricsSource      LyricsSource @default(NONE)
+  lyricsNeedsReview Boolean      @default(false)
+  lyricsOffsetMs    Int          @default(0)
+  playCount         Int          @default(0)
+  addedById         String?
+  addedBy           Profile?     @relation("SongAddedBy", fields: [addedById], references: [id], onDelete: SetNull)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  jobs          Job[]
+  playlistItems PlaylistItem[]
+  favorites     Favorite[]
+  performances  Performance[]
+
+  @@index([status])
+  @@index([artist])
+  @@fulltext([title, artist])
+  @@map("songs")
+}
+
+enum JobStatus {
+  PENDING
+  RUNNING
+  DONE
+  FAILED
+  CANCELED
+}
+
+enum JobStep {
+  DOWNLOAD
+  SEPARATE
+  LYRICS
+  COVER
+  MELODY
+  FINALIZE
+}
+
+model Job {
+  id         String    @id @default(cuid())
+  songId     String
+  song       Song      @relation(fields: [songId], references: [id], onDelete: Cascade)
+  status     JobStatus @default(PENDING)
+  step       JobStep?
+  progress   Int       @default(0)
+  message    String?   @db.VarChar(255)
+  position   Int
+  sourcePath String?   @db.VarChar(500)
+  device     String?   @db.VarChar(40)
+  error      String?   @db.Text
+  attempts   Int       @default(0)
+  createdAt  DateTime  @default(now())
+  startedAt  DateTime?
+  finishedAt DateTime?
+
+  @@index([status, position])
+  @@map("jobs")
+}
+
+model Playlist {
+  id        String         @id @default(cuid())
+  profileId String
+  profile   Profile        @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  name      String         @db.VarChar(80)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  items     PlaylistItem[]
+
+  @@map("playlists")
+}
+
+model PlaylistItem {
+  playlistId String
+  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  songId     String
+  song       Song     @relation(fields: [songId], references: [id], onDelete: Cascade)
+  position   Int
+  addedAt    DateTime @default(now())
+
+  @@id([playlistId, songId])
+  @@index([playlistId, position])
+  @@map("playlist_items")
+}
+
+model Favorite {
+  profileId String
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  songId    String
+  song      Song     @relation(fields: [songId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([profileId, songId])
+  @@map("favorites")
+}
+
+model Performance {
+  id             String    @id @default(cuid())
+  profileId      String
+  profile        Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  songId         String
+  song           Song      @relation(fields: [songId], references: [id], onDelete: Cascade)
+  startedAt      DateTime  @default(now())
+  finishedAt     DateTime?
+  completed      Boolean   @default(false)
+  voiceGuideUsed Boolean   @default(false)
+  pitchScore     Int?
+  audienceScore  Int?
+  finalScore     Int?
+  votes          Vote[]
+
+  @@index([profileId, startedAt])
+  @@index([songId])
+  @@map("performances")
+}
+
+model Vote {
+  id            String      @id @default(cuid())
+  performanceId String
+  performance   Performance @relation(fields: [performanceId], references: [id], onDelete: Cascade)
+  voterToken    String      @db.VarChar(64)
+  stars         Int
+  createdAt     DateTime    @default(now())
+
+  @@unique([performanceId, voterToken])
+  @@map("votes")
+}
+
+model Setting {
+  key       String   @id @db.VarChar(60)
+  value     Json
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
+}
