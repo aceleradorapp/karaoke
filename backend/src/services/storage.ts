@@ -47,12 +47,14 @@ export async function deleteSongDir(songId: string): Promise<void> {
 }
 
 export async function moveToError(filePath: string): Promise<string | null> {
+  if (!filePath || !isInsideStorage(filePath)) return null;
+
   const source = path.resolve(filePath);
-  const exists = await fs.stat(source).then(
-    () => true,
+  const isFile = await fs.stat(source).then(
+    (stats) => stats.isFile(),
     () => false,
   );
-  if (!exists) return null;
+  if (!isFile) return null;
   const target = path.join(storagePaths.errorDir, `${Date.now()}-${path.basename(source)}`);
   await fs.rename(source, target);
   return target;
@@ -85,4 +87,14 @@ async function directorySize(dir: string): Promise<number> {
 
 export async function diskUsage(): Promise<{ usedBytes: number }> {
   return { usedBytes: await directorySize(storagePaths.libraryDir) };
+}
+
+export function isInsideStorage(filePath: string): boolean {
+  const relative = path.relative(storagePaths.root, path.resolve(filePath));
+  return !relative.startsWith('..') && !path.isAbsolute(relative);
+}
+
+export async function deleteOriginFile(filePath: string | null): Promise<void> {
+  if (!filePath || !isInsideStorage(filePath)) return;
+  await fs.rm(filePath, { force: true });
 }
