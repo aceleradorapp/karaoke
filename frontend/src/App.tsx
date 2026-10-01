@@ -12,6 +12,8 @@ import { SongDetailPage } from './features/songs/SongDetailPage';
 import { UploadPage } from './features/upload/UploadPage';
 import { YoutubePage } from './features/youtube/YoutubePage';
 import { PlayerPage } from './features/player/PlayerPage';
+import { FavoritesPage } from './features/playlists/FavoritesPage';
+import { HistoryPage } from './features/playlists/HistoryPage';
 import { PlaylistPage } from './features/playlists/PlaylistPage';
 import { PlaylistsPage } from './features/playlists/PlaylistsPage';
 import { LyricsSyncPage } from './features/sync/LyricsSyncPage';
@@ -34,6 +36,8 @@ export function App() {
             <Route path="/fila" element={<QueuePage />} />
             <Route path="/" element={<HomePage />} />
             <Route path="/biblioteca" element={<LibraryPage />} />
+            <Route path="/favoritas" element={<FavoritesPage />} />
+            <Route path="/historico" element={<HistoryPage />} />
             <Route path="/playlists" element={<PlaylistsPage />} />
             <Route path="/playlists/:id" element={<PlaylistPage />} />
             <Route path="/musica/:id" element={<SongDetailPage />} />
