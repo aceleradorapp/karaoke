@@ -13,8 +13,8 @@
 | 1 | Perfis, temas e base visual | ✅ |
 | 2 | Importação e processamento | ✅ |
 | 3 | Biblioteca e player | ✅ |
-| 4 | Playlists, favoritas e histórico | ⬜ (próxima) |
-| 5 | Celular e QR code | ⬜ |
+| 4 | Playlists, favoritas e histórico | ✅ |
+| 5 | Celular e QR code | ⬜ (próxima) |
 | 6 | Letras inteligentes | ⬜ |
 | 7 | Pontuação e ranking | ⬜ |
 | 8 | Publicação (futuro) | ⬜ |
@@ -100,12 +100,12 @@
 ## Fase 4 — Playlists, favoritas e histórico
 | ID | Status | Tarefa | Docs | Modelo |
 |---|---|---|---|---|
-| F4-01 | ⬜ | API de playlists (CRUD, itens, reordenar, `containsSong`) com testes | T-04 §4.6 Playlists | 🟡 |
-| F4-02 | ⬜ | API de favoritos + `isFavorite` no `SongDTO` | T-04 §4.6 Favoritos | 🟢 |
-| F4-03 | ⬜ | `PlaylistPicker` (modal com checkboxes + criar nova) ligado ao ➕ do `SongCard` | T-06 §6.6 PlaylistPicker | 🟡 |
-| F4-04 | ⬜ | `/playlists` e `/playlists/:id` (cantar tudo, aleatório, reordenar) + player com sequência | T-06 §6.6, T-07 §7.2 | 🟡 |
-| F4-05 | ⬜ | `/favoritas` e `/historico` | T-06 §6.6 | 🟢 |
-| F4-06 | ⬜ | ✔ Verificação | — | 🟢 |
+| F4-01 | ✅ 2026-10-01 | API de playlists (CRUD, itens, reordenar, `containsSong`) com testes | T-04 §4.6 Playlists | 🟡 |
+| F4-02 | ✅ 2026-10-01 | API de favoritos + `isFavorite` no `SongDTO` | T-04 §4.6 Favoritos | 🟢 |
+| F4-03 | ✅ 2026-10-01 | `PlaylistPicker` (modal com checkboxes + criar nova) ligado ao ➕ do `SongCard` | T-06 §6.6 PlaylistPicker | 🟡 |
+| F4-04 | ✅ 2026-10-01 | `/playlists` e `/playlists/:id` (cantar tudo, aleatório, reordenar) + player com sequência | T-06 §6.6, T-07 §7.2 | 🟡 |
+| F4-05 | ✅ 2026-10-01 | `/favoritas` e `/historico` | T-06 §6.6 | 🟢 |
+| F4-06 | ✅ 2026-10-01 (47 checagens no Chromium) | ✔ Verificação | — | 🟢 |
 
 ## Fase 5 — Celular e QR code
 | ID | Status | Tarefa | Docs | Modelo |
@@ -123,6 +123,7 @@
 | F6-02 | ⬜ | API: `PUT lyrics`, `lyrics/search`, `lyrics/align` (jobs só de letra) | T-04 §4.6 Músicas | 🟡 |
 | F6-03 | ⬜ | Editor de letra (texto, sincronização por toque, ajuste fino) | T-07 §7.4 | 🔴 |
 | F6-04 | ⬜ | Exibição palavra a palavra quando houver `words` | T-07 §7.3 | 🟡 |
+| F6-06 | ⬜ | **Página avançada de sincronização** pedida pelo Michael (SPEC-001): ajuste por linha, marcar tocando, ímã nos inícios de voz, desfazer, melhorar o alinhamento automático (RF11). Discutir o design antes | SPEC-001 | 🔴 |
 | F6-05 | ⬜ | ✔ Verificação com 3 músicas brasileiras sem letra sincronizada no LRCLIB | — | 🟡 |
 
 ## Fase 7 — Pontuação e ranking

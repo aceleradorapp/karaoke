@@ -1,6 +1,6 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
+import { fireEvent, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import { renderWithQuery } from '../../test/renderWithQuery';
 import { buildSong } from '../../test/songBuilder';
 import { SongRow } from './SongRow';
 
@@ -10,11 +10,7 @@ function renderRow() {
     buildSong({ title: 'Segunda' }),
     buildSong({ title: 'Terceira' }),
   ];
-  render(
-    <MemoryRouter>
-      <SongRow title="Adicionadas recentemente" songs={songs} />
-    </MemoryRouter>,
-  );
+  renderWithQuery(<SongRow title="Adicionadas recentemente" songs={songs} />);
 }
 
 describe('SongRow', () => {

@@ -2,6 +2,8 @@ import type { SongDTO } from '@caraoke/shared';
 import { Info, Play } from 'lucide-react';
 import { Link } from 'react-router';
 import { coverGradient } from '../../lib/gradient';
+import { AddToPlaylistButton } from '../playlists/AddToPlaylistButton';
+import { FavoriteButton } from '../playlists/FavoriteButton';
 
 interface HomeHeroProps {
   song: SongDTO;
@@ -40,6 +42,8 @@ export function HomeHero({ song }: HomeHeroProps) {
             <Info aria-hidden="true" className="size-5" />
             Detalhes
           </Link>
+          <AddToPlaylistButton song={song} labeled />
+          <FavoriteButton song={song} labeled />
         </div>
       </div>
     </section>

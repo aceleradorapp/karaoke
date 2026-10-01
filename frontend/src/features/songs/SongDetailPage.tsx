@@ -11,6 +11,8 @@ import { formatDuration } from '../../lib/format';
 import { coverGradient } from '../../lib/gradient';
 import { useProfileStore } from '../../stores/useProfileStore';
 import { toast } from '../../stores/useToastStore';
+import { AddToPlaylistButton } from '../playlists/AddToPlaylistButton';
+import { FavoriteButton } from '../playlists/FavoriteButton';
 import { LyricsPreview } from './LyricsPreview';
 import { SongEditor } from './SongEditor';
 import { LYRICS_LABELS, SOURCE_LABELS, describePlayCount } from './songLabels';
@@ -126,6 +128,12 @@ export function SongDetailPage() {
               >
                 Ainda não está pronta · ver a fila
               </Link>
+            )}
+            {isReady && (
+              <>
+                <AddToPlaylistButton song={song} labeled />
+                <FavoriteButton song={song} labeled />
+              </>
             )}
             {isReady && song.lyricsUrl && (
               <Link

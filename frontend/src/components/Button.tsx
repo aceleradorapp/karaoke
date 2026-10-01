@@ -3,7 +3,7 @@ import type { ButtonHTMLAttributes } from 'react';
 import { Spinner } from './Spinner';
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
-type ButtonSize = 'md' | 'lg';
+type ButtonSize = 'md' | 'lg' | 'icon';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
@@ -21,6 +21,7 @@ const VARIANT_CLASSES: Record<ButtonVariant, string> = {
 const SIZE_CLASSES: Record<ButtonSize, string> = {
   md: 'min-h-11 px-5 text-base',
   lg: 'min-h-14 px-7 text-lg',
+  icon: 'size-11 shrink-0 p-0',
 };
 
 export function Button({

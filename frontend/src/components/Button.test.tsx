@@ -14,6 +14,20 @@ describe('Button', () => {
     expect(onClick).toHaveBeenCalledTimes(1);
   });
 
+  it('has an icon size that is square and keeps no side padding for the icon to fit', () => {
+    render(
+      <Button size="icon" aria-label="Mover">
+        <svg />
+      </Button>,
+    );
+
+    const classes = screen.getByRole('button', { name: 'Mover' }).className.split(' ');
+    expect(classes).toContain('size-11');
+    expect(classes).toContain('p-0');
+    expect(classes).not.toContain('px-5');
+    expect(classes).not.toContain('min-h-11');
+  });
+
   it('is disabled and shows a spinner while loading', () => {
     const onClick = vi.fn();
     render(
