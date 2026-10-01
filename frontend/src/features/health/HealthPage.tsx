@@ -1,7 +1,5 @@
-import { THEMES } from '@caraoke/shared';
 import { useHealthQuery } from '../../api/health';
 import { useSystemInfoQuery } from '../../api/system';
-import { applyTheme } from '../../lib/theme';
 import { workerLabel } from './workerLabel';
 
 function serverLabel(isLoading: boolean, isError: boolean, version?: string): string {
@@ -41,19 +39,6 @@ export function HealthPage() {
         label={serverLabel(health.isLoading, health.isError, health.data?.version)}
       />
       <StatusLine isOk={Boolean(system.data?.worker.online)} label={workerLabel(system.data?.worker)} />
-
-      <div className="mt-2 flex flex-wrap justify-center gap-2">
-        {THEMES.map((theme) => (
-          <button
-            key={theme.id}
-            type="button"
-            onClick={() => applyTheme(theme.id)}
-            className="min-h-11 rounded-lg bg-surface-2 px-4 text-base hover:bg-primary hover:text-primary-contrast"
-          >
-            {theme.name}
-          </button>
-        ))}
-      </div>
     </div>
   );
 }

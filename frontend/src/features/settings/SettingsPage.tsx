@@ -8,6 +8,7 @@ import { useAutoSave } from '../../lib/useAutoSave';
 import { ThemePicker } from '../profiles/ThemePicker';
 import { deviceHint } from './deviceHint';
 import { SelectField, SettingsSection, ToggleField } from './fields';
+import { MyThemeField } from './MyThemeField';
 
 const DEVICE_OPTIONS = [
   { value: 'auto', label: 'Automático' },
@@ -54,9 +55,14 @@ function SettingsForm({ initialSettings }: SettingsFormProps) {
       </div>
 
       <SettingsSection title="Aparência">
+        <MyThemeField />
         <div className="flex flex-col gap-2">
           <span className="text-base font-medium">Tema da tela de perfis</span>
+          <p className="text-sm text-muted">
+            Aparece na tela "Quem vai cantar?", antes de escolher um perfil.
+          </p>
           <ThemePicker
+            label="Tema da tela de perfis"
             value={draft['ui.defaultTheme']}
             onChange={(theme) => change('ui.defaultTheme', theme)}
           />

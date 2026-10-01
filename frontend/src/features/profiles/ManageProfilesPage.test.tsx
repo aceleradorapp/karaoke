@@ -54,6 +54,25 @@ describe('ManageProfilesPage', () => {
     vi.unstubAllGlobals();
   });
 
+  it('previews the chosen theme right away and restores it when the editor closes', async () => {
+    mockApi({
+      'GET /api/profiles': { body: { items: [ANA] } },
+      [`PATCH ${PATCH_URL}`]: { body: { ...ANA, theme: 'retro' } },
+    });
+    document.documentElement.dataset.theme = 'cinema';
+    renderPage();
+    await openEditor();
+
+    fireEvent.click(screen.getByRole('radio', { name: /Retrô/ }));
+    expect(document.documentElement.dataset.theme).toBe('retro');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Concluído' }));
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: 'Editar perfil' })).not.toBeInTheDocument(),
+    );
+    expect(document.documentElement.dataset.theme).toBe('cinema');
+  });
+
   it('has no save button: edits are saved automatically', async () => {
     mockApi({ 'GET /api/profiles': { body: { items: [ANA] } } });
     renderPage();

@@ -98,6 +98,20 @@ describe('ProfilesPage', () => {
     expect(useProfileStore.getState().currentProfile).toBeNull();
   });
 
+  it('previews the theme chosen for a new profile and restores it on cancel', async () => {
+    mockApi({ 'GET /api/profiles': { body: { items: [] } } });
+    document.documentElement.dataset.theme = 'cinema';
+    renderPage();
+
+    fireEvent.click(await screen.findByRole('button', { name: /Adicionar/ }));
+    fireEvent.click(screen.getByRole('radio', { name: /Neon/ }));
+    expect(document.documentElement.dataset.theme).toBe('neon');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(document.documentElement.dataset.theme).toBe('cinema');
+  });
+
   it('validates the name before creating a profile', async () => {
     const fetchMock = mockApi({ 'GET /api/profiles': { body: { items: [] } } });
     renderPage();

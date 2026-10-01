@@ -3,6 +3,7 @@ import { useState, type FormEvent } from 'react';
 import { useCreateProfileMutation } from '../../api/profiles';
 import { Button } from '../../components/Button';
 import { Modal } from '../../components/Modal';
+import { useThemePreview } from '../../lib/useThemePreview';
 import { toast } from '../../stores/useToastStore';
 import { AvatarPicker } from './AvatarPicker';
 import { ThemePicker } from './ThemePicker';
@@ -22,6 +23,8 @@ export function CreateProfileModal({ isOpen, isGuest, onClose }: CreateProfileMo
   const [avatar, setAvatar] = useState<string>(FIRST_AVATAR_ID);
   const [theme, setTheme] = useState<string>(DEFAULT_THEME_ID);
   const [nameError, setNameError] = useState<string | null>(null);
+
+  useThemePreview(theme, isOpen && !isGuest);
 
   function resetAndClose() {
     setName('');

@@ -59,11 +59,4 @@ describe('HealthPage', () => {
     expect(await screen.findByText('Servidor indisponível')).toBeInTheDocument();
     expect(await screen.findByText('Worker offline')).toBeInTheDocument();
   });
-
-  it('lists every theme as a button', () => {
-    mockApi({});
-    renderPage();
-    expect(screen.getByRole('button', { name: 'Cinema' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Retrô' })).toBeInTheDocument();
-  });
 });
