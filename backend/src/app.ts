@@ -1,5 +1,6 @@
 import cors from '@fastify/cors';
 import multipart from '@fastify/multipart';
+import fastifyStatic from '@fastify/static';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
 import { MAX_UPLOAD_BYTES, MAX_UPLOAD_FILES } from '@caraoke/shared';
@@ -14,6 +15,7 @@ import { systemRoutes } from './modules/system/routes.js';
 import { registerAccessControl } from './plugins/access.js';
 import { registerErrorHandler } from './plugins/errors.js';
 import { registerLenientJsonParser } from './plugins/jsonBody.js';
+import { storagePaths } from './services/storage.js';
 
 const BODY_LIMIT_BYTES = 1_000_000;
 
@@ -37,6 +39,13 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   await app.register(multipart, {
     limits: { fileSize: options.maxUploadBytes ?? MAX_UPLOAD_BYTES, files: MAX_UPLOAD_FILES },
     throwFileSizeLimit: false,
+  });
+  await app.register(fastifyStatic, {
+    root: storagePaths.libraryDir,
+    prefix: '/media/',
+    index: false,
+    list: false,
+    dotfiles: 'deny',
   });
   registerErrorHandler(app);
   registerAccessControl(app);

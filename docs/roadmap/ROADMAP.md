@@ -11,8 +11,8 @@
 |---|---|---|
 | 0 | Fundação e ambiente | ✅ |
 | 1 | Perfis, temas e base visual | ✅ |
-| 2 | Importação e processamento | ⬜ (próxima) |
-| 3 | Biblioteca e player | ⬜ |
+| 2 | Importação e processamento | ✅ |
+| 3 | Biblioteca e player | ⬜ (próxima) |
 | 4 | Playlists, favoritas e histórico | ⬜ |
 | 5 | Celular e QR code | ⬜ |
 | 6 | Letras inteligentes | ⬜ |
@@ -74,14 +74,14 @@
 | F2-12 | ✅ 2026-10-01 | Front: `/enviar` (arrastar e soltar + progresso) | T-06 §6.6 Enviar | 🟢 |
 | F2-13 | ✅ 2026-10-01 | Front: `/fila` (em tempo real, reordenar, cancelar, retry) + indicador na barra superior | T-06 §6.6 Fila | 🟡 |
 | F2-14 | ✅ 2026-10-01 | Configurações: dispositivo com info detectada, modelo Demucs, "Atualizar yt-dlp" | T-06 §6.6 Config, T-04 §4.6 Sistema | 🟢 |
-| F2-15 | 🟨 | ✔ Verificação: importar 1 do YouTube + 1 upload (arquivo copiado na pasta) + 1 upload pela página; as 3 ficam prontas; origens apagadas; cancelar funciona | — | 🟡 |
+| F2-15 | ✅ 2026-10-01 | ✔ Verificação: importar 1 do YouTube + 1 upload (arquivo copiado na pasta) + 1 upload pela página; as 3 ficam prontas; origens apagadas; cancelar funciona | — | 🟡 |
 
 ## Fase 3 — Biblioteca e player  ⭐ *primeira versão "cantável"*
 **Objetivo:** escolher uma música estilo Netflix e cantar com a letra e a voz guia.
 
 | ID | Status | Tarefa | Docs | Modelo |
 |---|---|---|---|---|
-| F3-01 | ⬜ | API de músicas: listar/buscar, detalhe, editar, excluir, `SongDTO` com URLs; `/media` estático | T-04 §4.6 Músicas, §4.2 | 🟡 |
+| F3-01 | ⬜ | (`/media` estático já existe, feito na F2) API de músicas: listar/buscar, detalhe, editar, excluir, `SongDTO` com URLs; `/media` estático | T-04 §4.6 Músicas, §4.2 | 🟡 |
 | F3-02 | ⬜ | API `GET /songs/home` (fileiras) | T-04 §4.6, T-06 §6.6 Início | 🟡 |
 | F3-03 | ⬜ | `SongCard` (capa/gradiente, hover, status de processamento) + `SongRow` (rolagem horizontal) | T-06 §6.6 SongCard | 🟡 |
 | F3-04 | ⬜ | Tela Início (hero + fileiras + estado vazio) | T-06 §6.6 Início | 🟡 |

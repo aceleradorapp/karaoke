@@ -123,7 +123,7 @@ if device == "cuda":
 if device == "cpu":
     cmd[3:3] = ["-j", "2"]          # 2 threads de trabalho (4 núcleos, sem travar o PC)
 ```
-- Progresso: o Demucs escreve barras do tqdm no **stderr**, com `\r`. Leia o stderr byte a byte/por bloco, divida por `\r` ou `\n` e extraia `(\d+)%`. Mensagem: "Separando voz (CPU)… 37%".
+- Progresso: o Demucs escreve barras do tqdm no **stderr**, com `\r`. Leia por blocos e junte em linhas completas (um bloco pode cortar a linha no meio). Use **só a barra de separação** (a unidade dela é `seconds`). A barra de **download dos pesos do modelo** (só na 1ª execução, unidade `M`/`B`) vira a mensagem "Baixando o modelo de IA (só na primeira vez)…" com progresso 0. Mensagem: "Separando voz (CPU)… 37%".
 - Saída: `out_dir/<model>/<nome_sem_extensão>/vocals.mp3` e `no_vocals.mp3`.
 - Mover para `songDir/voz.mp3` e `songDir/instrumental.mp3` (criar `songDir` se não existir).
 - **Fallback:** se `returncode != 0` e o stderr contiver `CUDA out of memory` (ou `CUDA error`), reporte "Pouca memória na GPU; continuando na CPU" e execute de novo com `-d cpu`.
