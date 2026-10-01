@@ -82,15 +82,15 @@
 | ID | Status | Tarefa | Docs | Modelo |
 |---|---|---|---|---|
 | F3-01 | ✅ 2026-10-01 | (`/media` estático já existe, feito na F2) API de músicas: listar/buscar, detalhe, editar, excluir, `SongDTO` com URLs; `/media` estático | T-04 §4.6 Músicas, §4.2 | 🟡 |
-| F3-02 | 🟨 | API `GET /songs/home` (fileiras) | T-04 §4.6, T-06 §6.6 Início | 🟡 |
-| F3-03 | ⬜ | `SongCard` (capa/gradiente, hover, status de processamento) + `SongRow` (rolagem horizontal) | T-06 §6.6 SongCard | 🟡 |
+| F3-02 | ✅ 2026-10-01 | API `GET /songs/home` (fileiras) | T-04 §4.6, T-06 §6.6 Início | 🟡 |
+| F3-03 | 🟨 | `SongCard` (capa/gradiente, hover, status de processamento) + `SongRow` (rolagem horizontal) | T-06 §6.6 SongCard | 🟡 |
 | F3-04 | ⬜ | Tela Início (hero + fileiras + estado vazio) | T-06 §6.6 Início | 🟡 |
 | F3-05 | ⬜ | `/biblioteca` (busca, filtros, rolagem infinita) | T-06 §6.6 Biblioteca | 🟢 |
 | F3-06 | ⬜ | `/musica/:id` (detalhe + ações) | T-06 §6.6 Detalhe | 🟢 |
 | F3-07 | ⬜ | `KaraokeEngine` (Web Audio, sincronia, voz guia, seek, volume) | T-07 §7.2 | 🔴 |
 | F3-08 | ⬜ | `LyricsView` (linha atual/próxima, preenchimento, contagem, PLAIN/NONE) + `findLineIndex` com testes | T-07 §7.3 | 🔴 |
 | F3-09 | ⬜ | `PlayerPage`: overlay "quem canta", controles, atalhos, ajuste de atraso da letra, tela cheia | T-07 §7.1 §7.7 | 🟡 |
-| F3-10 | ⬜ | API de performances (criar/finalizar sem nota) — registra o histórico | T-04 §4.6 Apresentações | 🟢 |
+| F3-10 | ✅ 2026-10-01 | API de performances (criar/finalizar sem nota) — registra o histórico | T-04 §4.6 Apresentações | 🟢 |
 | F3-11 | ⬜ | ✔ Verificação: cantar uma música inteira na TV; voz guia liga/desliga sem engasgo; letra sincronizada; histórico gravado | — | 🟡 |
 
 ## Fase 4 — Playlists, favoritas e histórico

@@ -75,3 +75,17 @@ export const updateSongSchema = z
   .refine((changes) => Object.keys(changes).length > 0, 'Nenhuma alteração informada');
 
 export type UpdateSongInput = z.infer<typeof updateSongSchema>;
+
+export const createPerformanceSchema = z.object({
+  profileId: z.string().min(1),
+  songId: z.string().min(1),
+});
+
+export const finishPerformanceSchema = z.object({
+  completed: z.boolean(),
+  voiceGuideUsed: z.boolean(),
+  pitchScore: z.number().int().min(0).max(100).nullable(),
+});
+
+export type CreatePerformanceInput = z.infer<typeof createPerformanceSchema>;
+export type FinishPerformanceInput = z.infer<typeof finishPerformanceSchema>;

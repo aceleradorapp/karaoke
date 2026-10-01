@@ -6,6 +6,7 @@ import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod
 import { MAX_UPLOAD_BYTES, MAX_UPLOAD_FILES } from '@caraoke/shared';
 import { jobsInternalRoutes } from './modules/jobs/internalRoutes.js';
 import { jobRoutes } from './modules/jobs/routes.js';
+import { performanceRoutes } from './modules/performances/routes.js';
 import { profileRoutes } from './modules/profiles/routes.js';
 import { settingsRoutes } from './modules/settings/routes.js';
 import { songRoutes } from './modules/songs/routes.js';
@@ -53,6 +54,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
 
   await app.register(systemRoutes, { prefix: '/api' });
   await app.register(jobRoutes, { prefix: '/api' });
+  await app.register(performanceRoutes, { prefix: '/api' });
   await app.register(profileRoutes, { prefix: '/api' });
   await app.register(settingsRoutes, { prefix: '/api' });
   await app.register(songRoutes, { prefix: '/api' });
