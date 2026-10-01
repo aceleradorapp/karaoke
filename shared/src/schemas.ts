@@ -64,7 +64,7 @@ export const importYoutubeSchema = z.object({
 
 export type ImportYoutubeInput = z.infer<typeof importYoutubeSchema>;
 
-export const LYRICS_OFFSET_LIMIT_MS = 5000;
+export const LYRICS_OFFSET_LIMIT_MS = 60000;
 
 export const updateSongSchema = z
   .object({

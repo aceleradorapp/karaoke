@@ -234,7 +234,7 @@ describe('song routes', () => {
         {},
         { title: '   ' },
         { artist: '' },
-        { lyricsOffsetMs: 5001 },
+        { lyricsOffsetMs: 60001 },
         { lyricsOffsetMs: 1.5 },
       ]) {
         expect((await patch(song.id, payload)).statusCode).toBe(400);

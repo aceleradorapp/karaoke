@@ -40,6 +40,7 @@ class JobContext:
             "hasMelody": False,
             "lyricsSource": "NONE",
             "lyricsNeedsReview": False,
+            "lyricsOffsetMs": 0,
         }
         self.current_step: str | None = None
         self.process: subprocess.Popen | None = None
