@@ -4,9 +4,13 @@ import { AlertTriangle, Play } from 'lucide-react';
 import { Link } from 'react-router';
 import { ProgressRing } from '../../components/ProgressRing';
 import { coverGradient } from '../../lib/gradient';
+import { AddToPlaylistButton } from '../playlists/AddToPlaylistButton';
+import { FavoriteButton } from '../playlists/FavoriteButton';
 import { STEP_LABELS } from '../processing/jobText';
 
 const QUEUE_ROUTE = '/fila';
+const REVEAL_ON_HOVER =
+  'opacity-0 group-hover:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100';
 
 function processingLabel(song: SongDTO): string {
   const step = song.job?.step;
@@ -93,6 +97,13 @@ export function SongCard({ song, className }: SongCardProps) {
           >
             <Play aria-hidden="true" className="size-6 fill-current" />
           </Link>
+        )}
+
+        {isReady && (
+          <div className="absolute right-2 top-2 z-10 flex gap-2">
+            <FavoriteButton song={song} className={clsx(!song.isFavorite && REVEAL_ON_HOVER)} />
+            <AddToPlaylistButton song={song} className={REVEAL_ON_HOVER} />
+          </div>
         )}
       </div>
 

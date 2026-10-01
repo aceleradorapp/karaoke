@@ -102,7 +102,7 @@
 |---|---|---|---|---|
 | F4-01 | ✅ 2026-10-01 | API de playlists (CRUD, itens, reordenar, `containsSong`) com testes | T-04 §4.6 Playlists | 🟡 |
 | F4-02 | ✅ 2026-10-01 | API de favoritos + `isFavorite` no `SongDTO` | T-04 §4.6 Favoritos | 🟢 |
-| F4-03 | ⬜ | `PlaylistPicker` (modal com checkboxes + criar nova) ligado ao ➕ do `SongCard` | T-06 §6.6 PlaylistPicker | 🟡 |
+| F4-03 | ✅ 2026-10-01 | `PlaylistPicker` (modal com checkboxes + criar nova) ligado ao ➕ do `SongCard` | T-06 §6.6 PlaylistPicker | 🟡 |
 | F4-04 | ⬜ | `/playlists` e `/playlists/:id` (cantar tudo, aleatório, reordenar) + player com sequência | T-06 §6.6, T-07 §7.2 | 🟡 |
 | F4-05 | ⬜ | `/favoritas` e `/historico` | T-06 §6.6 | 🟢 |
 | F4-06 | ⬜ | ✔ Verificação | — | 🟢 |

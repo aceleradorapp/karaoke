@@ -1,17 +1,14 @@
-import { render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
+import { fireEvent, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import type { SongDTO } from '@caraoke/shared';
+import { usePlaylistPickerStore } from '../../stores/usePlaylistPickerStore';
+import { renderWithQuery } from '../../test/renderWithQuery';
 import { buildJob } from '../../test/builders';
 import { buildProcessingSong, buildSong } from '../../test/songBuilder';
 import { SongCard } from './SongCard';
 
 function renderCard(song: SongDTO) {
-  render(
-    <MemoryRouter>
-      <SongCard song={song} />
-    </MemoryRouter>,
-  );
+  renderWithQuery(<SongCard song={song} />);
 }
 
 describe('SongCard', () => {
@@ -51,6 +48,29 @@ describe('SongCard', () => {
       expect(document.querySelector('img')).toBeNull();
     });
 
+    it('has buttons to favorite the song and to add it to a playlist', () => {
+      renderCard(song);
+      expect(screen.getByRole('button', { name: 'Favoritar Evidências' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Adicionar Evidências a uma playlist' })).toBeInTheDocument();
+    });
+
+    it('opens the playlist picker for this song', () => {
+      usePlaylistPickerStore.setState({ song: null });
+      renderCard(song);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Adicionar Evidências a uma playlist' }));
+
+      expect(usePlaylistPickerStore.getState().song).toEqual({ id: 'abc', title: 'Evidências' });
+    });
+
+    it('shows the heart as pressed for a favorite song', () => {
+      renderCard({ ...song, isFavorite: true });
+      expect(screen.getByRole('button', { name: 'Tirar Evidências das favoritas' })).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      );
+    });
+
     it('warns when the lyrics need a review', () => {
       renderCard(buildSong({ lyricsNeedsReview: true }));
       expect(screen.getByText('Letra para revisar')).toBeInTheDocument();
@@ -72,6 +92,12 @@ describe('SongCard', () => {
       );
       expect(screen.getByText('Separando a voz')).toBeInTheDocument();
       expect(screen.queryByRole('link', { name: /^Cantar/ })).not.toBeInTheDocument();
+    });
+
+    it('has no favorite or playlist buttons', () => {
+      renderCard(buildProcessingSong({ title: 'Processando' }));
+      expect(screen.queryByRole('button', { name: /Favoritar/ })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /playlist/ })).not.toBeInTheDocument();
     });
 
     it('sends the user to the queue instead of the details', () => {
