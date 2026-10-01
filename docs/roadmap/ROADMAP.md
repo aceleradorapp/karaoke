@@ -89,9 +89,9 @@
 | F3-06 | ✅ 2026-10-01 | `/musica/:id` (detalhe + ações) | T-06 §6.6 Detalhe | 🟢 |
 | F3-07 | ✅ 2026-10-01 | `KaraokeEngine` (Web Audio, sincronia, voz guia, seek, volume) | T-07 §7.2 | 🔴 |
 | F3-08 | ✅ 2026-10-01 | `LyricsView` (linha atual/próxima, preenchimento, contagem, PLAIN/NONE) + `findLineIndex` com testes | T-07 §7.3 | 🔴 |
-| F3-09 | 🟨 | `PlayerPage`: overlay "quem canta", controles, atalhos, ajuste de atraso da letra, tela cheia | T-07 §7.1 §7.7 | 🟡 |
+| F3-09 | ✅ 2026-10-01 | `PlayerPage`: overlay "quem canta", controles, atalhos, ajuste de atraso da letra, tela cheia | T-07 §7.1 §7.7 | 🟡 |
 | F3-10 | ✅ 2026-10-01 | API de performances (criar/finalizar sem nota) — registra o histórico | T-04 §4.6 Apresentações | 🟢 |
-| F3-11 | ⬜ | ✔ Verificação: cantar uma música inteira na TV; voz guia liga/desliga sem engasgo; letra sincronizada; histórico gravado | — | 🟡 |
+| F3-11 | 🟨 | ✔ Verificação: cantar uma música inteira na TV; voz guia liga/desliga sem engasgo; letra sincronizada; histórico gravado | — | 🟡 |
 
 ## Fase 4 — Playlists, favoritas e histórico
 | ID | Status | Tarefa | Docs | Modelo |
