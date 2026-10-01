@@ -282,7 +282,7 @@ Regras:
 - **Mobile-first:** escreva as classes base para o celular e adicione `md:`/`lg:` para telas maiores.
 - Sem rolagem horizontal da página em nenhuma largura (exceto as fileiras de cards, que rolam de propósito).
 - Grades com `grid-cols-[repeat(auto-fill,minmax(…,1fr))]` em vez de um número fixo de colunas.
-- A barra superior do palco vira um **menu hambúrguer** abaixo de `lg`; a busca vira um ícone que expande.
+- A barra superior do palco vira um **menu hambúrguer** abaixo de `xl` (1280 px: a barra completa só cabe a partir daí); a busca vira um ícone que expande.
 - Modais: tela cheia no celular (`< sm`), centralizados com largura máxima nas telas maiores.
 - Player: a letra usa `clamp()`; os controles se reorganizam em 2 linhas no celular.
 - Hover não pode ser o único jeito de acessar uma ação (em telas de toque, os botões do `SongCard` ficam sempre visíveis ou aparecem com um toque).

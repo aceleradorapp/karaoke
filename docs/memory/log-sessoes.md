@@ -2,6 +2,13 @@
 
 > Entradas mais recentes no topo. Use `/fim-sessao` para registrar.
 
+## 2026-10-01 (noite, 2) — Fase 1 concluída
+**Feito:** F1-01 a F1-08 — API de perfis, componentes base responsivos e hook useAutoSave, tela "Quem vai cantar?", gerenciar perfis com auto-save, guarda de rota + ThemeSync, layout do palco com barra superior responsiva, API de configurações e tela /configuracoes. Branches main/develop criadas e publicadas; fase desenvolvida em feature/f1-perfis-e-temas.
+**Verificado:** 45 testes backend, 73 frontend, 10 worker; typecheck, build e Prettier ok. Verificação ponta a ponta em navegador real (Playwright/Chromium instalado só na pasta temporária, fora do repositório) com 55 checagens: criação de perfis pela interface, tema por perfil, persistência após recarregar, auto-save, sem rolagem horizontal em 375/768/1366/1920 px, hambúrguer, modal em tela cheia no celular.
+**Bugs achados só no navegador (e corrigidos):** perfis alinhados à esquerda (agora centralizados); ícone de QR aparecendo no celular (classe hidden perdia para inline-flex, trocado por max-sm:hidden); barra superior quebrando em 2 linhas em 1366 px (fonte base sobe para 18 px a partir de 1280 px; hambúrguer agora abaixo de xl e nome do perfil só a partir de 2xl).
+**Decisões/desvios:** hambúrguer abaixo de xl (doc 06 atualizado); cliente HTTP só envia Content-Type JSON quando há corpo (Fastify rejeita corpo vazio com JSON); ThemeSync é o único ponto que aplica tema; a barra tem placeholders para a fila (/fila) e o QR code (desabilitado até a F5).
+**Próximos passos:** Fase 2 (importação e processamento): YouTube, upload, fila e etapas do worker.
+
 ## 2026-10-01 (noite) — Fase 0 concluída
 **Feito:** F0-06 a F0-14 — monorepo (workspaces, Prettier, tsconfig base, .env), pacote shared, backend Fastify (env Zod, erros, storage, Socket.IO, health, rotas internas do worker, controle de acesso), Prisma (schema completo, migration init, seed), frontend Vite/React/Tailwind 4 com 4 temas, worker Python (heartbeat + claim + detecção GPU/CPU), venv com torch cu124.
 **Verificado:** npm run dev sobe api+web+worker; worker aparece online (CPU, GT 1030 detectada com 2 GB); 30 testes backend, 5 frontend, 10 worker; typecheck e build ok.

@@ -1,5 +1,6 @@
-import type { AppSettings } from '@caraoke/shared';
+import type { AppSettings, UpdateSettingsInput } from '@caraoke/shared';
 import { prisma } from '../../db.js';
+import { emitToRoom } from '../../realtime.js';
 import { ACCESS_CODE_SETTING_KEY, DEFAULT_APP_SETTINGS } from './defaults.js';
 
 export async function getAppSettings(): Promise<AppSettings> {
@@ -13,4 +14,19 @@ export async function getAppSettings(): Promise<AppSettings> {
 export async function getAccessCode(): Promise<string | null> {
   const row = await prisma.setting.findUnique({ where: { key: ACCESS_CODE_SETTING_KEY } });
   return typeof row?.value === 'string' ? row.value : null;
+}
+
+export async function updateAppSettings(changes: UpdateSettingsInput): Promise<AppSettings> {
+  await prisma.$transaction(
+    Object.entries(changes).map(([key, value]) =>
+      prisma.setting.upsert({
+        where: { key },
+        update: { value: value as never },
+        create: { key, value: value as never },
+      }),
+    ),
+  );
+  const settings = await getAppSettings();
+  emitToRoom('stage', 'settings:updated', settings);
+  return settings;
 }
