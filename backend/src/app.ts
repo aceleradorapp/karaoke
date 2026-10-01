@@ -13,6 +13,7 @@ import { youtubeRoutes } from './modules/youtube/routes.js';
 import { systemRoutes } from './modules/system/routes.js';
 import { registerAccessControl } from './plugins/access.js';
 import { registerErrorHandler } from './plugins/errors.js';
+import { registerLenientJsonParser } from './plugins/jsonBody.js';
 
 const BODY_LIMIT_BYTES = 1_000_000;
 
@@ -28,6 +29,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     bodyLimit: BODY_LIMIT_BYTES,
   });
 
+  registerLenientJsonParser(app);
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
 

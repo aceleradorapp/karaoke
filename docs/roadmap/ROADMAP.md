@@ -65,11 +65,11 @@
 | F2-03 | ✅ 2026-10-01 | Backend: import do YouTube (cria Song + Job, duplicidade, limite de 12 min) | T-04 §4.6 YouTube, T-03 §3.4 | 🟡 |
 | F2-04 | ✅ 2026-10-01 | Backend: jobs (listar, reordenar, cancelar, retry, remover) + rotas internas progress/complete/fail + recuperação ao iniciar + eventos | T-04 §4.6 Jobs/Interno, T-03 §3.4 | 🔴 |
 | F2-05 | ✅ 2026-10-01 | Backend: upload (multipart + meta.json) + watcher chokidar | T-04 §4.6 Uploads, §4.8 | 🟡 |
-| F2-06 | 🟨 | Worker: etapa DOWNLOAD | T-05 §5.5 | 🟢 |
-| F2-07 | ⬜ | Worker: etapa SEPARATE (Demucs, progresso, cancelamento, fallback GPU→CPU) | T-05 §5.4 §5.6 | 🔴 |
-| F2-08 | ⬜ | Worker: etapa LYRICS (LRCLIB → letra.json/lrc; PLAIN/NONE) | T-05 §5.7 | 🟡 |
-| F2-09 | ⬜ | Worker: etapa COVER | T-05 §5.9 | 🟢 |
-| F2-10 | ⬜ | Front: `realtime/` (socket + `useRealtimeSync`) | T-04 §4.7, T-06 §6.7 | 🟡 |
+| F2-06 | ✅ 2026-10-01 | Worker: etapa DOWNLOAD | T-05 §5.5 | 🟢 |
+| F2-07 | ✅ 2026-10-01 | Worker: etapa SEPARATE (Demucs, progresso, cancelamento, fallback GPU→CPU) | T-05 §5.4 §5.6 | 🔴 |
+| F2-08 | ✅ 2026-10-01 | Worker: etapa LYRICS (LRCLIB → letra.json/lrc; PLAIN/NONE) | T-05 §5.7 | 🟡 |
+| F2-09 | ✅ 2026-10-01 | Worker: etapa COVER | T-05 §5.9 | 🟢 |
+| F2-10 | 🟨 | Front: `realtime/` (socket + `useRealtimeSync`) | T-04 §4.7, T-06 §6.7 | 🟡 |
 | F2-11 | ⬜ | Front: `/youtube` (busca, prévia embutida, modal de confirmar importação) | T-06 §6.6 YouTube | 🟡 |
 | F2-12 | ⬜ | Front: `/enviar` (arrastar e soltar + progresso) | T-06 §6.6 Enviar | 🟢 |
 | F2-13 | ⬜ | Front: `/fila` (em tempo real, reordenar, cancelar, retry) + indicador na barra superior | T-06 §6.6 Fila | 🟡 |

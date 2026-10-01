@@ -16,10 +16,13 @@ GPU_SEGMENT_SECONDS = 4
 CPU_WORKER_JOBS = 2
 READ_CHUNK_BYTES = 4096
 OUTPUT_TAIL_CHARS = 4000
+MAX_PERCENT = 100
 VOCALS_FILE = "vocals.mp3"
 INSTRUMENTAL_FILE = "no_vocals.mp3"
 GPU_MEMORY_ERRORS = ("out of memory", "cuda error")
-PROGRESS_PATTERN = re.compile(r"(\d{1,3})%")
+PROGRESS_BAR_PATTERN = re.compile(r"(\d{1,3})%\|")
+SEGMENT_SEPARATOR = re.compile(r"[\r\n]")
+SEPARATION_BAR_UNIT = "second"
 
 
 def build_command(source: Path, output_dir: Path, model: str, device: str) -> list[str]:
@@ -47,14 +50,45 @@ def build_command(source: Path, output_dir: Path, model: str, device: str) -> li
     return command
 
 
-def parse_progress(text: str) -> int | None:
-    matches = PROGRESS_PATTERN.findall(text)
-    return min(100, int(matches[-1])) if matches else None
+def _bar_percent(segment: str) -> int | None:
+    match = PROGRESS_BAR_PATTERN.search(segment)
+    return min(MAX_PERCENT, int(match.group(1))) if match else None
+
+
+def parse_separation_percent(segment: str) -> int | None:
+    is_separation_bar = SEPARATION_BAR_UNIT in segment.lower()
+    return _bar_percent(segment) if is_separation_bar else None
+
+
+def parse_model_download_percent(segment: str) -> int | None:
+    is_separation_bar = SEPARATION_BAR_UNIT in segment.lower()
+    return None if is_separation_bar else _bar_percent(segment)
+
+
+class OutputSegments:
+    def __init__(self) -> None:
+        self._partial = ""
+
+    def feed(self, text: str) -> list[str]:
+        parts = SEGMENT_SEPARATOR.split(self._partial + text)
+        self._partial = parts.pop()
+        return [part for part in parts if part]
 
 
 def is_gpu_memory_failure(output_tail: str) -> bool:
     lowered = output_tail.lower()
     return any(marker in lowered for marker in GPU_MEMORY_ERRORS)
+
+
+def report_segment(context: JobContext, segment: str, label: str) -> None:
+    separation = parse_separation_percent(segment)
+    if separation is not None:
+        context.report("SEPARATE", separation, f"Separando voz ({label})… {separation}%", label)
+        return
+
+    download = parse_model_download_percent(segment)
+    if download is not None:
+        context.report("SEPARATE", 0, f"Baixando o modelo de IA (só na primeira vez)… {download}%", label)
 
 
 def run_demucs(context: JobContext, source: Path, device: str, model: str) -> tuple[int, str]:
@@ -72,15 +106,15 @@ def run_demucs(context: JobContext, source: Path, device: str, model: str) -> tu
     )
     context.process = process
 
+    segments = OutputSegments()
     output_tail = ""
     try:
         assert process.stdout is not None
         while chunk := process.stdout.read1(READ_CHUNK_BYTES):
             text = chunk.decode("utf-8", errors="replace")
             output_tail = (output_tail + text)[-OUTPUT_TAIL_CHARS:]
-            percent = parse_progress(text)
-            if percent is not None:
-                context.report("SEPARATE", percent, f"Separando voz ({label})… {percent}%", label)
+            for segment in segments.feed(text):
+                report_segment(context, segment, label)
         process.wait()
     finally:
         if process.poll() is None:

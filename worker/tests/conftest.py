@@ -87,6 +87,7 @@ def make_context(storage_dir: Path, clock: FakeClock):
         api: FakeApi | None = None,
         hardware: dict[str, Any] = HARDWARE_CPU_ONLY,
         settings: dict[str, Any] | None = None,
+        clock_override: Any = None,
         **claim_options: Any,
     ) -> JobContext:
         fake_api = api or FakeApi()
@@ -95,7 +96,7 @@ def make_context(storage_dir: Path, clock: FakeClock):
             build_claim(storage_dir, **claim_options),
             settings or {},
             hardware,
-            clock,
+            clock_override or clock,
         )
 
     return factory

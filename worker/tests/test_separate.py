@@ -41,18 +41,38 @@ class TestBuildCommand:
         assert command[command.index("-n") + 1] == "htdemucs_ft"
 
 
-class TestParseProgress:
-    def test_reads_a_percentage_from_a_tqdm_line(self):
-        assert separate.parse_progress(" 37%|███▋      | 26.0/70.2 [00:08<00:14]") == 37
+class TestProgressParsing:
+    SEPARATION_BAR = " 37%|###7      | 21.6/58.5 [00:08<00:14,  1.2seconds/s]"
+    MODEL_DOWNLOAD_BAR = " 42%|####2     | 33.7M/80.2M [00:02<00:03, 15.0MB/s]"
 
-    def test_returns_the_latest_value_when_several_updates_arrive_together(self):
-        assert separate.parse_progress("\r 10%|█\r 11%|█\r 12%|█") == 12
+    def test_reads_the_percentage_of_the_separation_bar(self):
+        assert separate.parse_separation_percent(self.SEPARATION_BAR) == 37
 
-    def test_ignores_chunks_without_a_percentage(self):
-        assert separate.parse_progress("Selected model is a bag of 1 models.") is None
+    def test_ignores_the_model_download_bar_when_looking_for_separation_progress(self):
+        assert separate.parse_separation_percent(self.MODEL_DOWNLOAD_BAR) is None
+
+    def test_reads_the_percentage_of_the_model_download_bar(self):
+        assert separate.parse_model_download_percent(self.MODEL_DOWNLOAD_BAR) == 42
+        assert separate.parse_model_download_percent(self.SEPARATION_BAR) is None
+
+    def test_ignores_text_that_is_not_a_progress_bar(self):
+        line = "Selected model is a bag of 1 models."
+        assert separate.parse_separation_percent(line) is None
+        assert separate.parse_model_download_percent(line) is None
 
     def test_never_goes_above_one_hundred(self):
-        assert separate.parse_progress("999%") == 100
+        assert separate.parse_separation_percent("999%|#| 1/1 [00:01<00:00, 1seconds/s]") == 100
+
+
+class TestOutputSegments:
+    def test_returns_only_complete_segments_and_keeps_the_rest(self):
+        segments = separate.OutputSegments()
+
+        assert segments.feed("first\rsecond\rthi") == ["first", "second"]
+        assert segments.feed("rd\r\n") == ["third"]
+
+    def test_skips_empty_segments(self):
+        assert separate.OutputSegments().feed("a\r\n\r\nb\r") == ["a", "b"]
 
 
 def test_recognizes_gpu_memory_failures():
@@ -216,3 +236,103 @@ def test_fails_with_install_instructions_when_ffmpeg_is_missing(make_context, so
 
     with pytest.raises(StepError, match="winget install"):
         separate.run(separation_context(make_context, source_file))
+
+
+REAL_DEMUCS_OUTPUT = (
+    'Downloading: "https://dl.fbaipublicfiles.com/demucs/hybrid_transformer/955717e8-8726e21a.th"\r\n'
+    "\r  0%|          | 0.00/80.2M [00:00<?, ?B/s]"
+    "\r 50%|#####     | 40.1M/80.2M [00:02<00:02, 15.0MB/s]"
+    "\r100%|##########| 80.2M/80.2M [00:05<00:00, 16.0MB/s]\r\n"
+    "Selected model is a bag of 1 models. You will see that many progress bars per track.\r\n"
+    "\r  0%|          | 0.0/58.5 [00:00<?, ?seconds/s]"
+    "\r 10%|#         | 5.85/58.5 [00:17<02:38,  3.01s/seconds]"
+    "\r 50%|#####     | 29.2/58.5 [00:30<00:30,  1.00s/seconds]"
+    "\r100%|##########| 58.5/58.5 [00:50<00:00,  1.59seconds/s]\r\n"
+)
+
+
+class FakeStream:
+    def __init__(self, data: bytes, chunk_size: int) -> None:
+        self._data = data
+        self._chunk_size = chunk_size
+
+    def read1(self, size: int) -> bytes:
+        chunk, self._data = self._data[: self._chunk_size], self._data[self._chunk_size :]
+        return chunk
+
+
+class FakeProcess:
+    returncode = 0
+
+    def __init__(self, data: bytes, chunk_size: int) -> None:
+        self.stdout = FakeStream(data, chunk_size)
+
+    def wait(self):
+        return self.returncode
+
+    def poll(self):
+        return self.returncode
+
+    def kill(self):
+        pass
+
+
+class KillTrackingProcess(FakeProcess):
+    def __init__(self, data: bytes, chunk_size: int) -> None:
+        super().__init__(data, chunk_size)
+        self.killed = False
+        self.returncode = None
+
+    def poll(self):
+        return 1 if self.killed else None
+
+    def kill(self):
+        self.killed = True
+        self.returncode = 1
+
+    def wait(self):
+        return self.returncode
+
+
+def test_kills_the_demucs_process_as_soon_as_the_job_is_canceled(make_context, source_file, monkeypatch):
+    from caraoke_worker.errors import JobCanceled
+
+    process = KillTrackingProcess(REAL_DEMUCS_OUTPUT.encode(), 64)
+    monkeypatch.setattr(separate.subprocess, "Popen", lambda *args, **kwargs: process)
+    context = make_context(
+        FakeApi(cancel_on_call=2), source_path=str(source_file), steps=["SEPARATE"], clock_override=ticking_clock()
+    )
+
+    with pytest.raises(JobCanceled):
+        separate.run_demucs(context, source_file, "cpu", "htdemucs")
+
+    assert process.killed is True
+    assert context.process is None
+
+
+def ticking_clock():
+    ticks = iter(range(0, 10_000, 2))
+    return lambda: next(ticks)
+
+
+@pytest.mark.parametrize("chunk_size", [4096, 64, 7])
+def test_reads_real_demucs_output_without_confusing_the_model_download_with_the_separation(
+    make_context, source_file, monkeypatch, chunk_size
+):
+    monkeypatch.setattr(
+        separate.subprocess, "Popen", lambda *args, **kwargs: FakeProcess(REAL_DEMUCS_OUTPUT.encode(), chunk_size)
+    )
+    api = FakeApi()
+    context = make_context(api, source_path=str(source_file), steps=["SEPARATE"], clock_override=ticking_clock())
+
+    return_code, _ = separate.run_demucs(context, source_file, "cpu", "htdemucs")
+
+    assert return_code == 0
+    separating = [call["progress"] for call in api.progress_calls if "Separando" in (call["message"] or "")]
+    downloading = [call["message"] for call in api.progress_calls if "Baixando o modelo" in (call["message"] or "")]
+    assert separating == sorted(separating)
+    assert separating[0] == 0 and 10 in separating and 50 in separating
+    assert any("só na primeira vez" in message for message in downloading)
+    assert all(
+        call["progress"] == 0 for call in api.progress_calls if "Baixando o modelo" in (call["message"] or "")
+    )
