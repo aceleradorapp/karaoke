@@ -4,7 +4,7 @@ export const LYRICS_LABELS: Record<LyricsSource, string> = {
   NONE: 'Não encontrada',
   LRCLIB: 'Sincronizada (LRCLIB)',
   PLAIN: 'Sem sincronia (só o texto)',
-  ALIGNED: 'Sincronizada por IA',
+  ALIGNED: 'Alinhada com a voz',
   TRANSCRIBED: 'Transcrita por IA (vale revisar)',
   MANUAL: 'Editada manualmente',
 };

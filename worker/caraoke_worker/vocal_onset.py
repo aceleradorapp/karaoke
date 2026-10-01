@@ -7,16 +7,13 @@ from .tools import find_ffmpeg
 
 SAMPLE_RATE = 8000
 HOP_SECONDS = 0.05
-ANALYZED_SECONDS = 150
+ANALYZED_SECONDS = 600
 REFERENCE_PERCENTILE = 90
 THRESHOLD_RATIO = 0.15
 SUSTAIN_SECONDS = 0.5
 SUSTAIN_MIN_FRACTION = 0.8
 MIN_REFERENCE_LEVEL = 1e-4
-
-MIN_SHIFT_SECONDS = 1.0
-MAX_SHIFT_SECONDS = 60.0
-MILLISECONDS_PER_SECOND = 1000
+PHRASE_GAP_SECONDS = 0.5
 
 
 def compute_envelope(samples: np.ndarray, sample_rate: int = SAMPLE_RATE) -> np.ndarray:
@@ -28,14 +25,21 @@ def compute_envelope(samples: np.ndarray, sample_rate: int = SAMPLE_RATE) -> np.
     return np.sqrt((trimmed**2).mean(axis=1)).astype(np.float32)
 
 
-def find_onset(envelope: np.ndarray) -> float | None:
+def loud_mask(envelope: np.ndarray) -> np.ndarray | None:
     if len(envelope) == 0:
         return None
-    reference = float(np.percentile(envelope, REFERENCE_PERCENTILE))
-    if reference < MIN_REFERENCE_LEVEL:
+    audible = envelope[envelope > MIN_REFERENCE_LEVEL]
+    if len(audible) == 0:
+        return None
+    reference = float(np.percentile(audible, REFERENCE_PERCENTILE))
+    return envelope > reference * THRESHOLD_RATIO
+
+
+def find_onset(envelope: np.ndarray) -> float | None:
+    loud = loud_mask(envelope)
+    if loud is None:
         return None
 
-    loud = envelope > reference * THRESHOLD_RATIO
     window = max(1, int(round(SUSTAIN_SECONDS / HOP_SECONDS)))
     if len(loud) < window:
         return None
@@ -48,6 +52,20 @@ def find_onset(envelope: np.ndarray) -> float | None:
     while not loud[first]:
         first += 1
     return first * HOP_SECONDS
+
+
+def find_phrase_onsets(envelope: np.ndarray) -> np.ndarray:
+    loud = loud_mask(envelope)
+    if loud is None:
+        return np.zeros(0)
+
+    gap = int(round(PHRASE_GAP_SECONDS / HOP_SECONDS))
+    onsets = [
+        index * HOP_SECONDS
+        for index in range(len(loud))
+        if loud[index] and not loud[max(0, index - gap) : index].any()
+    ]
+    return np.array(onsets)
 
 
 def decode_samples(path: Path) -> np.ndarray | None:
@@ -64,17 +82,8 @@ def decode_samples(path: Path) -> np.ndarray | None:
     return np.frombuffer(completed.stdout, dtype=np.float32)
 
 
-def detect_vocal_onset(path: Path) -> float | None:
+def analyze_vocals(path: Path) -> np.ndarray | None:
     samples = decode_samples(path)
     if samples is None:
         return None
-    return find_onset(compute_envelope(samples))
-
-
-def suggest_offset_ms(first_line_start: float, onset: float | None) -> int:
-    if onset is None:
-        return 0
-    shift = onset - first_line_start
-    if abs(shift) < MIN_SHIFT_SECONDS or abs(shift) > MAX_SHIFT_SECONDS:
-        return 0
-    return int(round(shift * MILLISECONDS_PER_SECOND))
+    return compute_envelope(samples)

@@ -4,10 +4,10 @@ import pytest
 from caraoke_worker import vocal_onset
 from caraoke_worker.vocal_onset import (
     HOP_SECONDS,
+    analyze_vocals,
     compute_envelope,
-    detect_vocal_onset,
     find_onset,
-    suggest_offset_ms,
+    find_phrase_onsets,
 )
 
 RATE = vocal_onset.SAMPLE_RATE
@@ -58,25 +58,30 @@ def test_voice_from_the_very_first_second_starts_at_zero():
     assert find_onset(compute_envelope(tone(10.0, 0.4))) == pytest.approx(0.0, abs=0.05)
 
 
-def test_suggests_a_delay_when_the_voice_comes_later_than_the_lyrics():
-    assert suggest_offset_ms(19.24, 34.7) == 15460
+def test_finds_the_start_of_every_phrase_separated_by_a_pause():
+    audio = np.concatenate([silence(5.0), tone(3.0, 0.4), silence(2.0), tone(4.0, 0.4), silence(6.0), tone(2.0, 0.4)])
+
+    onsets = find_phrase_onsets(compute_envelope(audio))
+
+    assert onsets == pytest.approx([5.0, 10.0, 20.0], abs=0.1)
 
 
-def test_suggests_an_advance_when_the_voice_comes_earlier():
-    assert suggest_offset_ms(20.0, 12.5) == -7500
+def test_a_breath_shorter_than_the_pause_does_not_start_a_new_phrase():
+    audio = np.concatenate([silence(2.0), tone(3.0, 0.4), silence(0.3), tone(3.0, 0.4)])
+    assert find_phrase_onsets(compute_envelope(audio)) == pytest.approx([2.0], abs=0.1)
 
 
-@pytest.mark.parametrize("onset", [None, 19.8, 18.9, 200.0])
-def test_does_not_touch_small_or_absurd_differences(onset):
-    assert suggest_offset_ms(19.24, onset) == 0
+def test_there_are_no_phrases_in_silence_or_in_nothing():
+    assert len(find_phrase_onsets(compute_envelope(silence(5.0)))) == 0
+    assert len(find_phrase_onsets(np.zeros(0, dtype=np.float32))) == 0
 
 
-def test_detect_returns_none_without_ffmpeg(monkeypatch, tmp_path):
+def test_analysis_returns_none_without_ffmpeg(monkeypatch, tmp_path):
     monkeypatch.setattr(vocal_onset, "find_ffmpeg", lambda: None)
-    assert detect_vocal_onset(tmp_path / "voz.mp3") is None
+    assert analyze_vocals(tmp_path / "voz.mp3") is None
 
 
-def test_detect_returns_none_when_decoding_fails(monkeypatch, tmp_path):
+def test_analysis_returns_none_when_decoding_fails(monkeypatch, tmp_path):
     monkeypatch.setattr(vocal_onset, "find_ffmpeg", lambda: tmp_path / "ffmpeg")
 
     class Failed:
@@ -84,4 +89,19 @@ def test_detect_returns_none_when_decoding_fails(monkeypatch, tmp_path):
         stdout = b""
 
     monkeypatch.setattr(vocal_onset.subprocess, "run", lambda *args, **kwargs: Failed())
-    assert detect_vocal_onset(tmp_path / "voz.mp3") is None
+    assert analyze_vocals(tmp_path / "voz.mp3") is None
+
+
+def test_analysis_builds_the_envelope_from_the_decoded_audio(monkeypatch, tmp_path):
+    monkeypatch.setattr(vocal_onset, "find_ffmpeg", lambda: tmp_path / "ffmpeg")
+    audio = tone(2.0, 0.5)
+
+    class Decoded:
+        returncode = 0
+        stdout = audio.tobytes()
+
+    monkeypatch.setattr(vocal_onset.subprocess, "run", lambda *args, **kwargs: Decoded())
+
+    envelope = analyze_vocals(tmp_path / "voz.mp3")
+
+    assert envelope is not None and len(envelope) == int(2.0 / HOP_SECONDS)

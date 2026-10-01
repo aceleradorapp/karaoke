@@ -1,13 +1,21 @@
 import type { SongDTO } from '@caraoke/shared';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { KaraokeEngine } from '../../lib/audio/KaraokeEngine';
-import { analyzeVocals, normalizeForDrawing } from '../../lib/lyrics/vocalAnalysis';
+import {
+  analyzeVocals,
+  findPhraseOnsets,
+  findVocalEnd,
+  normalizeForDrawing,
+} from '../../lib/lyrics/vocalAnalysis';
 
 export type PreviewStatus = 'loading' | 'ready' | 'error';
 
 export interface VoiceProfile {
   envelope: Float32Array;
+  drawing: Float32Array;
   onset: number | null;
+  onsets: number[];
+  voiceEnd: number | null;
   duration: number;
 }
 
@@ -55,8 +63,11 @@ export function useSyncPreview(song: SongDTO): SyncPreview {
         instance.setVoiceGuide(true);
         setDuration(instance.duration);
         setProfile({
-          envelope: normalizeForDrawing(analysis.envelope),
+          envelope: analysis.envelope,
+          drawing: normalizeForDrawing(analysis.envelope),
           onset: analysis.onset,
+          onsets: findPhraseOnsets(analysis.envelope),
+          voiceEnd: findVocalEnd(analysis.envelope),
           duration: analysis.duration,
         });
         setStatus('ready');
