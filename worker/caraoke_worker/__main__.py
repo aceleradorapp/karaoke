@@ -12,7 +12,7 @@ from .runner import run_job
 logger = logging.getLogger("caraoke_worker")
 
 
-def poll_forever(api: Api, poll_interval_seconds: float) -> None:
+def poll_forever(api: Api, hardware: dict, poll_interval_seconds: float) -> None:
     while True:
         try:
             claim = api.claim()
@@ -25,7 +25,10 @@ def poll_forever(api: Api, poll_interval_seconds: float) -> None:
             time.sleep(poll_interval_seconds)
             continue
 
-        run_job(claim)
+        try:
+            run_job(api, claim, hardware)
+        except Exception:
+            logger.exception("Could not finish job handling; continuing with the queue")
 
 
 def main() -> None:
@@ -39,10 +42,12 @@ def main() -> None:
     logger.info("Worker started: %s", hardware)
 
     heartbeat = HeartbeatThread(api, hardware, config.heartbeat_interval_seconds)
-    heartbeat.start()
 
     try:
-        poll_forever(api, config.poll_interval_seconds)
+        while not heartbeat.send_once():
+            time.sleep(BACKEND_RETRY_SECONDS)
+        heartbeat.start()
+        poll_forever(api, hardware, config.poll_interval_seconds)
     except KeyboardInterrupt:
         logger.info("Worker stopped")
     finally:

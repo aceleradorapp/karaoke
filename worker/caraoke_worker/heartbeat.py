@@ -1,5 +1,6 @@
 import logging
 import threading
+import uuid
 from typing import Any
 
 from .api import Api
@@ -25,24 +26,27 @@ class HeartbeatThread(threading.Thread):
         self._hardware = hardware
         self._interval_seconds = interval_seconds
         self._stop_event = threading.Event()
+        self.instance_id = uuid.uuid4().hex
 
     def stop(self) -> None:
         self._stop_event.set()
 
     def run(self) -> None:
-        while not self._stop_event.is_set():
-            self._send_once()
-            self._stop_event.wait(self._interval_seconds)
+        while not self._stop_event.wait(self._interval_seconds):
+            self.send_once()
 
-    def _send_once(self) -> None:
+    def send_once(self) -> bool:
         try:
             mode = self._api.settings().get(SETTINGS_DEVICE_KEY, DEVICE_AUTO)
             self._api.heartbeat(self._build_payload(mode))
+            return True
         except Exception as error:
             logger.warning("Heartbeat failed: %s", error)
+            return False
 
     def _build_payload(self, mode: str) -> dict[str, Any]:
         return {
+            "instanceId": self.instance_id,
             "device": resolve_device(mode, self._hardware),
             "ytdlpVersion": read_ytdlp_version(),
             **self._hardware,
