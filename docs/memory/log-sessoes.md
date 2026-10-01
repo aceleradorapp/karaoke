@@ -2,6 +2,15 @@
 
 > Entradas mais recentes no topo. Use `/fim-sessao` para registrar.
 
+## 2026-10-01 (noite, 5) — Sincronização da letra com a voz
+**Problema:** a letra do LRCLIB entrava ~15,5 s antes da voz em "À Sua Maneira" (o vídeo do YouTube tem introdução maior que a gravação da letra), e o ajuste manual era limitado a ±5 s.
+**Feito (F3-12 a F3-15):** (1) o worker mede onde a voz começa na faixa separada (numpy + FFmpeg) e grava o atraso da letra ao concluir o job (só aplica diferenças entre 1 s e 60 s); (2) limite do atraso subiu para ±60 s; (3) nova tela `/musica/:id/sincronizar`: linha do tempo com a onda da voz e as linhas da letra arrastáveis, "Alinhar com a voz", "Ouvir e marcar" (descontando 0,15 s de reação), passos de 5 s a 0,01 s, zoom, prévia de como aparece no karaokê, atalhos e auto-save; (4) link "Sincronizar a letra" no detalhe da música.
+**Verificado:** pytest 141, backend 203, frontend com testes novos; no Chromium com a música real: a análise achou a voz em 34,8 s (letra em 19,2 s), o alinhamento aplicou +15,51 s, o arraste, os passos, o recarregar e o player (antes da voz a letra não entra; com a voz cantando aparece a 1ª linha) funcionaram; 375/768/1366/1920 px sem rolagem horizontal.
+**Bugs achados só no navegador (corrigidos):** (a) a URL da letra muda a cada salvamento (`?v=updatedAt`), o que fazia a tela de sincronizar remontar e recarregar o áudio a cada auto-save (e o player piscar a letra): a consulta da letra agora mantém o dado anterior; (b) lista "Linha para marcar" esmagada em 375 px; (c) detecção da voz começava até 2 passos antes (corrigido no worker e no front).
+**Decisões:** a música de teste ficou alinhada com +15,51 s (era o objetivo). O alinhamento só olha o começo da voz: vale para deslocamento fixo; versões com cortes no meio dependem do alinhamento por IA da Fase 6.
+**Pendência:** o job completo (baixar, separar, buscar letra e alinhar) com uma música nova não foi rodado de ponta a ponta (a separação leva ~6 min na CPU); as partes foram testadas por unidade e a detecção foi conferida no arquivo real.
+**Próximos passos:** Fase 4 (playlists, favoritas e histórico).
+
 ## 2026-10-01 (noite, 4) — Fase 3 concluída
 **Feito:** F3-01 a F3-11 — API de músicas (busca por tokens, filtros, ordenações, cursor), Início estilo Netflix (destaque + fileiras), Biblioteca com busca/filtros, detalhe com editor (auto-save) e letra, engine de áudio (Web Audio: instrumental + voz guia em sincronia), letra sincronizada com preenchimento por palavra e contagem regressiva, player com atalhos, atraso da letra salvo sozinho, histórico de apresentações, confirmação ao remover da fila.
 **Verificado:** typecheck, testes (shared, backend 200, frontend 380, worker 121), build e Prettier. No Chromium real com a música "À Sua Maneira": 61 checagens (áudio rodando e com som, voz guia desligada por padrão e liga/desliga sem engasgo, letra acompanhando o tempo em 9 amostras, pausa/seek/atalhos, atraso salvo, fim da música, "Cantar de novo", sair no meio, áudio liberado, sem rolagem horizontal em 375/768/1366/1920 px).

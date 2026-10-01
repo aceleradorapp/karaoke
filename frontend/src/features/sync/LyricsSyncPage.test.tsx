@@ -276,6 +276,26 @@ describe('LyricsSyncPage', () => {
       await waitFor(() => expect(patchBodies(fetchMock)).toEqual([{ lyricsOffsetMs: 2340 }]));
     });
 
+    it('keeps the screen and the audio in place when saving changes the lyrics address', async () => {
+      const newUrl = '/media/s1/letra.json?v=2';
+      const { fetchMock } = await renderReady(
+        baseRoutes(readySong(), LYRICS, {
+          'PATCH /api/songs/s1': { body: readySong({ lyricsUrl: newUrl, lyricsOffsetMs: 1000 }) },
+          [`GET ${newUrl}`]: { body: LYRICS },
+        }),
+      );
+      const engine = latestEngine();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Atrasar a letra 1 s' }));
+      await waitFor(() => expect(requestsTo(fetchMock, 'GET', newUrl)).toHaveLength(1));
+
+      expect(screen.queryByRole('status')).not.toBeInTheDocument();
+      expect(screen.getByTestId('timeline')).toBeInTheDocument();
+      expect(audioMock.state.instances).toEqual([engine]);
+      expect(engine.destroyed).toBe(false);
+      expect(screen.getByRole('button', { name: /Voltar ao de quando abri/ })).toBeEnabled();
+    });
+
     it('saves only the last value after several quick changes', async () => {
       const { fetchMock } = await renderReady();
 
@@ -377,7 +397,7 @@ describe('LyricsSyncPage', () => {
     it('seeks when the user touches the waveform', async () => {
       await renderReady();
       fireEvent.click(screen.getByRole('button', { name: 'tocar na onda' }));
-      expect(latestEngine().seeks).toEqual([77]);
+      expect(latestEngine().seeks).toEqual([19.24 - 3, 77]);
     });
 
     it('changes the zoom of the timeline', async () => {

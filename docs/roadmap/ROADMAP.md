@@ -95,7 +95,7 @@
 | F3-12 | ✅ 2026-10-01 | Sincronização automática: o worker acha onde a voz começa (faixa de voz) e grava o atraso da letra; limite do atraso sobe para ±60 s | T-05 | 🟡 |
 | F3-13 | ✅ 2026-10-01 | Biblioteca de análise da voz no front (envelope + início da voz) | T-06 | 🟡 |
 | F3-14 | ✅ 2026-10-01 | Tela "Sincronizar a letra" (/musica/:id/sincronizar): linha do tempo com a voz, arrastar a letra, ouvir e marcar, passos de ajuste, auto-save | T-06 | 🔴 |
-| F3-15 | ⬜ | ✔ Verificação real da sincronização no navegador | — | 🟡 |
+| F3-15 | ✅ 2026-10-01 (44 checagens no Chromium) | ✔ Verificação real da sincronização no navegador | — | 🟡 |
 
 ## Fase 4 — Playlists, favoritas e histórico
 | ID | Status | Tarefa | Docs | Modelo |

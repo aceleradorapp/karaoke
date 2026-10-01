@@ -1,7 +1,7 @@
 import { LYRICS_OFFSET_LIMIT_MS, type LyricsDoc, type SongDTO } from '@caraoke/shared';
 import clsx from 'clsx';
 import { ArrowLeft, Mic, MicOff, Pause, Play, SkipBack, Target, Wand2 } from 'lucide-react';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { useLyricsQuery } from '../../api/lyrics';
 import { useSongQuery, useUpdateSongMutation } from '../../api/songs';
@@ -86,11 +86,38 @@ function SyncWorkbench({ song, doc }: SyncWorkbenchProps) {
   const nudge = useCallback((deltaMs: number) => setOffsetMs((value) => clampOffset(value + deltaMs)), []);
   const setOffset = useCallback((value: number) => setOffsetMs(clampOffset(value)), []);
 
+  const firstLineTime = useCallback(
+    (offset: number) =>
+      firstLine ? firstLine.start + offset / MILLISECONDS_PER_SECOND - LEAD_IN_SECONDS : 0,
+    [firstLine],
+  );
+
+  const focusFirstLine = useCallback(
+    (offset: number) => {
+      preview.seek(Math.max(0, firstLineTime(offset)));
+      recenter();
+    },
+    [preview, firstLineTime, recenter],
+  );
+
+  const hasFocusedOnOpening = useRef(false);
+  useEffect(() => {
+    if (!isReady || hasFocusedOnOpening.current) return;
+    hasFocusedOnOpening.current = true;
+    focusFirstLine(offsetMs);
+  }, [isReady, offsetMs, focusFirstLine]);
+
+  const applySuggestion = useCallback(() => {
+    if (suggestedOffsetMs === null) return;
+    setOffset(suggestedOffsetMs);
+    focusFirstLine(suggestedOffsetMs);
+  }, [suggestedOffsetMs, setOffset, focusFirstLine]);
+
   const playFromFirstLine = useCallback(() => {
     if (!firstLine) return;
-    preview.playFrom(firstLine.start + offsetMs / MILLISECONDS_PER_SECOND - LEAD_IN_SECONDS);
+    preview.playFrom(firstLineTime(offsetMs));
     recenter();
-  }, [firstLine, offsetMs, preview, recenter]);
+  }, [firstLine, offsetMs, preview, firstLineTime, recenter]);
 
   const markTargetLine = useCallback(() => {
     const line = doc.lines[targetIndex];
@@ -149,7 +176,7 @@ function SyncWorkbench({ song, doc }: SyncWorkbenchProps) {
                 <div className="flex flex-wrap items-center gap-3">
                   <button
                     type="button"
-                    onClick={() => setOffset(suggestedOffsetMs)}
+                    onClick={applySuggestion}
                     disabled={isAligned}
                     className="inline-flex min-h-12 items-center gap-2 rounded-lg bg-primary px-5 text-base font-semibold text-primary-contrast disabled:opacity-50"
                   >
@@ -248,7 +275,7 @@ function SyncWorkbench({ song, doc }: SyncWorkbenchProps) {
               parou.
             </p>
             <div className="flex flex-wrap items-center gap-3">
-              <label className="flex min-w-0 flex-1 flex-col gap-1 text-sm text-muted sm:max-w-md">
+              <label className="flex min-w-0 basis-full flex-col gap-1 text-sm text-muted sm:max-w-md sm:flex-1 sm:basis-0">
                 Linha para marcar
                 <select
                   value={targetIndex}
@@ -265,7 +292,7 @@ function SyncWorkbench({ song, doc }: SyncWorkbenchProps) {
               <button
                 type="button"
                 onClick={markTargetLine}
-                className="inline-flex min-h-12 items-center gap-2 self-end rounded-lg bg-primary px-5 text-base font-semibold text-primary-contrast"
+                className="inline-flex min-h-12 items-center gap-2 rounded-lg bg-primary px-5 sm:self-end text-base font-semibold text-primary-contrast"
               >
                 <Target aria-hidden="true" className="size-5" />
                 Esta linha começa agora
