@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { within } from '@testing-library/react';
 import type { AppSettings, ProfileDTO } from '@caraoke/shared';
 import { useProfileStore } from '../../stores/useProfileStore';
+import { useToastStore } from '../../stores/useToastStore';
 import { mockApi, requestsTo } from '../../test/mockApi';
 import { SettingsPage } from './SettingsPage';
 
@@ -62,6 +63,7 @@ const ANA: ProfileDTO = {
 describe('SettingsPage', () => {
   beforeEach(() => {
     useProfileStore.setState({ currentProfile: null });
+    useToastStore.setState({ toasts: [] });
     document.documentElement.dataset.theme = 'cinema';
   });
 
@@ -159,6 +161,71 @@ describe('SettingsPage', () => {
       await waitFor(() => expect(requestsTo(fetchMock, 'PATCH', '/api/profiles/p1')).toHaveLength(1));
 
       expect(requestsTo(fetchMock, 'PATCH', '/api/settings')).toHaveLength(0);
+    });
+  });
+
+  describe('yt-dlp update', () => {
+    const withVersion = (version: string | null) => ({
+      'GET /api/system/info': {
+        body: { worker: { ...WORKER, ytdlpVersion: version }, storage: { usedBytes: 0, songs: 0 } },
+      },
+    });
+
+    it('shows the version in use', async () => {
+      renderPage(withVersion('2026.08.19'));
+      expect(await screen.findByText('Versão em uso: 2026.08.19')).toBeInTheDocument();
+    });
+
+    it('says the version is unknown when the worker has not reported it', async () => {
+      renderPage(withVersion(null));
+      expect(await screen.findByText('Versão em uso: desconhecida')).toBeInTheDocument();
+    });
+
+    it('updates yt-dlp and announces the new version', async () => {
+      const fetchMock = renderPage({
+        ...withVersion('2026.08.19'),
+        'POST /api/system/ytdlp/update': { body: { version: '2026.10.05' } },
+      });
+
+      fireEvent.click(await screen.findByRole('button', { name: 'Atualizar yt-dlp' }));
+
+      await waitFor(() => expect(requestsTo(fetchMock, 'POST', '/api/system/ytdlp/update')).toHaveLength(1));
+      await waitFor(() =>
+        expect(useToastStore.getState().toasts[0]?.message).toBe(
+          'yt-dlp atualizado para a versão 2026.10.05',
+        ),
+      );
+    });
+
+    it('shows a loading state while the update runs', async () => {
+      let finishUpdate: (route: { body: unknown }) => void = () => undefined;
+      renderPage({
+        ...withVersion('2026.08.19'),
+        'POST /api/system/ytdlp/update': () => new Promise((resolve) => (finishUpdate = resolve)),
+      });
+
+      const button = await screen.findByRole('button', { name: 'Atualizar yt-dlp' });
+      fireEvent.click(button);
+      await waitFor(() => expect(button).toBeDisabled());
+
+      finishUpdate({ body: { version: '2026.10.05' } });
+      await waitFor(() => expect(button).toBeEnabled());
+    });
+
+    it('explains when the update fails', async () => {
+      renderPage({
+        ...withVersion('2026.08.19'),
+        'POST /api/system/ytdlp/update': {
+          status: 502,
+          body: { error: { code: 'YTDLP_UPDATE_FAILED', message: 'Não foi possível atualizar o yt-dlp' } },
+        },
+      });
+
+      fireEvent.click(await screen.findByRole('button', { name: 'Atualizar yt-dlp' }));
+
+      await waitFor(() =>
+        expect(useToastStore.getState().toasts[0]?.message).toBe('Não foi possível atualizar o yt-dlp'),
+      );
     });
   });
 });

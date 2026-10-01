@@ -1,12 +1,10 @@
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
 import { env } from '../env.js';
 import { AppError } from '../utils/errors.js';
-
-const execFileAsync = promisify(execFile);
+import { runCommand } from './commands.js';
 
 const SEARCH_TIMEOUT_MS = 25_000;
-const MAX_OUTPUT_BYTES = 10 * 1024 * 1024;
+const VERSION_TIMEOUT_MS = 15_000;
+const UPDATE_TIMEOUT_MS = 3 * 60 * 1000;
 const BAD_GATEWAY = 502;
 
 export interface YtdlpSearchEntry {
@@ -40,14 +38,22 @@ export async function searchYoutubeEntries(query: string, limit: number): Promis
   ];
 
   try {
-    const { stdout } = await execFileAsync(env.YTDLP_PATH, args, {
-      timeout: SEARCH_TIMEOUT_MS,
-      maxBuffer: MAX_OUTPUT_BYTES,
-      windowsHide: true,
-    });
+    const stdout = await runCommand(env.YTDLP_PATH, args, { timeoutMs: SEARCH_TIMEOUT_MS });
     const response = JSON.parse(stdout) as YtdlpSearchResponse;
     return response.entries ?? [];
   } catch {
     throw searchFailed();
+  }
+}
+
+export async function updateYtdlp(): Promise<string> {
+  try {
+    await runCommand(env.PYTHON_PATH, ['-m', 'pip', 'install', '-U', 'yt-dlp'], {
+      timeoutMs: UPDATE_TIMEOUT_MS,
+    });
+    const version = await runCommand(env.YTDLP_PATH, ['--version'], { timeoutMs: VERSION_TIMEOUT_MS });
+    return version.trim();
+  } catch {
+    throw new AppError('YTDLP_UPDATE_FAILED', 'Não foi possível atualizar o yt-dlp', BAD_GATEWAY);
   }
 }
