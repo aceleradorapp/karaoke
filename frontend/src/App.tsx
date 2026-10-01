@@ -3,6 +3,7 @@ import { ThemeSync } from './components/ThemeSync';
 import { ToastViewport } from './components/ToastViewport';
 import { HealthPage } from './features/health/HealthPage';
 import { ManageProfilesPage } from './features/profiles/ManageProfilesPage';
+import { StageLayout } from './features/layout/StageLayout';
 import { ProfilesPage } from './features/profiles/ProfilesPage';
 import { RequireProfile } from './features/profiles/RequireProfile';
 
@@ -14,7 +15,9 @@ export function App() {
         <Route path="/perfis" element={<ProfilesPage />} />
         <Route path="/perfis/gerenciar" element={<ManageProfilesPage />} />
         <Route element={<RequireProfile />}>
-          <Route path="*" element={<HealthPage />} />
+          <Route element={<StageLayout />}>
+            <Route path="*" element={<HealthPage />} />
+          </Route>
         </Route>
       </Routes>
       <ToastViewport />

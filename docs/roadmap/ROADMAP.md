@@ -51,8 +51,8 @@
 | F1-03 | ✅ 2026-10-01 | Tela `/perfis` (família + convidados) + modal de criar perfil/convidado | T-06 §6.6 Perfis | 🟡 |
 | F1-04 | ✅ 2026-10-01 | `/perfis/gerenciar` (editar nome, avatar e tema; excluir com confirmação) | T-06 §6.6 | 🟢 |
 | F1-05 | ✅ 2026-10-01 | `useProfileStore` + guarda de rota (sem perfil → `/perfis`) + aplicação do tema do perfil | T-06 §6.7 | 🟢 |
-| F1-06 | 🟨 | `StageLayout` com a barra superior (links, menu do perfil, placeholders do QR e da fila) | T-06 §6.6 Barra superior | 🟡 |
-| F1-07 | ⬜ | API de settings + tela `/configuracoes` (seções Aparência e Processamento, por enquanto) | T-04 §4.6 Config, T-03 §3.3 | 🟡 |
+| F1-06 | ✅ 2026-10-01 | `StageLayout` com a barra superior (links, menu do perfil, placeholders do QR e da fila) | T-06 §6.6 Barra superior | 🟡 |
+| F1-07 | 🟨 | API de settings + tela `/configuracoes` (seções Aparência e Processamento, por enquanto) | T-04 §4.6 Config, T-03 §3.3 | 🟡 |
 | F1-08 | ⬜ | ✔ Verificação: criar 3 perfis, trocar temas, recarregar e manter o perfil | — | 🟢 |
 
 ## Fase 2 — Importação e processamento
