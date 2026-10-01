@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { updateSongSchema } from '@caraoke/shared';
 import { z } from 'zod';
+import { buildHome } from './home.js';
 import { deleteSong, getSong, listSongs, updateSong } from './service.js';
 
 const NO_CONTENT = 204;
@@ -27,6 +28,10 @@ export async function songRoutes(app: FastifyInstance): Promise<void> {
 
   typedApp.get('/songs', { schema: { querystring: listQuerySchema } }, async (request) =>
     listSongs(request.query),
+  );
+
+  typedApp.get('/songs/home', { schema: { querystring: profileQuerySchema } }, async (request) =>
+    buildHome(request.query.profileId),
   );
 
   typedApp.get(
