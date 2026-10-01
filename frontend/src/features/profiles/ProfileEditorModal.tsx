@@ -7,7 +7,6 @@ import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { Modal } from '../../components/Modal';
 import { SaveIndicator } from '../../components/SaveIndicator';
 import { useAutoSave } from '../../lib/useAutoSave';
-import { applyTheme } from '../../lib/theme';
 import { useProfileStore } from '../../stores/useProfileStore';
 import { toast } from '../../stores/useToastStore';
 import { AvatarPicker } from './AvatarPicker';
@@ -56,7 +55,6 @@ function ProfileEditorForm({ profile, onClose }: ProfileEditorFormProps) {
     const updated = await updateProfile.mutateAsync({ id: profile.id, changes });
     if (currentProfile?.id === updated.id) {
       setCurrentProfile(updated);
-      applyTheme(updated.theme);
     }
   }
 

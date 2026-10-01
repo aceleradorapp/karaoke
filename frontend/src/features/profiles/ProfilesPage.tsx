@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { useProfilesQuery, useTouchProfileMutation } from '../../api/profiles';
 import { Spinner } from '../../components/Spinner';
-import { applyTheme } from '../../lib/theme';
 import { useProfileStore } from '../../stores/useProfileStore';
 import { toast } from '../../stores/useToastStore';
 import { CreateProfileModal } from './CreateProfileModal';
@@ -20,7 +19,6 @@ export function ProfilesPage() {
     try {
       const touched = await touchProfile.mutateAsync(profile.id);
       setProfile(touched);
-      applyTheme(touched.theme);
       navigate('/');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Não foi possível entrar no perfil');

@@ -48,7 +48,6 @@ describe('ProfilesPage', () => {
   beforeEach(() => {
     useProfileStore.setState({ currentProfile: null });
     useToastStore.setState({ toasts: [] });
-    document.documentElement.dataset.theme = 'cinema';
   });
 
   afterEach(() => {
@@ -67,7 +66,7 @@ describe('ProfilesPage', () => {
     expect(within(guests).getByText('Tio Beto')).toBeInTheDocument();
   });
 
-  it('selects a profile: touches it, stores it, applies its theme and goes home', async () => {
+  it('selects a profile: touches it, stores it and goes home', async () => {
     const touched = { ...ANA, lastUsedAt: '2026-10-01T12:00:00.000Z' };
     const fetchMock = mockApi({
       'GET /api/profiles': { body: { items: [ANA] } },
@@ -80,7 +79,6 @@ describe('ProfilesPage', () => {
     expect(await screen.findByText('Início')).toBeInTheDocument();
     expect(requestsTo(fetchMock, 'POST', '/api/profiles/p1/touch')).toHaveLength(1);
     expect(useProfileStore.getState().currentProfile).toEqual(touched);
-    expect(document.documentElement.dataset.theme).toBe('neon');
   });
 
   it('stays on the page and warns when the profile cannot be selected', async () => {
