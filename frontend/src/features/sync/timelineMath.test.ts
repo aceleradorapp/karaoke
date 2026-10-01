@@ -1,14 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import type { LyricLine } from '@caraoke/shared';
 import {
   centerOn,
-  clampOffset,
   clampViewStart,
   followPlayhead,
-  offsetAfterDrag,
-  offsetToMarkLine,
-  shiftedLines,
-  snapOffset,
   timeToX,
   xToTime,
   type TimelineView,
@@ -47,48 +41,5 @@ describe('window position', () => {
   it('moves the window when the playhead nears or leaves the edge', () => {
     expect(followPlayhead(29.5, 10, 20, 200)).toBe(24.5);
     expect(followPlayhead(5, 10, 20, 200)).toBe(0);
-  });
-});
-
-describe('lyrics offset', () => {
-  it('snaps to 10 ms steps', () => {
-    expect(snapOffset(1234)).toBe(1230);
-    expect(snapOffset(-1236)).toBe(-1240);
-  });
-
-  it('stays within the limit', () => {
-    expect(clampOffset(90000)).toBe(60000);
-    expect(clampOffset(-90000)).toBe(-60000);
-  });
-
-  it('follows the finger while dragging the lyrics', () => {
-    expect(offsetAfterDrag(0, 500, VIEW)).toBe(10000);
-    expect(offsetAfterDrag(2000, -100, VIEW)).toBe(0);
-  });
-
-  it('computes the offset that makes a line start at the marked time', () => {
-    const line: LyricLine = { start: 19.24, end: 24, text: 'x' };
-    expect(offsetToMarkLine(line, 34.7)).toBe(15460);
-    expect(offsetToMarkLine(line, 10)).toBe(-9240);
-  });
-});
-
-describe('shiftedLines', () => {
-  const lines: LyricLine[] = [
-    { start: 5, end: 10, text: 'a' },
-    { start: 10, end: 15, text: 'b' },
-    { start: 40, end: 45, text: 'c' },
-  ];
-
-  it('moves every line by the offset and keeps only the visible ones', () => {
-    const visible = shiftedLines(lines, 10000, 12, 30);
-    expect(visible.map((item) => [item.index, item.start])).toEqual([
-      [0, 15],
-      [1, 20],
-    ]);
-  });
-
-  it('can move lines earlier with a negative offset', () => {
-    expect(shiftedLines(lines, -3000, 0, 8).map((item) => item.index)).toEqual([0, 1]);
   });
 });

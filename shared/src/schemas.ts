@@ -107,3 +107,40 @@ export type CreatePlaylistInput = z.infer<typeof createPlaylistSchema>;
 export type UpdatePlaylistInput = z.infer<typeof updatePlaylistSchema>;
 export type AddPlaylistItemInput = z.infer<typeof addPlaylistItemSchema>;
 export type ReorderPlaylistInput = z.infer<typeof reorderPlaylistSchema>;
+
+const LYRIC_TEXT_MAX_LENGTH = 500;
+const LYRIC_LINES_MAX = 500;
+const LYRIC_WORDS_MAX = 200;
+const LANGUAGE_MAX_LENGTH = 10;
+
+const lyricWordSchema = z
+  .object({
+    start: z.number().min(0),
+    end: z.number().min(0),
+    text: z.string().trim().min(1).max(SONG_TEXT_MAX_LENGTH),
+  })
+  .refine((word) => word.end >= word.start, 'O fim da palavra vem antes do começo');
+
+const lyricLineSchema = z
+  .object({
+    start: z.number().min(0),
+    end: z.number().min(0),
+    text: z.string().trim().min(1, 'Linha sem texto').max(LYRIC_TEXT_MAX_LENGTH),
+    words: z.array(lyricWordSchema).max(LYRIC_WORDS_MAX).optional(),
+  })
+  .refine((line) => line.end >= line.start, 'O fim da linha vem antes do começo');
+
+export const saveLyricsSchema = z
+  .object({
+    synced: z.boolean(),
+    language: z.string().trim().min(2).max(LANGUAGE_MAX_LENGTH).optional(),
+    lines: z.array(lyricLineSchema).min(1, 'A letra precisa ter ao menos uma linha').max(LYRIC_LINES_MAX),
+  })
+  .refine(
+    (doc) =>
+      !doc.synced ||
+      doc.lines.every((line, index) => index === 0 || line.start >= (doc.lines[index - 1]?.start ?? 0)),
+    'As linhas precisam estar em ordem de tempo',
+  );
+
+export type SaveLyricsInput = z.infer<typeof saveLyricsSchema>;

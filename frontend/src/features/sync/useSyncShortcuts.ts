@@ -3,13 +3,17 @@ import { useEffect, useRef } from 'react';
 export interface SyncShortcutHandlers {
   togglePlay: () => void;
   seekBy: (seconds: number) => void;
-  nudgeOffset: (deltaMs: number) => void;
+  nudgeSelected: (deltaSeconds: number) => void;
+  selectRelative: (delta: number) => void;
   markLine: () => void;
+  tapBack: () => void;
+  undo: () => void;
+  redo: () => void;
 }
 
 const SEEK_STEP_SECONDS = 5;
-const FINE_STEP_MS = 100;
-const COARSE_STEP_MS = 1000;
+const FINE_STEP_SECONDS = 0.1;
+const COARSE_STEP_SECONDS = 1;
 const TYPING_TAGS = new Set(['INPUT', 'TEXTAREA', 'SELECT']);
 
 function isTyping(target: EventTarget | null): boolean {
@@ -28,22 +32,36 @@ export function useSyncShortcuts(handlers: SyncShortcutHandlers, isEnabled: bool
     if (!isEnabled) return;
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (isTyping(event.target) || event.ctrlKey || event.metaKey || event.altKey) return;
-      if (event.key === ' ' && isButton(event.target)) return;
-
+      if (isTyping(event.target) || event.altKey) return;
       const actions = handlersRef.current;
-      const step = event.shiftKey ? COARSE_STEP_MS : FINE_STEP_MS;
+      const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
+
+      if (event.ctrlKey || event.metaKey) {
+        const wantsRedo = key === 'y' || (key === 'z' && event.shiftKey);
+        if (key === 'z' && !event.shiftKey) actions.undo();
+        else if (wantsRedo) actions.redo();
+        else return;
+        event.preventDefault();
+        return;
+      }
+
+      if ((key === ' ' || key === 'Enter') && isButton(event.target)) return;
+
       const byKey: Record<string, () => void> = {
         ' ': actions.togglePlay,
+        Enter: actions.markLine,
         m: actions.markLine,
+        Backspace: actions.tapBack,
         ArrowLeft: () => actions.seekBy(-SEEK_STEP_SECONDS),
         ArrowRight: () => actions.seekBy(SEEK_STEP_SECONDS),
-        '[': () => actions.nudgeOffset(-step),
-        ']': () => actions.nudgeOffset(step),
-        '{': () => actions.nudgeOffset(-COARSE_STEP_MS),
-        '}': () => actions.nudgeOffset(COARSE_STEP_MS),
+        ArrowUp: () => actions.selectRelative(-1),
+        ArrowDown: () => actions.selectRelative(1),
+        '[': () => actions.nudgeSelected(event.shiftKey ? -COARSE_STEP_SECONDS : -FINE_STEP_SECONDS),
+        ']': () => actions.nudgeSelected(event.shiftKey ? COARSE_STEP_SECONDS : FINE_STEP_SECONDS),
+        '{': () => actions.nudgeSelected(-COARSE_STEP_SECONDS),
+        '}': () => actions.nudgeSelected(COARSE_STEP_SECONDS),
       };
-      const action = byKey[event.key.length === 1 ? event.key.toLowerCase() : event.key];
+      const action = byKey[key];
       if (!action) return;
       event.preventDefault();
       action();

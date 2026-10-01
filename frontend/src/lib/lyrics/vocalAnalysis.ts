@@ -49,8 +49,9 @@ export function computeEnvelope(source: ChannelSource): Float32Array {
 }
 
 export function findVocalOnset(envelope: Float32Array): number | null {
-  const reference = percentile(envelope, REFERENCE_PERCENTILE);
-  if (reference < MIN_REFERENCE_LEVEL) return null;
+  const audible = envelope.filter((value) => value > MIN_REFERENCE_LEVEL);
+  if (audible.length === 0) return null;
+  const reference = percentile(audible, REFERENCE_PERCENTILE);
 
   const window = Math.max(1, Math.round(SUSTAIN_SECONDS / HOP_SECONDS));
   if (envelope.length < window) return null;
@@ -66,6 +67,38 @@ export function findVocalOnset(envelope: Float32Array): number | null {
       while ((envelope[first] as number) <= threshold) first++;
       return first * HOP_SECONDS;
     }
+  }
+  return null;
+}
+
+const PHRASE_GAP_SECONDS = 0.5;
+
+function loudThreshold(envelope: Float32Array): number | null {
+  const audible = envelope.filter((value) => value > MIN_REFERENCE_LEVEL);
+  if (audible.length === 0) return null;
+  return percentile(audible, REFERENCE_PERCENTILE) * THRESHOLD_RATIO;
+}
+
+export function findPhraseOnsets(envelope: Float32Array): number[] {
+  const threshold = loudThreshold(envelope);
+  if (threshold === null) return [];
+
+  const gap = Math.round(PHRASE_GAP_SECONDS / HOP_SECONDS);
+  const onsets: number[] = [];
+  let silentFrames = gap;
+  for (let index = 0; index < envelope.length; index++) {
+    const isLoud = (envelope[index] as number) > threshold;
+    if (isLoud && silentFrames >= gap) onsets.push(index * HOP_SECONDS);
+    silentFrames = isLoud ? 0 : silentFrames + 1;
+  }
+  return onsets;
+}
+
+export function findVocalEnd(envelope: Float32Array): number | null {
+  const threshold = loudThreshold(envelope);
+  if (threshold === null) return null;
+  for (let index = envelope.length - 1; index >= 0; index--) {
+    if ((envelope[index] as number) > threshold) return (index + 1) * HOP_SECONDS;
   }
   return null;
 }
@@ -91,8 +124,4 @@ export async function analyzeVocals(url: string): Promise<VocalAnalysis> {
   } finally {
     void context.close();
   }
-}
-
-export function offsetToAlignFirstLine(firstLineStart: number, onset: number): number {
-  return Math.round((onset - firstLineStart) * 1000);
 }

@@ -1,6 +1,6 @@
 # SPEC-001 — Página avançada de sincronização da letra
 
-- **Status:** rascunho
+- **Status:** em implementação (RF1, RF2, RF3, RF5 parcial, RF6 parcial, RF8 parcial, RF9, RF10 e RF11 feitos em 2026-10-01; faltam RF4 e RF7, que dependem do Whisper)
 - **Criada em:** 2026-10-01
 - **Fase do roadmap:** 6 (F6-03 e F6-06)
 - **Relacionadas:** tela atual `/musica/:id/sincronizar` (F3-13/F3-14), ADR a criar para o alinhamento por IA

@@ -1,23 +1,19 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { LyricsDoc, SongDTO } from '@caraoke/shared';
+import { useToastStore } from '../../stores/useToastStore';
 import { mockApi, requestsTo, type MockRoutes } from '../../test/mockApi';
 import { buildProcessingSong, buildSong } from '../../test/songBuilder';
 import { LyricsSyncPage } from './LyricsSyncPage';
 
 const audioMock = vi.hoisted(() => {
-  const state = {
-    instances: [] as unknown[],
-    failLoad: false,
-    onset: 34.65 as number | null,
-    analysisFails: false,
-  };
+  const state = { instances: [] as unknown[], failLoad: false, analysisFails: false };
 
   class FakeEngine {
     onEnded: (() => void) | null = null;
-    duration = 258;
+    duration = 100;
     time = 0;
     isPlaying = false;
     voiceGuide = false;
@@ -72,21 +68,69 @@ vi.mock('../../lib/lyrics/vocalAnalysis', async (importOriginal) => {
     ...original,
     analyzeVocals: vi.fn(async () => {
       if (audioMock.state.analysisFails) throw new Error('Não foi possível carregar a voz (404)');
-      return { envelope: new Float32Array(100).fill(0.5), onset: audioMock.state.onset, duration: 258 };
+      const envelope = new Float32Array(2000);
+      for (const [start, end] of [
+        [25, 31],
+        [33, 39],
+        [42, 48],
+        [55, 61],
+      ] as const) {
+        envelope.fill(0.4, Math.round(start / 0.05), Math.round(end / 0.05));
+      }
+      return { envelope, onset: 25, duration: 100 };
     }),
   };
 });
 
 vi.mock('./SyncTimeline', () => ({
   SyncTimeline: (props: {
-    offsetMs: number;
+    lines: Array<{ start: number }>;
+    selectedIndex: number;
     zoomSeconds: number;
-    onOffsetChange: (value: number) => void;
+    onsets: number[];
+    onSelect: (index: number) => void;
     onSeek: (seconds: number) => void;
+    onDragStart: () => void;
+    onDrag: (index: number, mode: 'move' | 'start' | 'end', delta: number) => void;
+    onDragEnd: () => void;
   }) => (
-    <div data-testid="timeline" data-offset={props.offsetMs} data-zoom={props.zoomSeconds}>
-      <button type="button" onClick={() => props.onOffsetChange(2340)}>
-        arrastar letra
+    <div
+      data-testid="timeline"
+      data-zoom={props.zoomSeconds}
+      data-selected={props.selectedIndex}
+      data-onsets={props.onsets.length}
+      data-starts={props.lines.map((line) => line.start).join(',')}
+    >
+      <button
+        type="button"
+        onClick={() => {
+          props.onSelect(1);
+          props.onDragStart();
+          props.onDrag(1, 'move', 0.5);
+          props.onDrag(1, 'move', 1.5);
+          props.onDragEnd();
+        }}
+      >
+        arrastar linha 2
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          props.onDragStart();
+          props.onDrag(0, 'end', 0.7);
+          props.onDragEnd();
+        }}
+      >
+        esticar linha 1
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          props.onDragStart();
+          props.onDragEnd();
+        }}
+      >
+        soltar sem mexer
       </button>
       <button type="button" onClick={() => props.onSeek(77)}>
         tocar na onda
@@ -104,9 +148,17 @@ const LYRICS: LyricsDoc = {
   source: 'LRCLIB',
   synced: true,
   lines: [
-    { start: 19.24, end: 27.45, text: 'Ela dormiu no calor dos meus braços' },
-    { start: 27.45, end: 35.74, text: 'E eu acordei sem saber se era um sonho' },
+    { start: 10, end: 14, text: 'Primeira linha' },
+    { start: 18, end: 24, text: 'Segunda linha' },
+    { start: 27, end: 31, text: 'Terceira linha' },
+    { start: 40, end: 44, text: 'Quarta linha' },
   ],
+};
+const UNTIMED: LyricsDoc = {
+  version: 1,
+  source: 'PLAIN',
+  synced: false,
+  lines: ['Primeira linha', 'Segunda linha', 'Terceira linha'].map((text) => ({ start: 0, end: 0, text })),
 };
 
 function readySong(overrides: Partial<SongDTO> = {}): SongDTO {
@@ -122,13 +174,21 @@ function readySong(overrides: Partial<SongDTO> = {}): SongDTO {
   });
 }
 
-function baseRoutes(song: SongDTO = readySong(), lyrics: LyricsDoc = LYRICS, extra: MockRoutes = {}) {
+function baseRoutes(
+  song: SongDTO = readySong(),
+  lyrics: LyricsDoc = LYRICS,
+  extra: MockRoutes = {},
+): MockRoutes {
   return {
     'GET /api/songs/s1': { body: song },
     [`GET ${LYRICS_URL}`]: { body: lyrics },
-    'PATCH /api/songs/s1': { body: song },
+    'PUT /api/songs/s1/lyrics': { body: song },
+    'GET /api/songs/s1/lyrics/original': {
+      status: 404,
+      body: { error: { code: 'NO_ORIGINAL_LYRICS', message: 'Sem original' } },
+    },
     ...extra,
-  } satisfies MockRoutes;
+  };
 }
 
 function renderPage(routes: MockRoutes = baseRoutes()) {
@@ -147,15 +207,26 @@ function renderPage(routes: MockRoutes = baseRoutes()) {
   return { fetchMock };
 }
 
-const patchBodies = (fetchMock: ReturnType<typeof mockApi>) =>
-  requestsTo(fetchMock, 'PATCH', '/api/songs/s1').map(([, init]) => JSON.parse(String(init?.body)));
+type SavedLine = { start: number; end: number; text: string };
 
-const currentOffset = () => screen.getByLabelText('Ajuste atual da letra').textContent;
+const savedBodies = (fetchMock: ReturnType<typeof mockApi>) =>
+  requestsTo(fetchMock, 'PUT', '/api/songs/s1/lyrics').map(
+    ([, init]) => JSON.parse(String(init?.body)) as { synced: boolean; lines: SavedLine[] },
+  );
+
+const startsOf = (body: { lines: SavedLine[] }) => body.lines.map((line) => line.start);
+const toastMessages = () => useToastStore.getState().toasts.map((toast) => toast.message);
+const timelineStarts = () => screen.getByTestId('timeline').getAttribute('data-starts');
+const lineRow = (number: number) =>
+  screen
+    .getAllByRole('listitem')
+    .find((row) => within(row).queryByLabelText(`Texto da linha ${number}`)) as HTMLElement;
+const SAVE_TIMEOUT = { timeout: 3000 };
 
 async function renderReady(routes?: MockRoutes) {
   const rendered = renderPage(routes);
-  await screen.findByRole('button', { name: 'Alinhar com a voz' }).catch(() => undefined);
-  await screen.findByTestId('timeline');
+  await screen.findByTestId('timeline').catch(() => undefined);
+  await screen.findByRole('list', { name: 'Linhas da letra' }).catch(() => undefined);
   return rendered;
 }
 
@@ -163,13 +234,12 @@ describe('LyricsSyncPage', () => {
   beforeEach(() => {
     audioMock.state.instances = [];
     audioMock.state.failLoad = false;
-    audioMock.state.onset = 34.65;
     audioMock.state.analysisFails = false;
+    useToastStore.setState({ toasts: [] });
   });
 
   afterEach(() => {
     vi.unstubAllGlobals();
-    vi.useRealTimers();
   });
 
   describe('when it cannot work', () => {
@@ -184,9 +254,9 @@ describe('LyricsSyncPage', () => {
       expect(await screen.findByText('Sem letra para sincronizar')).toBeInTheDocument();
     });
 
-    it('explains when the lyrics have no timestamps', async () => {
-      renderPage(baseRoutes(readySong(), { ...LYRICS, synced: false }));
-      expect(await screen.findByText('A letra não tem tempos')).toBeInTheDocument();
+    it('explains when the lyrics are empty', async () => {
+      renderPage(baseRoutes(readySong(), { ...LYRICS, lines: [] }));
+      expect(await screen.findByText('A letra está vazia')).toBeInTheDocument();
     });
 
     it('shows a message when the song does not exist', async () => {
@@ -213,230 +283,475 @@ describe('LyricsSyncPage', () => {
     });
   });
 
-  describe('automatic alignment', () => {
-    it('tells where the voice starts and what the alignment would be', async () => {
+  describe('opening', () => {
+    it('lists every line with its time and text, ready to be edited', async () => {
       await renderReady();
-      const panel = screen.getByRole('region', { name: 'Alinhar automaticamente' });
-      expect(panel).toHaveTextContent('0:34,7');
-      expect(panel).toHaveTextContent('0:19,2');
-      expect(panel).toHaveTextContent('15,41 s de atraso');
+
+      expect(screen.getAllByRole('listitem')).toHaveLength(4);
+      expect(screen.getByLabelText('Texto da linha 1')).toHaveValue('Primeira linha');
+      expect(within(lineRow(2)).getByText('0:18,0')).toBeInTheDocument();
+      expect(screen.getByTestId('timeline')).toHaveAttribute('data-onsets', '4');
     });
 
-    it('applies the suggestion and saves it by itself', async () => {
+    it('starts a little before the first line and saves nothing by itself', async () => {
       const { fetchMock } = await renderReady();
 
-      fireEvent.click(screen.getByRole('button', { name: 'Alinhar com a voz' }));
-
-      expect(currentOffset()).toBe('+15,41 s');
-      await waitFor(() => expect(patchBodies(fetchMock)).toEqual([{ lyricsOffsetMs: 15410 }]));
-      expect(screen.getByRole('button', { name: 'Alinhar com a voz' })).toBeDisabled();
-      expect(screen.getByText('Já está alinhada ✓')).toBeInTheDocument();
+      expect(latestEngine().seeks[0]).toBe(8);
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      expect(savedBodies(fetchMock)).toHaveLength(0);
     });
 
-    it('says so when the voice start cannot be detected', async () => {
-      audioMock.state.onset = null;
-      await renderReady();
-      expect(screen.getByText(/Não consegui achar sozinho onde a voz começa/)).toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: 'Alinhar com a voz' })).not.toBeInTheDocument();
-    });
+    it('shows the lines already moved by the offset the song had, and saves the baked times only after an edit', async () => {
+      const { fetchMock } = await renderReady(baseRoutes(readySong({ lyricsOffsetMs: 15000 })));
 
-    it('starts from the offset the song already has', async () => {
-      await renderReady(baseRoutes(readySong({ lyricsOffsetMs: 15410 })));
-      expect(currentOffset()).toBe('+15,41 s');
-      expect(screen.getByText('Já está alinhada ✓')).toBeInTheDocument();
+      expect(timelineStarts()).toBe('25,33,42,55');
+      expect(savedBodies(fetchMock)).toHaveLength(0);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Atrasar a linha 1 em 0,1 s' }));
+
+      await waitFor(() => expect(savedBodies(fetchMock)).toHaveLength(1), SAVE_TIMEOUT);
+      expect(startsOf(savedBodies(fetchMock)[0] as never)).toEqual([25.1, 33, 42, 55]);
     });
   });
 
-  describe('manual adjustment', () => {
-    it('moves the lyrics with the step buttons, in both directions', async () => {
-      await renderReady();
-
-      fireEvent.click(screen.getByRole('button', { name: 'Atrasar a letra 5 s' }));
-      fireEvent.click(screen.getByRole('button', { name: 'Atrasar a letra 0,1 s' }));
-      expect(currentOffset()).toBe('+5,10 s');
-
-      fireEvent.click(screen.getByRole('button', { name: 'Adiantar a letra 1 s' }));
-      fireEvent.click(screen.getByRole('button', { name: 'Adiantar a letra 0,01 s' }));
-      expect(currentOffset()).toBe('+4,09 s');
-      expect(screen.getByTestId('timeline')).toHaveAttribute('data-offset', '4090');
-    });
-
-    it('never goes beyond one minute', async () => {
-      await renderReady(baseRoutes(readySong({ lyricsOffsetMs: 58000 })));
-      fireEvent.click(screen.getByRole('button', { name: 'Atrasar a letra 5 s' }));
-      expect(currentOffset()).toBe('+60,00 s');
-    });
-
-    it('follows the lyrics being dragged on the timeline and saves the result', async () => {
+  describe('aligning with the voice', () => {
+    it('aligns every line with the voice, tells how, and saves by itself', async () => {
       const { fetchMock } = await renderReady();
 
-      fireEvent.click(screen.getByRole('button', { name: 'arrastar letra' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Alinhar tudo com a voz' }));
 
-      expect(currentOffset()).toBe('+2,34 s');
-      await waitFor(() => expect(patchBodies(fetchMock)).toEqual([{ lyricsOffsetMs: 2340 }]));
+      expect(timelineStarts()).toBe('25,33,42,55');
+      expect(toastMessages().join(' ')).toMatch(
+        /Alinhada com a voz: deslocamento de \+15,00 s e \d de 4 linhas/,
+      );
+      await waitFor(() => expect(savedBodies(fetchMock)).toHaveLength(1), SAVE_TIMEOUT);
+      expect(savedBodies(fetchMock)[0]).toMatchObject({ synced: true });
+      expect(startsOf(savedBodies(fetchMock)[0] as never)).toEqual([25, 33, 42, 55]);
+      expect(latestEngine().seeks.at(-1)).toBe(23);
+    });
+
+    it('can be undone and redone', async () => {
+      await renderReady();
+      fireEvent.click(screen.getByRole('button', { name: 'Alinhar tudo com a voz' }));
+
+      fireEvent.click(screen.getByRole('button', { name: 'Desfazer' }));
+      expect(timelineStarts()).toBe('10,18,27,40');
+      expect(screen.getByRole('button', { name: 'Desfazer' })).toBeDisabled();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Refazer' }));
+      expect(timelineStarts()).toBe('25,33,42,55');
+    });
+
+    it('says so when it cannot align by itself', async () => {
+      await renderReady(
+        baseRoutes(readySong(), { ...LYRICS, lines: [{ start: 100, end: 104, text: 'Só uma' }] }),
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: 'Alinhar tudo com a voz' }));
+
+      expect(toastMessages()).toContain(
+        'Não consegui alinhar sozinho. Use as ferramentas abaixo para ajustar ouvindo.',
+      );
+    });
+  });
+
+  describe('moving lines', () => {
+    it('follows a drag on the timeline as one step and saves the final position', async () => {
+      const { fetchMock } = await renderReady();
+
+      fireEvent.click(screen.getByRole('button', { name: 'arrastar linha 2' }));
+
+      expect(timelineStarts()).toBe('10,19.5,27,40');
+      expect(screen.getByTestId('timeline')).toHaveAttribute('data-selected', '1');
+      await waitFor(() => expect(savedBodies(fetchMock)).toHaveLength(1), SAVE_TIMEOUT);
+      expect(startsOf(savedBodies(fetchMock)[0] as never)).toEqual([10, 19.5, 27, 40]);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Desfazer' }));
+      expect(timelineStarts()).toBe('10,18,27,40');
+    });
+
+    it('changes only the end of a line when its edge is dragged', async () => {
+      const { fetchMock } = await renderReady();
+
+      fireEvent.click(screen.getByRole('button', { name: 'esticar linha 1' }));
+
+      await waitFor(() => expect(savedBodies(fetchMock)).toHaveLength(1), SAVE_TIMEOUT);
+      expect(savedBodies(fetchMock)[0]?.lines[0]).toEqual({ start: 10, end: 14.7, text: 'Primeira linha' });
+    });
+
+    it('records nothing when the drag does not move anything', async () => {
+      await renderReady();
+      fireEvent.click(screen.getByRole('button', { name: 'soltar sem mexer' }));
+      expect(screen.getByRole('button', { name: 'Desfazer' })).toBeDisabled();
+    });
+
+    it('nudges one line with the buttons of its row', async () => {
+      await renderReady();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Atrasar a linha 2 em 0,1 s' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Atrasar a linha 2 em 0,1 s' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Adiantar a linha 3 em 0,1 s' }));
+
+      expect(timelineStarts()).toBe('10,18.2,26.9,40');
+    });
+
+    it('takes the following lines along when asked', async () => {
+      await renderReady();
+      fireEvent.click(screen.getByLabelText('Mover leva as linhas seguintes'));
+
+      fireEvent.click(screen.getByRole('button', { name: 'Atrasar a linha 2 em 0,1 s' }));
+
+      expect(timelineStarts()).toBe('10,18.1,27.1,40.1');
+    });
+
+    it('moves the whole lyrics', async () => {
+      await renderReady();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Atrasar a letra inteira 5 s' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Adiantar a letra inteira 0,1 s' }));
+
+      expect(timelineStarts()).toBe('14.9,22.9,31.9,44.9');
+    });
+
+    it('snaps one line to the start of the voice that is close, or says there is none', async () => {
+      await renderReady(
+        baseRoutes(readySong(), {
+          ...LYRICS,
+          lines: [25.4, 33.4, 42.4, 75].map((start, index) => ({
+            start,
+            end: start + 4,
+            text: `Linha ${index + 1}`,
+          })),
+        }),
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: 'Imantar a linha 1 ao começo da voz' }));
+      expect(timelineStarts()?.split(',')[0]).toBe('25');
+
+      fireEvent.click(screen.getByRole('button', { name: 'Escolher a linha 4' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Imantar a linha escolhida' }));
+      expect(timelineStarts()?.split(',')[3]).toBe('75');
+      expect(toastMessages()).toContain('Não há começo de voz perto o bastante dessa linha.');
+    });
+  });
+
+  describe('listening and marking', () => {
+    it('plays a line from a little before it', async () => {
+      await renderReady();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Tocar a linha 3' }));
+
+      expect(latestEngine().playCalls.at(-1)).toBe(25);
+      expect(screen.getByRole('button', { name: 'Pausar' })).toBeInTheDocument();
+      expect(screen.getByTestId('timeline')).toHaveAttribute('data-selected', '2');
+    });
+
+    it('plays and pauses, turns the voice off and on, and changes the zoom', async () => {
+      await renderReady();
+      expect(latestEngine().voiceGuide).toBe(true);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Tocar' }));
+      expect(latestEngine().isPlaying).toBe(true);
+      fireEvent.click(screen.getByRole('button', { name: 'Pausar' }));
+      expect(latestEngine().isPlaying).toBe(false);
+
+      const voice = screen.getByRole('button', { name: /Voz:/ });
+      fireEvent.click(voice);
+      expect(latestEngine().voiceGuide).toBe(false);
+      expect(voice).toHaveTextContent('desligada');
+
+      fireEvent.click(screen.getByRole('button', { name: '40 s' }));
+      expect(screen.getByTestId('timeline')).toHaveAttribute('data-zoom', '40');
+    });
+
+    it('seeks when the user touches the waveform', async () => {
+      await renderReady();
+      fireEvent.click(screen.getByRole('button', { name: 'tocar na onda' }));
+      expect(latestEngine().seeks.at(-1)).toBe(77);
+    });
+
+    it('marks the start of a line at the paused position', async () => {
+      const { fetchMock } = await renderReady();
+      latestEngine().time = 30;
+
+      fireEvent.click(screen.getByRole('button', { name: 'Marcar o começo da linha 2 agora' }));
+
+      expect(timelineStarts()).toBe('10,30,30.3,43.3');
+      await waitFor(() => expect(savedBodies(fetchMock)).toHaveLength(1), SAVE_TIMEOUT);
+    });
+
+    it('discounts the reaction time when marking while the music plays', async () => {
+      await renderReady();
+      fireEvent.click(screen.getByRole('button', { name: 'Tocar' }));
+      latestEngine().time = 30;
+
+      fireEvent.click(screen.getByRole('button', { name: 'Marcar o começo da linha 2 agora' }));
+
+      expect(timelineStarts()?.split(',')[1]).toBe('29.85');
+    });
+
+    it('marks line after line in the tap mode, moving on to the next one', async () => {
+      await renderReady();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Começar a marcar' }));
+      expect(screen.getByText('Linha 1 de 4')).toBeInTheDocument();
+      latestEngine().time = 26;
+      fireEvent.click(screen.getByRole('button', { name: 'Marcar' }));
+
+      expect(screen.getByText('Linha 2 de 4')).toBeInTheDocument();
+      expect(timelineStarts()?.split(',')[0]).toBe('26');
+      latestEngine().time = 34;
+      act(() => {
+        document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      });
+
+      expect(screen.getByText('Linha 3 de 4')).toBeInTheDocument();
+      expect(timelineStarts()?.split(',').slice(0, 2).join(',')).toBe('26,34');
+    });
+
+    it('goes back one line in the tap mode and stops marking', async () => {
+      await renderReady();
+      fireEvent.click(screen.getByRole('button', { name: 'Começar a marcar' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Marcar' }));
+      expect(screen.getByText('Linha 2 de 4')).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Voltar uma linha' }));
+      expect(screen.getByText('Linha 1 de 4')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Voltar uma linha' })).toBeDisabled();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Parar de marcar' }));
+      expect(screen.getByRole('button', { name: 'Começar a marcar' })).toBeInTheDocument();
+    });
+  });
+
+  describe('lines and text', () => {
+    it('saves a corrected text when the user leaves the field', async () => {
+      const { fetchMock } = await renderReady();
+      const input = screen.getByLabelText('Texto da linha 2');
+
+      fireEvent.change(input, { target: { value: 'Segunda corrigida' } });
+      expect(savedBodies(fetchMock)).toHaveLength(0);
+      fireEvent.blur(input);
+
+      await waitFor(() => expect(savedBodies(fetchMock)).toHaveLength(1), SAVE_TIMEOUT);
+      expect(savedBodies(fetchMock)[0]?.lines[1]?.text).toBe('Segunda corrigida');
+    });
+
+    it('does not save a line without text and marks the problem', async () => {
+      const { fetchMock } = await renderReady();
+      const input = screen.getByLabelText('Texto da linha 2');
+
+      fireEvent.change(input, { target: { value: '   ' } });
+      fireEvent.blur(input);
+
+      expect(screen.getByLabelText('Texto da linha 2')).toHaveAttribute('aria-invalid', 'true');
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+      expect(savedBodies(fetchMock)).toHaveLength(0);
+    });
+
+    it('goes back to the saved text with Escape', async () => {
+      await renderReady();
+      const input = screen.getByLabelText('Texto da linha 2');
+
+      fireEvent.change(input, { target: { value: 'Mudei de ideia' } });
+      fireEvent.keyDown(input, { key: 'Escape' });
+
+      expect(input).toHaveValue('Segunda linha');
+    });
+
+    it('inserts an empty line after one, and removes a line', async () => {
+      await renderReady();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Inserir uma linha depois da 2' }));
+      expect(screen.getAllByRole('listitem')).toHaveLength(5);
+      expect(screen.getByLabelText('Texto da linha 3')).toHaveValue('');
+
+      fireEvent.click(screen.getByRole('button', { name: 'Apagar a linha 3' }));
+      expect(screen.getAllByRole('listitem')).toHaveLength(4);
+      expect(screen.getByLabelText('Texto da linha 3')).toHaveValue('Terceira linha');
+    });
+
+    it('can bring a deleted line back with undo', async () => {
+      await renderReady();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Apagar a linha 1' }));
+      expect(screen.getAllByRole('listitem')).toHaveLength(3);
+      fireEvent.click(screen.getByRole('button', { name: 'Desfazer' }));
+
+      expect(screen.getAllByRole('listitem')).toHaveLength(4);
+      expect(screen.getByLabelText('Texto da linha 1')).toHaveValue('Primeira linha');
+    });
+  });
+
+  describe('the original lyrics', () => {
+    const originalDoc: LyricsDoc = {
+      ...LYRICS,
+      lines: LYRICS.lines.map((line) => ({ ...line, start: line.start - 5, end: line.end - 5 })),
+    };
+
+    it('cannot go back to the original when there is none', async () => {
+      await renderReady();
+      expect(screen.getByRole('button', { name: 'Voltar ao original' })).toBeDisabled();
+    });
+
+    it('goes back to the original lyrics, as a step that can be undone', async () => {
+      const { fetchMock } = await renderReady(
+        baseRoutes(readySong(), LYRICS, { 'GET /api/songs/s1/lyrics/original': { body: originalDoc } }),
+      );
+      fireEvent.click(screen.getByRole('button', { name: 'Alinhar tudo com a voz' }));
+      await waitFor(() => expect(screen.getByRole('button', { name: 'Voltar ao original' })).toBeEnabled());
+
+      fireEvent.click(screen.getByRole('button', { name: 'Voltar ao original' }));
+
+      expect(timelineStarts()).toBe('5,13,22,35');
+      expect(toastMessages()).toContain('Letra original de volta. Dá para desfazer.');
+      fireEvent.click(screen.getByRole('button', { name: 'Desfazer' }));
+      expect(timelineStarts()).toBe('25,33,42,55');
+      await waitFor(() => expect(savedBodies(fetchMock).length).toBeGreaterThan(0), SAVE_TIMEOUT);
+    });
+
+    it('does not offer an original that has no times', async () => {
+      await renderReady(
+        baseRoutes(readySong(), LYRICS, { 'GET /api/songs/s1/lyrics/original': { body: UNTIMED } }),
+      );
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      expect(screen.getByRole('button', { name: 'Voltar ao original' })).toBeDisabled();
+    });
+  });
+
+  describe('lyrics without times', () => {
+    const untimedRoutes = () => baseRoutes(readySong({ lyricsSource: 'PLAIN' }), UNTIMED);
+
+    it('offers the two ways to start and hides the tools until then', async () => {
+      await renderReady(untimedRoutes());
+
+      expect(await screen.findByText('Esta letra ainda não tem tempos')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Alinhar tudo com a voz' })).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Marcar tocando a música' })).toBeInTheDocument();
+    });
+
+    it('spreads the lines over the part of the song that has voice and saves them', async () => {
+      const { fetchMock } = await renderReady(untimedRoutes());
+
+      fireEvent.click(await screen.findByRole('button', { name: 'Distribuir pela música e ajustar' }));
+
+      expect(await screen.findByRole('list', { name: 'Linhas da letra' })).toBeInTheDocument();
+      expect(timelineStarts()).toBe('25,37,49');
+      expect(screen.queryByText('Esta letra ainda não tem tempos')).not.toBeInTheDocument();
+      await waitFor(() => expect(savedBodies(fetchMock)).toHaveLength(1), SAVE_TIMEOUT);
+      expect(savedBodies(fetchMock)[0]).toMatchObject({ synced: true });
+    });
+
+    it('spreads the lines and starts marking right away', async () => {
+      await renderReady(untimedRoutes());
+
+      fireEvent.click(await screen.findByRole('button', { name: 'Marcar tocando a música' }));
+
+      expect(await screen.findByText('Linha 1 de 3')).toBeInTheDocument();
+      expect(latestEngine().seeks.at(-1)).toBe(23);
+    });
+  });
+
+  describe('keyboard', () => {
+    it('chooses lines with the arrows and nudges the chosen one with the brackets', async () => {
+      await renderReady();
+
+      act(() => {
+        document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+      });
+      expect(screen.getByTestId('timeline')).toHaveAttribute('data-selected', '1');
+      act(() => {
+        document.body.dispatchEvent(new KeyboardEvent('keydown', { key: ']', bubbles: true }));
+      });
+
+      expect(timelineStarts()).toBe('10,18.1,27,40');
+    });
+
+    it('never goes past the first or the last line with the arrows', async () => {
+      await renderReady();
+
+      act(() => {
+        document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
+      });
+      expect(screen.getByTestId('timeline')).toHaveAttribute('data-selected', '0');
+      for (let press = 0; press < 9; press++) {
+        act(() => {
+          document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+        });
+      }
+      expect(screen.getByTestId('timeline')).toHaveAttribute('data-selected', '3');
+    });
+
+    it('undoes with Ctrl+Z, plays with the space bar and marks the chosen line with Enter', async () => {
+      await renderReady();
+      fireEvent.click(screen.getByRole('button', { name: 'Atrasar a linha 1 em 0,1 s' }));
+
+      act(() => {
+        document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', ctrlKey: true, bubbles: true }));
+      });
+      expect(timelineStarts()).toBe('10,18,27,40');
+
+      act(() => {
+        document.body.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
+      });
+      expect(latestEngine().isPlaying).toBe(true);
+
+      latestEngine().isPlaying = false;
+      latestEngine().time = 12;
+      act(() => {
+        document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      });
+      expect(timelineStarts()?.split(',')[0]).toBe('11.85');
+    });
+  });
+
+  describe('saving', () => {
+    it('shows the failure to save and lets the user retry', async () => {
+      const { fetchMock } = await renderReady(
+        baseRoutes(readySong(), LYRICS, { 'PUT /api/songs/s1/lyrics': { status: 500 } }),
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: 'Atrasar a linha 1 em 0,1 s' }));
+
+      expect(await screen.findByText(/Não foi possível salvar/, undefined, SAVE_TIMEOUT)).toBeInTheDocument();
+      expect(savedBodies(fetchMock)).toHaveLength(1);
     });
 
     it('keeps the screen and the audio in place when saving changes the lyrics address', async () => {
       const newUrl = '/media/s1/letra.json?v=2';
       const { fetchMock } = await renderReady(
         baseRoutes(readySong(), LYRICS, {
-          'PATCH /api/songs/s1': { body: readySong({ lyricsUrl: newUrl, lyricsOffsetMs: 1000 }) },
+          'PUT /api/songs/s1/lyrics': { body: readySong({ lyricsUrl: newUrl, lyricsSource: 'MANUAL' }) },
           [`GET ${newUrl}`]: { body: LYRICS },
         }),
       );
       const engine = latestEngine();
 
-      fireEvent.click(screen.getByRole('button', { name: 'Atrasar a letra 1 s' }));
-      await waitFor(() => expect(requestsTo(fetchMock, 'GET', newUrl)).toHaveLength(1));
+      fireEvent.click(screen.getByRole('button', { name: 'Atrasar a linha 1 em 0,1 s' }));
+      await waitFor(() => expect(requestsTo(fetchMock, 'GET', newUrl)).toHaveLength(1), SAVE_TIMEOUT);
 
       expect(screen.queryByRole('status')).not.toBeInTheDocument();
       expect(screen.getByTestId('timeline')).toBeInTheDocument();
       expect(audioMock.state.instances).toEqual([engine]);
       expect(engine.destroyed).toBe(false);
-      expect(screen.getByRole('button', { name: /Voltar ao de quando abri/ })).toBeEnabled();
+      expect(timelineStarts()).toBe('10.1,18,27,40');
     });
 
-    it('saves only the last value after several quick changes', async () => {
+    it('saves only the last state after several quick changes', async () => {
       const { fetchMock } = await renderReady();
 
       for (let click = 0; click < 5; click++) {
-        fireEvent.click(screen.getByRole('button', { name: 'Atrasar a letra 1 s' }));
+        fireEvent.click(screen.getByRole('button', { name: 'Atrasar a letra inteira 1 s' }));
       }
 
-      await waitFor(() => expect(patchBodies(fetchMock)).toEqual([{ lyricsOffsetMs: 5000 }]));
-    });
-
-    it('clears the adjustment and goes back to what it was when the page opened', async () => {
-      await renderReady(baseRoutes(readySong({ lyricsOffsetMs: 700 })));
-      expect(screen.getByRole('button', { name: /Voltar ao de quando abri/ })).toBeDisabled();
-
-      fireEvent.click(screen.getByRole('button', { name: 'Atrasar a letra 1 s' }));
-      expect(currentOffset()).toBe('+1,70 s');
-
-      fireEvent.click(screen.getByRole('button', { name: /Voltar ao de quando abri/ }));
-      expect(currentOffset()).toBe('+0,70 s');
-
-      fireEvent.click(screen.getByRole('button', { name: /Tirar o ajuste/ }));
-      expect(currentOffset()).toBe('0,00 s');
-      expect(screen.getByRole('button', { name: /Tirar o ajuste/ })).toBeDisabled();
-    });
-
-    it('shows the failure to save and lets the user retry', async () => {
-      const { fetchMock } = await renderReady(
-        baseRoutes(readySong(), LYRICS, { 'PATCH /api/songs/s1': { status: 500 } }),
-      );
-
-      fireEvent.click(screen.getByRole('button', { name: 'Atrasar a letra 1 s' }));
-
-      expect(await screen.findByText(/Não foi possível salvar/)).toBeInTheDocument();
-      expect(patchBodies(fetchMock)).toEqual([{ lyricsOffsetMs: 1000 }]);
-    });
-  });
-
-  describe('listening and marking', () => {
-    it('plays from a little before the first line, already counting the offset', async () => {
-      await renderReady(baseRoutes(readySong({ lyricsOffsetMs: 15410 })));
-
-      fireEvent.click(screen.getByRole('button', { name: 'Da primeira linha' }));
-
-      expect(latestEngine().playCalls.at(-1)).toBeCloseTo(19.24 + 15.41 - 3, 5);
-      expect(screen.getByRole('button', { name: 'Pausar' })).toBeInTheDocument();
-    });
-
-    it('plays and pauses, and the voice starts on', async () => {
-      await renderReady();
-      expect(latestEngine().voiceGuide).toBe(true);
-
-      fireEvent.click(screen.getByRole('button', { name: 'Tocar' }));
-      expect(latestEngine().isPlaying).toBe(true);
-
-      fireEvent.click(screen.getByRole('button', { name: 'Pausar' }));
-      expect(latestEngine().isPlaying).toBe(false);
-    });
-
-    it('turns the voice off and on', async () => {
-      await renderReady();
-      const button = screen.getByRole('button', { name: /Voz:/ });
-      expect(button).toHaveTextContent('ligada');
-
-      fireEvent.click(button);
-      expect(latestEngine().voiceGuide).toBe(false);
-      expect(button).toHaveTextContent('desligada');
-      expect(button).toHaveAttribute('aria-pressed', 'false');
-    });
-
-    it('marks the chosen line at the paused position, without reaction compensation', async () => {
-      await renderReady();
-      latestEngine().time = 34.7;
-
-      fireEvent.click(screen.getByRole('button', { name: 'Esta linha começa agora' }));
-
-      expect(currentOffset()).toBe('+15,46 s');
-    });
-
-    it('marks while playing and discounts the reaction time', async () => {
-      await renderReady();
-      fireEvent.click(screen.getByRole('button', { name: 'Tocar' }));
-      latestEngine().time = 34.9;
-
-      fireEvent.click(screen.getByRole('button', { name: 'Esta linha começa agora' }));
-
-      expect(currentOffset()).toBe('+15,51 s');
-    });
-
-    it('marks another line when it is chosen in the list', async () => {
-      await renderReady();
-      fireEvent.change(screen.getByLabelText('Linha para marcar'), { target: { value: '1' } });
-      latestEngine().time = 40;
-
-      fireEvent.click(screen.getByRole('button', { name: 'Esta linha começa agora' }));
-
-      expect(currentOffset()).toBe('+12,55 s');
-    });
-
-    it('seeks when the user touches the waveform', async () => {
-      await renderReady();
-      fireEvent.click(screen.getByRole('button', { name: 'tocar na onda' }));
-      expect(latestEngine().seeks).toEqual([19.24 - 3, 77]);
-    });
-
-    it('changes the zoom of the timeline', async () => {
-      await renderReady();
-      expect(screen.getByTestId('timeline')).toHaveAttribute('data-zoom', '20');
-
-      fireEvent.click(screen.getByRole('button', { name: '40 s' }));
-
-      expect(screen.getByTestId('timeline')).toHaveAttribute('data-zoom', '40');
-      expect(screen.getByRole('button', { name: '40 s' })).toHaveAttribute('aria-pressed', 'true');
-    });
-  });
-
-  describe('keyboard', () => {
-    it('marks with M, nudges with the brackets and plays with the space bar', async () => {
-      await renderReady();
-      latestEngine().time = 20.24;
-
-      act(() => {
-        document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'm', bubbles: true }));
-      });
-      expect(currentOffset()).toBe('+1,00 s');
-
-      act(() => {
-        document.body.dispatchEvent(new KeyboardEvent('keydown', { key: ']', bubbles: true }));
-      });
-      expect(currentOffset()).toBe('+1,10 s');
-
-      act(() => {
-        document.body.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
-      });
-      expect(latestEngine().isPlaying).toBe(true);
+      await waitFor(() => expect(savedBodies(fetchMock)).toHaveLength(1), SAVE_TIMEOUT);
+      expect(startsOf(savedBodies(fetchMock)[0] as never)).toEqual([15, 23, 32, 45]);
     });
   });
 
   it('releases the audio when leaving the page', async () => {
-    const { fetchMock } = await renderReady();
+    await renderReady();
     const engine = latestEngine();
-    expect(requestsTo(fetchMock, 'GET', '/api/songs/s1')).toHaveLength(1);
 
     fireEvent.click(screen.getByRole('link', { name: /Voltar para a música/ }));
 

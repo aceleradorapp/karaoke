@@ -5,7 +5,6 @@ import {
   computeEnvelope,
   findVocalOnset,
   normalizeForDrawing,
-  offsetToAlignFirstLine,
   type ChannelSource,
 } from './vocalAnalysis';
 
@@ -81,6 +80,17 @@ describe('findVocalOnset', () => {
     expect(onset).toBeCloseTo(10.1, 1);
   });
 
+  it('finds the voice even when it takes a small part of the song', () => {
+    const { onset } = analyzeSamples(
+      source([
+        [100, 0],
+        [10, 0.4],
+        [100, 0],
+      ]),
+    );
+    expect(onset).toBeCloseTo(100, 1);
+  });
+
   it('returns null for silence and for an empty envelope', () => {
     expect(analyzeSamples(source([[10, 0]])).onset).toBeNull();
     expect(findVocalOnset(new Float32Array(0))).toBeNull();
@@ -100,15 +110,5 @@ describe('normalizeForDrawing', () => {
 
   it('keeps silence flat', () => {
     expect(Array.from(normalizeForDrawing(new Float32Array(4)))).toEqual([0, 0, 0, 0]);
-  });
-});
-
-describe('offsetToAlignFirstLine', () => {
-  it('is positive when the voice starts after the first lyric line', () => {
-    expect(offsetToAlignFirstLine(19.24, 34.65)).toBe(15410);
-  });
-
-  it('is negative when the voice starts before it', () => {
-    expect(offsetToAlignFirstLine(20, 12.5)).toBe(-7500);
   });
 });
