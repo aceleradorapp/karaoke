@@ -37,7 +37,7 @@ Roda em um PC da casa, na rede local.
 - Não adicionar dependências fora das listadas no documento técnico sem registrar o porquê.
 - Não tomar decisões de arquitetura sozinho: propor → discutir → ADR.
 - **Git**: ver "Fluxo de branches" abaixo. Commit e push das branches de trabalho estão autorizados pelo Michael; merge em `develop` e em `main` só ao fim de uma fase, depois de ele aprovar.
-- Permissões (`.claude/settings.json`): acesso amplo liberado pelo Michael; `git push`, `git reset --hard`, `git clean` e apagar pastas recursivamente pedem confirmação.
+- Permissões (`.claude/settings.json`): permissão total liberada pelo Michael (sem lista de confirmação). Não peça aprovação para executar tarefas; use bom senso em ações destrutivas e force-push.
 - Nunca commitar segredos (`.env`). Nunca tocar nos outros bancos do XAMPP (`family_manager_dev`, `furabucho_db`, `tissflow_db`).
 
 ## Fluxo de branches
