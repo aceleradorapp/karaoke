@@ -31,7 +31,7 @@ export function SongRow({ title, songs }: SongRowProps) {
           type="button"
           aria-label={`Rolar ${title} para a esquerda`}
           onClick={() => scrollBy(-1)}
-          className="absolute left-0 top-1/3 z-20 hidden size-11 -translate-x-1/2 items-center justify-center rounded-full bg-black/70 text-white opacity-0 transition hover:bg-black group-hover/row:opacity-100 focus-visible:opacity-100 md:inline-flex"
+          className="absolute left-2 top-1/3 z-20 hidden size-11 items-center justify-center rounded-full bg-black/70 text-white opacity-0 transition hover:bg-black group-hover/row:opacity-100 focus-visible:opacity-100 md:inline-flex"
         >
           <ChevronLeft aria-hidden="true" />
         </button>
@@ -51,7 +51,7 @@ export function SongRow({ title, songs }: SongRowProps) {
           type="button"
           aria-label={`Rolar ${title} para a direita`}
           onClick={() => scrollBy(1)}
-          className="absolute right-0 top-1/3 z-20 hidden size-11 translate-x-1/2 items-center justify-center rounded-full bg-black/70 text-white opacity-0 transition hover:bg-black group-hover/row:opacity-100 focus-visible:opacity-100 md:inline-flex"
+          className="absolute right-2 top-1/3 z-20 hidden size-11 items-center justify-center rounded-full bg-black/70 text-white opacity-0 transition hover:bg-black group-hover/row:opacity-100 focus-visible:opacity-100 md:inline-flex"
         >
           <ChevronRight aria-hidden="true" />
         </button>

@@ -12,8 +12,8 @@
 | 0 | Fundação e ambiente | ✅ |
 | 1 | Perfis, temas e base visual | ✅ |
 | 2 | Importação e processamento | ✅ |
-| 3 | Biblioteca e player | ⬜ (próxima) |
-| 4 | Playlists, favoritas e histórico | ⬜ |
+| 3 | Biblioteca e player | ✅ |
+| 4 | Playlists, favoritas e histórico | ⬜ (próxima) |
 | 5 | Celular e QR code | ⬜ |
 | 6 | Letras inteligentes | ⬜ |
 | 7 | Pontuação e ranking | ⬜ |
@@ -91,7 +91,7 @@
 | F3-08 | ✅ 2026-10-01 | `LyricsView` (linha atual/próxima, preenchimento, contagem, PLAIN/NONE) + `findLineIndex` com testes | T-07 §7.3 | 🔴 |
 | F3-09 | ✅ 2026-10-01 | `PlayerPage`: overlay "quem canta", controles, atalhos, ajuste de atraso da letra, tela cheia | T-07 §7.1 §7.7 | 🟡 |
 | F3-10 | ✅ 2026-10-01 | API de performances (criar/finalizar sem nota) — registra o histórico | T-04 §4.6 Apresentações | 🟢 |
-| F3-11 | 🟨 | ✔ Verificação: cantar uma música inteira na TV; voz guia liga/desliga sem engasgo; letra sincronizada; histórico gravado | — | 🟡 |
+| F3-11 | ✅ 2026-10-01 (61 checagens no Chromium, áudio real) | ✔ Verificação: cantar uma música inteira na TV; voz guia liga/desliga sem engasgo; letra sincronizada; histórico gravado | — | 🟡 |
 
 ## Fase 4 — Playlists, favoritas e histórico
 | ID | Status | Tarefa | Docs | Modelo |
