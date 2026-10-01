@@ -81,6 +81,17 @@ describe('findVocalOnset', () => {
     expect(onset).toBeCloseTo(10.1, 1);
   });
 
+  it('finds the voice even when it takes a small part of the song', () => {
+    const { onset } = analyzeSamples(
+      source([
+        [100, 0],
+        [10, 0.4],
+        [100, 0],
+      ]),
+    );
+    expect(onset).toBeCloseTo(100, 1);
+  });
+
   it('returns null for silence and for an empty envelope', () => {
     expect(analyzeSamples(source([[10, 0]])).onset).toBeNull();
     expect(findVocalOnset(new Float32Array(0))).toBeNull();

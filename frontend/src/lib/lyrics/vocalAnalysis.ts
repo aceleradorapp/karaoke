@@ -49,8 +49,9 @@ export function computeEnvelope(source: ChannelSource): Float32Array {
 }
 
 export function findVocalOnset(envelope: Float32Array): number | null {
-  const reference = percentile(envelope, REFERENCE_PERCENTILE);
-  if (reference < MIN_REFERENCE_LEVEL) return null;
+  const audible = envelope.filter((value) => value > MIN_REFERENCE_LEVEL);
+  if (audible.length === 0) return null;
+  const reference = percentile(audible, REFERENCE_PERCENTILE);
 
   const window = Math.max(1, Math.round(SUSTAIN_SECONDS / HOP_SECONDS));
   if (envelope.length < window) return null;

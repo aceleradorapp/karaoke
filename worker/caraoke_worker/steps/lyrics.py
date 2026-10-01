@@ -9,7 +9,8 @@ import requests
 from ..context import JobContext
 from ..lrc import build_document, parse_lrc, plain_text_lines, to_lrc
 from ..titles import clean_title
-from ..vocal_onset import detect_vocal_onset, suggest_offset_ms
+from ..lyric_alignment import align_lines_with_vocals
+from ..vocal_onset import analyze_vocals
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +19,7 @@ DEFAULT_USER_AGENT = "caraoke-michael/0.1 (personal use)"
 REQUEST_TIMEOUT_SECONDS = 15
 DURATION_TOLERANCE_SECONDS = 5
 NOT_FOUND = 404
+ORIGINAL_FILE = "letra.original.json"
 
 
 @dataclass
@@ -107,24 +109,27 @@ def build_result(match: LyricsMatch | None) -> tuple[dict[str, Any] | None, str,
     return None, "NONE", True
 
 
-def write_documents(context: JobContext, document: dict[str, Any]) -> None:
+def write_documents(context: JobContext, document: dict[str, Any], original: dict[str, Any] | None = None) -> None:
     context.song_dir.mkdir(parents=True, exist_ok=True)
     (context.song_dir / "letra.json").write_text(json.dumps(document, ensure_ascii=False), encoding="utf-8")
+    if original is not None:
+        (context.song_dir / ORIGINAL_FILE).write_text(json.dumps(original, ensure_ascii=False), encoding="utf-8")
     if document["synced"]:
         (context.song_dir / "letra.lrc").write_text(to_lrc(document["lines"]), encoding="utf-8")
 
 
-def align_with_vocals(context: JobContext, document: dict[str, Any]) -> int:
+def align_with_vocals(context: JobContext, document: dict[str, Any]) -> dict[str, Any] | None:
     vocals = context.song_dir / "voz.mp3"
     if not document["synced"] or not document["lines"] or not vocals.exists():
-        return 0
+        return None
     context.report("LYRICS", 90, "Alinhando a letra com a voz…")
     try:
-        onset = detect_vocal_onset(vocals)
+        envelope = analyze_vocals(vocals)
+        lines = align_lines_with_vocals(document["lines"], envelope) if envelope is not None else None
     except Exception:
-        logger.warning("Vocal onset detection failed", exc_info=True)
-        return 0
-    return suggest_offset_ms(document["lines"][0]["start"], onset)
+        logger.warning("Aligning the lyrics with the vocals failed", exc_info=True)
+        return None
+    return build_document("ALIGNED", True, lines) if lines else None
 
 
 def run(context: JobContext) -> None:
@@ -140,9 +145,9 @@ def run(context: JobContext) -> None:
         match = None
 
     document, source, needs_review = build_result(match)
-    offset_ms = 0
     if document:
-        write_documents(context, document)
-        offset_ms = align_with_vocals(context, document)
-    context.result.update(lyricsSource=source, lyricsNeedsReview=needs_review, lyricsOffsetMs=offset_ms)
+        aligned = align_with_vocals(context, document)
+        write_documents(context, aligned or document, original=document if aligned else None)
+        source = "ALIGNED" if aligned else source
+    context.result.update(lyricsSource=source, lyricsNeedsReview=needs_review, lyricsOffsetMs=0)
     context.report("LYRICS", 100, "Letra encontrada" if document else "Letra não encontrada")

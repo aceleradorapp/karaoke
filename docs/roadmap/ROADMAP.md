@@ -116,15 +116,15 @@
 | F5-04 | ⬜ | `/m/buscar`, `/m/enviar`, `/m/fila` (reutilizando os componentes) | T-08 §8.2 | 🟡 |
 | F5-05 | ⬜ | ✔ Verificação com um celular real na rede (inclui o firewall do Windows) | T-02 §2.5 | 🟢 |
 
-## Fase 6 — Letras inteligentes
+## Fase 6 — Letras inteligentes (sincronia)  ⭐ *prioridade do Michael*
 | ID | Status | Tarefa | Docs | Modelo |
 |---|---|---|---|---|
-| F6-01 | ⬜ | Worker: `align.py` com stable-ts (alinhar texto + transcrever) integrado à etapa LYRICS | T-05 §5.8 §5.7 | 🔴 |
-| F6-02 | ⬜ | API: `PUT lyrics`, `lyrics/search`, `lyrics/align` (jobs só de letra) | T-04 §4.6 Músicas | 🟡 |
-| F6-03 | ⬜ | Editor de letra (texto, sincronização por toque, ajuste fino) | T-07 §7.4 | 🔴 |
-| F6-04 | ⬜ | Exibição palavra a palavra quando houver `words` | T-07 §7.3 | 🟡 |
-| F6-06 | ⬜ | **Página avançada de sincronização** pedida pelo Michael (SPEC-001): ajuste por linha, marcar tocando, ímã nos inícios de voz, desfazer, melhorar o alinhamento automático (RF11). Discutir o design antes | SPEC-001 | 🔴 |
-| F6-05 | ⬜ | ✔ Verificação com 3 músicas brasileiras sem letra sincronizada no LRCLIB | — | 🟡 |
+| F6-01 | ✅ 2026-10-01 | Worker: alinhar a letra do LRCLIB com a voz — atraso global ajustado com **todas** as linhas + cada linha imantada ao início de frase da voz; guarda `letra.original.json` (rápido, sem Whisper; substitui o atraso só pelo 1º som) | T-05 §5.7, SPEC-001 RF11 | 🔴 |
+| F6-02 | ⬜ | Worker: `align.py` com stable-ts (Whisper `small`, CPU ≈ 2,3× a duração): alinhar texto sem tempos e transcrever; linhas remontadas a partir das palavras; ímã nos inícios de voz | T-05 §5.8 | 🔴 |
+| F6-03 | ⬜ | API: `PUT lyrics`, `lyrics/original`, `lyrics/realign` (job só de letra, rápido), `lyrics/align` (texto + Whisper), `lyrics/search` | T-04 §4.6 Músicas | 🟡 |
+| F6-04 | ⬜ | Front: nova página de sincronização (SPEC-001): ajuste por linha (arrastar), marcar tocando, ímã, desfazer/refazer, voltar ao original, realinhar com a voz e com IA | SPEC-001, T-07 §7.4 | 🔴 |
+| F6-05 | ⬜ | Exibição palavra a palavra quando houver `words` (+ cores/terminação) | T-07 §7.3 | 🟡 |
+| F6-06 | ⬜ | ✔ Verificação com 3 músicas brasileiras (uma sem letra sincronizada no LRCLIB) | — | 🟡 |
 
 ## Fase 7 — Pontuação e ranking
 | ID | Status | Tarefa | Docs | Modelo |

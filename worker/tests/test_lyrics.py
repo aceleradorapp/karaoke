@@ -1,6 +1,7 @@
 import json
 from typing import Any
 
+import numpy as np
 import pytest
 import requests
 
@@ -230,9 +231,19 @@ def test_searches_without_a_duration_filter_when_the_duration_is_unknown(make_co
     assert "duration" not in FakeSession.calls[0][1]
 
 
-def run_with_vocals(make_context, monkeypatch, onset, synced=SYNCED_LRC):
+SPREAD_LRC = "[00:10.00]Primeira\n[00:18.00]Segunda\n[00:27.00]Terceira\n[00:40.00]Quarta"
+
+
+def voice_at(*phrases):
+    envelope = np.zeros(6000, dtype=np.float32)
+    for start, end in phrases:
+        envelope[int(start * 20) : int(end * 20)] = 0.4
+    return envelope
+
+
+def run_with_vocals(make_context, monkeypatch, envelope, synced=SPREAD_LRC):
     serve(monkeypatch, lambda endpoint, params: found(synced=synced))
-    monkeypatch.setattr(lyrics, "detect_vocal_onset", lambda path: onset)
+    monkeypatch.setattr(lyrics, "analyze_vocals", lambda path: envelope)
     context = lyrics_context(make_context)
     context.song_dir.mkdir(parents=True, exist_ok=True)
     (context.song_dir / "voz.mp3").write_bytes(b"x")
@@ -240,29 +251,53 @@ def run_with_vocals(make_context, monkeypatch, onset, synced=SYNCED_LRC):
     return context
 
 
-def test_shifts_the_lyrics_to_where_the_voice_really_starts(make_context, monkeypatch):
-    context = run_with_vocals(make_context, monkeypatch, onset=25.5)
-    assert context.result["lyricsOffsetMs"] == 15500
+def test_aligns_every_line_with_the_voice_and_keeps_the_original_lyrics(make_context, monkeypatch):
+    envelope = voice_at((25, 31), (33, 39), (42, 48), (55, 61))
 
+    context = run_with_vocals(make_context, monkeypatch, envelope)
 
-def test_keeps_the_offset_at_zero_when_the_voice_already_matches(make_context, monkeypatch):
-    context = run_with_vocals(make_context, monkeypatch, onset=10.4)
+    document = stored_document(context)
+    assert document["source"] == "ALIGNED"
+    assert [round(line["start"]) for line in document["lines"]] == [25, 33, 42, 55]
+    original = json.loads((context.song_dir / "letra.original.json").read_text(encoding="utf-8"))
+    assert original["source"] == "LRCLIB"
+    assert [line["start"] for line in original["lines"]] == [10.0, 18.0, 27.0, 40.0]
+    assert context.result["lyricsSource"] == "ALIGNED"
     assert context.result["lyricsOffsetMs"] == 0
+    assert (context.song_dir / "letra.lrc").read_text(encoding="utf-8").startswith("[00:25.")
 
 
-def test_keeps_the_offset_at_zero_when_no_voice_is_found(make_context, monkeypatch):
-    context = run_with_vocals(make_context, monkeypatch, onset=None)
-    assert context.result["lyricsOffsetMs"] == 0
+def test_keeps_the_lyrics_as_they_came_when_no_voice_is_found(make_context, monkeypatch):
+    context = run_with_vocals(make_context, monkeypatch, np.zeros(6000, dtype=np.float32))
+
+    document = stored_document(context)
+    assert document["source"] == "LRCLIB"
+    assert [line["start"] for line in document["lines"]] == [10.0, 18.0, 27.0, 40.0]
+    assert not (context.song_dir / "letra.original.json").exists()
+    assert context.result["lyricsSource"] == "LRCLIB"
 
 
 def test_does_not_align_lyrics_without_timestamps(make_context, monkeypatch):
     serve(monkeypatch, lambda endpoint, params: found(synced=None))
-    monkeypatch.setattr(lyrics, "detect_vocal_onset", lambda path: pytest.fail("must not analyze"))
+    monkeypatch.setattr(lyrics, "analyze_vocals", lambda path: pytest.fail("must not analyze"))
     context = lyrics_context(make_context)
     context.song_dir.mkdir(parents=True, exist_ok=True)
     (context.song_dir / "voz.mp3").write_bytes(b"x")
+
     lyrics.run(context)
+
+    assert context.result["lyricsSource"] == "PLAIN"
     assert context.result["lyricsOffsetMs"] == 0
+
+
+def test_does_not_try_to_align_when_there_is_no_vocals_file(make_context, monkeypatch):
+    serve(monkeypatch, lambda endpoint, params: found(synced=SPREAD_LRC))
+    monkeypatch.setattr(lyrics, "analyze_vocals", lambda path: pytest.fail("must not analyze"))
+    context = lyrics_context(make_context)
+
+    lyrics.run(context)
+
+    assert stored_document(context)["source"] == "LRCLIB"
 
 
 def test_a_failure_while_analyzing_never_breaks_the_lyrics(make_context, monkeypatch):
@@ -271,10 +306,12 @@ def test_a_failure_while_analyzing_never_breaks_the_lyrics(make_context, monkeyp
     def explode(path):
         raise RuntimeError("boom")
 
-    monkeypatch.setattr(lyrics, "detect_vocal_onset", explode)
+    monkeypatch.setattr(lyrics, "analyze_vocals", explode)
     context = lyrics_context(make_context)
     context.song_dir.mkdir(parents=True, exist_ok=True)
     (context.song_dir / "voz.mp3").write_bytes(b"x")
+
     lyrics.run(context)
-    assert context.result["lyricsOffsetMs"] == 0
+
     assert context.result["lyricsSource"] == "LRCLIB"
+    assert stored_document(context)["lines"][0]["start"] == 10.0
