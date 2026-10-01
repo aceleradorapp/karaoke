@@ -3,6 +3,7 @@ import { env } from './env.js';
 import { attachRealtime, closeRealtime } from './realtime.js';
 import { recoverInterruptedJobs } from './modules/jobs/recovery.js';
 import { ensureDirs } from './services/storage.js';
+import { startUploadWatcher } from './services/watcher.js';
 import { startWorkerWatchdog } from './services/workerStatus.js';
 
 async function main(): Promise<void> {
@@ -13,8 +14,10 @@ async function main(): Promise<void> {
   const app = await buildApp();
   attachRealtime(app.server);
   startWorkerWatchdog();
+  const uploadWatcher = startUploadWatcher();
 
   const shutdown = async () => {
+    await uploadWatcher.close();
     await closeRealtime();
     await app.close();
     process.exit(0);

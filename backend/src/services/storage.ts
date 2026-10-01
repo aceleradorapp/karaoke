@@ -66,6 +66,7 @@ export function safeFilename(name: string): string {
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
     .replace(/[^a-zA-Z0-9._-]+/g, '-')
+    .replace(/-{2,}/g, '-')
     .replace(/^-+|-+$/g, '')
     .slice(0, SAFE_FILENAME_MAX_LENGTH);
   const extension = parsed.ext.toLowerCase().replace(/[^a-z0-9.]/g, '');
