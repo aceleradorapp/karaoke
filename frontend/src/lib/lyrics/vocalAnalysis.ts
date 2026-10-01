@@ -71,6 +71,38 @@ export function findVocalOnset(envelope: Float32Array): number | null {
   return null;
 }
 
+const PHRASE_GAP_SECONDS = 0.5;
+
+function loudThreshold(envelope: Float32Array): number | null {
+  const audible = envelope.filter((value) => value > MIN_REFERENCE_LEVEL);
+  if (audible.length === 0) return null;
+  return percentile(audible, REFERENCE_PERCENTILE) * THRESHOLD_RATIO;
+}
+
+export function findPhraseOnsets(envelope: Float32Array): number[] {
+  const threshold = loudThreshold(envelope);
+  if (threshold === null) return [];
+
+  const gap = Math.round(PHRASE_GAP_SECONDS / HOP_SECONDS);
+  const onsets: number[] = [];
+  let silentFrames = gap;
+  for (let index = 0; index < envelope.length; index++) {
+    const isLoud = (envelope[index] as number) > threshold;
+    if (isLoud && silentFrames >= gap) onsets.push(index * HOP_SECONDS);
+    silentFrames = isLoud ? 0 : silentFrames + 1;
+  }
+  return onsets;
+}
+
+export function findVocalEnd(envelope: Float32Array): number | null {
+  const threshold = loudThreshold(envelope);
+  if (threshold === null) return null;
+  for (let index = envelope.length - 1; index >= 0; index--) {
+    if ((envelope[index] as number) > threshold) return (index + 1) * HOP_SECONDS;
+  }
+  return null;
+}
+
 export function normalizeForDrawing(envelope: Float32Array): Float32Array {
   const ceiling = percentile(envelope, DRAW_PERCENTILE);
   if (ceiling <= 0) return new Float32Array(envelope.length);
@@ -92,8 +124,4 @@ export async function analyzeVocals(url: string): Promise<VocalAnalysis> {
   } finally {
     void context.close();
   }
-}
-
-export function offsetToAlignFirstLine(firstLineStart: number, onset: number): number {
-  return Math.round((onset - firstLineStart) * 1000);
 }
