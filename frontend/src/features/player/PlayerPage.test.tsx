@@ -3,6 +3,7 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { LyricsDoc, ProfileDTO, SongDTO } from '@caraoke/shared';
+import { buildPlayQueue } from '../../lib/playQueue';
 import { useProfileStore } from '../../stores/useProfileStore';
 import { mockApi, requestsTo, type MockRoutes } from '../../test/mockApi';
 import { buildProcessingSong, buildSong } from '../../test/songBuilder';
@@ -610,6 +611,129 @@ describe('PlayerPage', () => {
         '/fila',
       );
       expect(engines()).toHaveLength(0);
+    });
+  });
+
+  describe('playing a playlist', () => {
+    const first = () => readySong({ id: 's1', title: 'Primeira' });
+    const second = () =>
+      buildSong({
+        id: 's2',
+        title: 'Segunda',
+        instrumentalUrl: '/media/s2/instrumental.mp3',
+        vocalsUrl: '/media/s2/voz.mp3',
+      });
+    const broken = () => buildSong({ id: 's3', title: 'Quebrada', status: 'ERROR' });
+
+    function playlistRoutes(items: SongDTO[]): MockRoutes {
+      return {
+        ...baseRoutes(first(), { 'GET /api/songs/s2': { body: second() } }),
+        'GET /api/playlists/pl1': { body: { id: 'pl1', name: 'Festa', profileId: 'p1', items } },
+      };
+    }
+
+    it('offers the next song when a song ends, telling the position in the playlist', async () => {
+      renderPlayer(playlistRoutes([first(), second()]), ['/player/s1?playlist=pl1'], 0);
+      await startSinging();
+
+      act(() => latestEngine().finishSong());
+
+      expect(await screen.findByText('Música 1 de 2 da playlist')).toBeInTheDocument();
+      expect(screen.getByText('A seguir: Segunda')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Próxima música' })).toBeInTheDocument();
+    });
+
+    it('goes to the next song, asking again to start, with the same singer already chosen', async () => {
+      renderPlayer(playlistRoutes([first(), second()]), ['/musica/s1', '/player/s1?playlist=pl1']);
+      await startSinging('Bia');
+      act(() => latestEngine().finishSong());
+
+      fireEvent.click(await screen.findByRole('button', { name: 'Próxima música' }));
+
+      expect(await screen.findByRole('heading', { name: 'Segunda' })).toBeInTheDocument();
+      expect(screen.getByText('Quem vai cantar esta?')).toBeInTheDocument();
+      expect(await screen.findByRole('radio', { name: 'Bia' })).toBeChecked();
+    });
+
+    it('releases the audio of the song that ended before the next one', async () => {
+      renderPlayer(playlistRoutes([first(), second()]), ['/player/s1?playlist=pl1'], 0);
+      await startSinging();
+      const ended = latestEngine();
+      act(() => ended.finishSong());
+
+      fireEvent.click(await screen.findByRole('button', { name: 'Próxima música' }));
+
+      await screen.findByRole('heading', { name: 'Segunda' });
+      expect(ended.destroyed).toBe(true);
+    });
+
+    it('skips songs that are not ready', async () => {
+      renderPlayer(playlistRoutes([first(), broken(), second()]), ['/player/s1?playlist=pl1'], 0);
+      await startSinging();
+
+      act(() => latestEngine().finishSong());
+
+      expect(await screen.findByText('Música 1 de 2 da playlist')).toBeInTheDocument();
+      expect(screen.getByText('A seguir: Segunda')).toBeInTheDocument();
+    });
+
+    it('says the playlist is over after the last song', async () => {
+      renderPlayer(playlistRoutes([second(), first()]), ['/player/s1?playlist=pl1'], 0);
+      await startSinging();
+
+      act(() => latestEngine().finishSong());
+
+      expect(await screen.findByText('Fim da playlist! 🎉')).toBeInTheDocument();
+      expect(screen.getByText('Música 2 de 2 da playlist')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Próxima música' })).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Cantar de novo' })).toBeInTheDocument();
+    });
+
+    it('follows the same shuffled order for the same seed', async () => {
+      const songs = [
+        first(),
+        second(),
+        buildSong({ id: 's4', title: 'Quarta' }),
+        buildSong({ id: 's5', title: 'Quinta' }),
+      ];
+      const expectedOrder = buildPlayQueue(songs, 5).map((song) => song.id);
+      const startId = expectedOrder[0] as string;
+      const nextId = expectedOrder[1] as string;
+      renderPlayer(
+        {
+          ...playlistRoutes(songs),
+          [`GET /api/songs/${startId}`]: { body: songs.find((song) => song.id === startId) },
+          [`GET /api/songs/${nextId}`]: { body: songs.find((song) => song.id === nextId) },
+        },
+        [`/player/${startId}?playlist=pl1&shuffle=5`],
+        0,
+      );
+      await startSinging();
+
+      act(() => latestEngine().finishSong());
+
+      const nextTitle = songs.find((song) => song.id === nextId)?.title;
+      expect(await screen.findByText(`A seguir: ${nextTitle}`)).toBeInTheDocument();
+    });
+
+    it('works like a single song when the playlist does not have it', async () => {
+      renderPlayer(playlistRoutes([second()]), ['/player/s1?playlist=pl1'], 0);
+      await startSinging();
+
+      act(() => latestEngine().finishSong());
+
+      expect(await screen.findByText('Fim da música')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Próxima música' })).not.toBeInTheDocument();
+    });
+
+    it('has no next song when the player was not opened from a playlist', async () => {
+      renderPlayer();
+      await startSinging();
+
+      act(() => latestEngine().finishSong());
+
+      expect(await screen.findByText('Fim da música')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Próxima música' })).not.toBeInTheDocument();
     });
   });
 });
