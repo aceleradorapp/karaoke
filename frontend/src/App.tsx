@@ -3,6 +3,7 @@ import { ThemeSync } from './components/ThemeSync';
 import { ToastViewport } from './components/ToastViewport';
 import { HomePage } from './features/home/HomePage';
 import { NotFoundPage } from './features/home/NotFoundPage';
+import { LibraryPage } from './features/library/LibraryPage';
 import { ManageProfilesPage } from './features/profiles/ManageProfilesPage';
 import { StageLayout } from './features/layout/StageLayout';
 import { SettingsPage } from './features/settings/SettingsPage';
@@ -26,6 +27,7 @@ export function App() {
             <Route path="/enviar" element={<UploadPage />} />
             <Route path="/fila" element={<QueuePage />} />
             <Route path="/" element={<HomePage />} />
+            <Route path="/biblioteca" element={<LibraryPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Route>

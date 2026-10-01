@@ -1,4 +1,10 @@
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import type { HomeResponse, SongDTO, SongListResponse, UpdateSongInput } from '@caraoke/shared';
 import { apiGet, apiSend } from './client';
 
@@ -36,6 +42,7 @@ export function useSongsInfiniteQuery(params: SongSearchParams) {
     queryFn: ({ pageParam }) =>
       apiGet<SongListResponse>(`/songs${toQueryString({ ...params, cursor: pageParam })}`),
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    placeholderData: keepPreviousData,
   });
 }
 
