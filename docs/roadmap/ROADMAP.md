@@ -13,8 +13,8 @@
 | 1 | Perfis, temas e base visual | ✅ |
 | 2 | Importação e processamento | ✅ |
 | 3 | Biblioteca e player | ✅ |
-| 4 | Playlists, favoritas e histórico | ⬜ (próxima) |
-| 5 | Celular e QR code | ⬜ |
+| 4 | Playlists, favoritas e histórico | ✅ |
+| 5 | Celular e QR code | ⬜ (próxima) |
 | 6 | Letras inteligentes | ⬜ |
 | 7 | Pontuação e ranking | ⬜ |
 | 8 | Publicação (futuro) | ⬜ |
@@ -105,7 +105,7 @@
 | F4-03 | ✅ 2026-10-01 | `PlaylistPicker` (modal com checkboxes + criar nova) ligado ao ➕ do `SongCard` | T-06 §6.6 PlaylistPicker | 🟡 |
 | F4-04 | ✅ 2026-10-01 | `/playlists` e `/playlists/:id` (cantar tudo, aleatório, reordenar) + player com sequência | T-06 §6.6, T-07 §7.2 | 🟡 |
 | F4-05 | ✅ 2026-10-01 | `/favoritas` e `/historico` | T-06 §6.6 | 🟢 |
-| F4-06 | ⬜ | ✔ Verificação | — | 🟢 |
+| F4-06 | ✅ 2026-10-01 (47 checagens no Chromium) | ✔ Verificação | — | 🟢 |
 
 ## Fase 5 — Celular e QR code
 | ID | Status | Tarefa | Docs | Modelo |

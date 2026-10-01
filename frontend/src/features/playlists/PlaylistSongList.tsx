@@ -7,8 +7,6 @@ import { formatDuration } from '../../lib/format';
 import { coverGradient } from '../../lib/gradient';
 import { moveItem } from '../../lib/reorder';
 
-const ICON_BUTTON_CLASSES = 'size-11 px-0';
-
 const STATUS_NOTES: Partial<Record<SongDTO['status'], string>> = {
   QUEUED: 'Na fila de processamento',
   PROCESSING: 'Processando…',
@@ -88,7 +86,7 @@ export function PlaylistSongList({ songs, onPlay, onReorder, onRemove }: Playlis
               {isReady && (
                 <Button
                   variant="secondary"
-                  className={ICON_BUTTON_CLASSES}
+                  size="icon"
                   aria-label={`Cantar ${song.title}`}
                   onClick={() => onPlay(song)}
                 >
@@ -97,7 +95,7 @@ export function PlaylistSongList({ songs, onPlay, onReorder, onRemove }: Playlis
               )}
               <Button
                 variant="ghost"
-                className={ICON_BUTTON_CLASSES}
+                size="icon"
                 aria-label={`Mover ${song.title} para cima`}
                 disabled={index === 0}
                 onClick={() => moveTo(song.id, index - 1)}
@@ -106,7 +104,7 @@ export function PlaylistSongList({ songs, onPlay, onReorder, onRemove }: Playlis
               </Button>
               <Button
                 variant="ghost"
-                className={ICON_BUTTON_CLASSES}
+                size="icon"
                 aria-label={`Mover ${song.title} para baixo`}
                 disabled={index === songs.length - 1}
                 onClick={() => moveTo(song.id, index + 1)}
@@ -115,7 +113,7 @@ export function PlaylistSongList({ songs, onPlay, onReorder, onRemove }: Playlis
               </Button>
               <Button
                 variant="ghost"
-                className={ICON_BUTTON_CLASSES}
+                size="icon"
                 aria-label={`Tirar ${song.title} da playlist`}
                 onClick={() => onRemove(song)}
               >

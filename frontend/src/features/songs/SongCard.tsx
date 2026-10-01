@@ -73,37 +73,38 @@ export function SongCard({ song, className }: SongCardProps) {
 
   return (
     <article className={clsx('group relative flex flex-col gap-2', className)}>
-      <div
-        className={clsx(
-          'relative aspect-video overflow-hidden rounded-xl bg-surface-2 shadow-md transition duration-200',
-          'group-hover:scale-105 group-hover:shadow-xl',
-          isProcessing && 'opacity-90',
-        )}
-      >
-        <Cover song={song} />
-        {isProcessing && <ProcessingOverlay song={song} />}
-        {song.status === 'ERROR' && <FailedBadge />}
-        {isReady && song.lyricsNeedsReview && <ReviewBadge />}
+      <div className="relative">
+        <div
+          className={clsx(
+            'relative aspect-video overflow-hidden rounded-xl bg-surface-2 shadow-md transition duration-200',
+            'group-hover:scale-105 group-hover:shadow-xl',
+            isProcessing && 'opacity-90',
+          )}
+        >
+          <Cover song={song} />
+          {isProcessing && <ProcessingOverlay song={song} />}
+          {song.status === 'ERROR' && <FailedBadge />}
+          {isReady && song.lyricsNeedsReview && <ReviewBadge />}
+        </div>
 
         {isReady && (
-          <Link
-            to={`/player/${song.id}`}
-            aria-label={`Cantar ${song.title}`}
-            className={clsx(
-              'absolute bottom-2 right-2 z-10 inline-flex size-12 items-center justify-center rounded-full',
-              'bg-primary text-primary-contrast shadow-lg transition',
-              'opacity-0 group-hover:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100',
-            )}
-          >
-            <Play aria-hidden="true" className="size-6 fill-current" />
-          </Link>
-        )}
-
-        {isReady && (
-          <div className="absolute right-2 top-2 z-10 flex gap-2">
-            <FavoriteButton song={song} className={clsx(!song.isFavorite && REVEAL_ON_HOVER)} />
-            <AddToPlaylistButton song={song} className={REVEAL_ON_HOVER} />
-          </div>
+          <>
+            <Link
+              to={`/player/${song.id}`}
+              aria-label={`Cantar ${song.title}`}
+              className={clsx(
+                'absolute bottom-2 right-2 z-20 inline-flex size-12 items-center justify-center rounded-full',
+                'bg-primary text-primary-contrast shadow-lg transition',
+                REVEAL_ON_HOVER,
+              )}
+            >
+              <Play aria-hidden="true" className="size-6 fill-current" />
+            </Link>
+            <div className="absolute right-2 top-2 z-20 flex gap-2">
+              <FavoriteButton song={song} className={clsx(!song.isFavorite && REVEAL_ON_HOVER)} />
+              <AddToPlaylistButton song={song} className={REVEAL_ON_HOVER} />
+            </div>
+          </>
         )}
       </div>
 

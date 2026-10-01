@@ -54,6 +54,15 @@ describe('SongCard', () => {
       expect(screen.getByRole('button', { name: 'Adicionar Evidências a uma playlist' })).toBeInTheDocument();
     });
 
+    it('keeps its buttons outside of the zoomed cover so they stay above the clickable card', () => {
+      renderCard(song);
+      for (const name of ['Favoritar Evidências', 'Cantar Evidências']) {
+        expect(
+          screen.getByRole(/Cantar/.test(name) ? 'link' : 'button', { name }).closest('.aspect-video'),
+        ).toBeNull();
+      }
+    });
+
     it('opens the playlist picker for this song', () => {
       usePlaylistPickerStore.setState({ song: null });
       renderCard(song);
