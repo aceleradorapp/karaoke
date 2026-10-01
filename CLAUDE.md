@@ -36,9 +36,18 @@ Roda em um PC da casa, na rede local.
 - Conversa e documentação em **português**; textos da UI em pt-BR.
 - Não adicionar dependências fora das listadas no documento técnico sem registrar o porquê.
 - Não tomar decisões de arquitetura sozinho: propor → discutir → ADR.
-- Commits só quando o Michael pedir. Remote: `origin` = https://github.com/aceleradorapp/karaoke.git (branch `main`). Push só com pedido explícito.
+- **Git**: ver "Fluxo de branches" abaixo. Commit e push das branches de trabalho estão autorizados pelo Michael; merge em `develop` e em `main` só ao fim de uma fase, depois de ele aprovar.
 - Permissões (`.claude/settings.json`): acesso amplo liberado pelo Michael; `git push`, `git reset --hard`, `git clean` e apagar pastas recursivamente pedem confirmação.
 - Nunca commitar segredos (`.env`). Nunca tocar nos outros bancos do XAMPP (`family_manager_dev`, `furabucho_db`, `tissflow_db`).
+
+## Fluxo de branches
+Remote: `origin` = https://github.com/aceleradorapp/karaoke.git
+- `main`: sempre estável (só recebe merge de `develop` quando uma fase está verificada).
+- `develop`: integração; toda branch de trabalho nasce dela.
+- `feature/f<N>-<nome-curto>`: uma branch por **fase** (ex.: `feature/f1-perfis-e-temas`), criada a partir de `develop`. Tarefas muito grandes ou arriscadas podem ter branch própria: `feature/f2-04-jobs`.
+- Um **commit por tarefa** do roadmap, em português, no formato Conventional Commits, com rodapé `Tarefa: F1-03`. Faça push da branch a cada tarefa concluída.
+- Ao fim da fase: rodar typecheck e testes, perguntar ao Michael, e então mergear em `develop` (`--no-ff`) e depois `develop` em `main`; push das duas.
+- Nunca commitar direto em `main` ou `develop` (exceto o merge de fim de fase).
 
 ## Ambiente
 - Windows 11 · Node 24 · Python 3.11 (venv em `worker/.venv`) · FFmpeg · MariaDB 10.4 (XAMPP, `root` sem senha, banco `caraoke`)
