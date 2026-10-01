@@ -9,6 +9,8 @@
   --color-primary: var(--primary);
   --color-primary-contrast: var(--primary-contrast);
   --color-accent: var(--accent);
+  --color-danger: var(--danger);
+  --color-danger-contrast: var(--danger-contrast);
   --color-lyric-sung: var(--lyric-sung);
   --color-lyric-unsung: var(--lyric-unsung);
   --font-display: var(--font-display-family);
@@ -28,6 +30,8 @@
   --lyric-sung: #f5c518;
   --lyric-unsung: #ffffff;
   --font-display-family: 'Bebas Neue', sans-serif;
+  --danger: #ef4444;
+  --danger-contrast: #ffffff;
 }
 
 [data-theme='neon'] {
@@ -45,6 +49,7 @@
 }
 
 [data-theme='light'] {
+  --danger: #dc2626;
   --bg: #f6f6f8;
   --surface: #ffffff;
   --surface-2: #ececf1;

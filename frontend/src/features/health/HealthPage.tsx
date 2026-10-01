@@ -1,11 +1,8 @@
 import { THEMES } from '@caraoke/shared';
 import { useHealthQuery } from '../../api/health';
 import { useSystemInfoQuery } from '../../api/system';
+import { applyTheme } from '../../lib/theme';
 import { workerLabel } from './workerLabel';
-
-function applyTheme(themeId: string): void {
-  document.documentElement.dataset.theme = themeId;
-}
 
 function serverLabel(isLoading: boolean, isError: boolean, version?: string): string {
   if (isLoading) return 'Verificando o servidor…';
@@ -36,7 +33,7 @@ export function HealthPage() {
   const isServerOnline = Boolean(health.data) && !health.isError;
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col items-center justify-center gap-4 px-4 py-8">
+    <div className="mx-auto flex min-h-[60dvh] w-full max-w-xl flex-col items-center justify-center gap-4 px-4 py-8">
       <h1 className="mb-2 font-display text-5xl text-primary sm:text-6xl">Karaokê</h1>
 
       <StatusLine
@@ -57,6 +54,6 @@ export function HealthPage() {
           </button>
         ))}
       </div>
-    </main>
+    </div>
   );
 }

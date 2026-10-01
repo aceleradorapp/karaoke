@@ -10,8 +10,8 @@
 | Fase | Nome | Status |
 |---|---|---|
 | 0 | Fundação e ambiente | ✅ |
-| 1 | Perfis, temas e base visual | ⬜ (próxima) |
-| 2 | Importação e processamento | ⬜ |
+| 1 | Perfis, temas e base visual | ✅ |
+| 2 | Importação e processamento | ⬜ (próxima) |
 | 3 | Biblioteca e player | ⬜ |
 | 4 | Playlists, favoritas e histórico | ⬜ |
 | 5 | Celular e QR code | ⬜ |
@@ -46,14 +46,14 @@
 
 | ID | Status | Tarefa | Docs | Modelo |
 |---|---|---|---|---|
-| F1-01 | ⬜ | API de perfis (CRUD + touch) com testes | T-04 §4.6 Perfis | 🟢 |
-| F1-02 | ⬜ | Componentes base responsivos: `Avatar`, `Button`, `Modal` (tela cheia no celular), `Toast`, `Spinner`, `ProgressRing`, `SaveIndicator` + hook `useAutoSave` com testes | T-06 §6.4 §6.5 §6.9 §6.10 | 🟡 |
-| F1-03 | ⬜ | Tela `/perfis` (família + convidados) + modal de criar perfil/convidado | T-06 §6.6 Perfis | 🟡 |
-| F1-04 | ⬜ | `/perfis/gerenciar` (editar nome, avatar e tema; excluir com confirmação) | T-06 §6.6 | 🟢 |
-| F1-05 | ⬜ | `useProfileStore` + guarda de rota (sem perfil → `/perfis`) + aplicação do tema do perfil | T-06 §6.7 | 🟢 |
-| F1-06 | ⬜ | `StageLayout` com a barra superior (links, menu do perfil, placeholders do QR e da fila) | T-06 §6.6 Barra superior | 🟡 |
-| F1-07 | ⬜ | API de settings + tela `/configuracoes` (seções Aparência e Processamento, por enquanto) | T-04 §4.6 Config, T-03 §3.3 | 🟡 |
-| F1-08 | ⬜ | ✔ Verificação: criar 3 perfis, trocar temas, recarregar e manter o perfil | — | 🟢 |
+| F1-01 | ✅ 2026-10-01 | API de perfis (CRUD + touch) com testes | T-04 §4.6 Perfis | 🟢 |
+| F1-02 | ✅ 2026-10-01 | Componentes base responsivos: `Avatar`, `Button`, `Modal` (tela cheia no celular), `Toast`, `Spinner`, `ProgressRing`, `SaveIndicator` + hook `useAutoSave` com testes | T-06 §6.4 §6.5 §6.9 §6.10 | 🟡 |
+| F1-03 | ✅ 2026-10-01 | Tela `/perfis` (família + convidados) + modal de criar perfil/convidado | T-06 §6.6 Perfis | 🟡 |
+| F1-04 | ✅ 2026-10-01 | `/perfis/gerenciar` (editar nome, avatar e tema; excluir com confirmação) | T-06 §6.6 | 🟢 |
+| F1-05 | ✅ 2026-10-01 | `useProfileStore` + guarda de rota (sem perfil → `/perfis`) + aplicação do tema do perfil | T-06 §6.7 | 🟢 |
+| F1-06 | ✅ 2026-10-01 | `StageLayout` com a barra superior (links, menu do perfil, placeholders do QR e da fila) | T-06 §6.6 Barra superior | 🟡 |
+| F1-07 | ✅ 2026-10-01 | API de settings + tela `/configuracoes` (seções Aparência e Processamento, por enquanto) | T-04 §4.6 Config, T-03 §3.3 | 🟡 |
+| F1-08 | ✅ 2026-10-01 | ✔ Verificação: criar 3 perfis, trocar temas, recarregar e manter o perfil | — | 🟢 |
 
 ## Fase 2 — Importação e processamento
 **Objetivo:** buscar no YouTube ou enviar um arquivo → a música sai pronta (instrumental + voz + letra LRCLIB + capa), com progresso em tempo real.

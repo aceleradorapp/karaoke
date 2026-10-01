@@ -2,6 +2,8 @@ import cors from '@fastify/cors';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
 import { jobsInternalRoutes } from './modules/jobs/internalRoutes.js';
+import { profileRoutes } from './modules/profiles/routes.js';
+import { settingsRoutes } from './modules/settings/routes.js';
 import { systemInternalRoutes } from './modules/system/internalRoutes.js';
 import { systemRoutes } from './modules/system/routes.js';
 import { registerAccessControl } from './plugins/access.js';
@@ -28,6 +30,8 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   registerAccessControl(app);
 
   await app.register(systemRoutes, { prefix: '/api' });
+  await app.register(profileRoutes, { prefix: '/api' });
+  await app.register(settingsRoutes, { prefix: '/api' });
   await app.register(systemInternalRoutes, { prefix: '/api' });
   await app.register(jobsInternalRoutes, { prefix: '/api' });
 
