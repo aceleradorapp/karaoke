@@ -9,6 +9,7 @@ import requests
 from ..context import JobContext
 from ..lrc import build_document, parse_lrc, plain_text_lines, to_lrc
 from ..titles import clean_title
+from ..vocal_onset import detect_vocal_onset, suggest_offset_ms
 
 logger = logging.getLogger(__name__)
 
@@ -113,6 +114,19 @@ def write_documents(context: JobContext, document: dict[str, Any]) -> None:
         (context.song_dir / "letra.lrc").write_text(to_lrc(document["lines"]), encoding="utf-8")
 
 
+def align_with_vocals(context: JobContext, document: dict[str, Any]) -> int:
+    vocals = context.song_dir / "voz.mp3"
+    if not document["synced"] or not document["lines"] or not vocals.exists():
+        return 0
+    context.report("LYRICS", 90, "Alinhando a letra com a voz…")
+    try:
+        onset = detect_vocal_onset(vocals)
+    except Exception:
+        logger.warning("Vocal onset detection failed", exc_info=True)
+        return 0
+    return suggest_offset_ms(document["lines"][0]["start"], onset)
+
+
 def run(context: JobContext) -> None:
     context.report("LYRICS", 0, "Buscando a letra…")
     duration = context.result.get("durationSec")
@@ -126,7 +140,9 @@ def run(context: JobContext) -> None:
         match = None
 
     document, source, needs_review = build_result(match)
+    offset_ms = 0
     if document:
         write_documents(context, document)
-    context.result.update(lyricsSource=source, lyricsNeedsReview=needs_review)
+        offset_ms = align_with_vocals(context, document)
+    context.result.update(lyricsSource=source, lyricsNeedsReview=needs_review, lyricsOffsetMs=offset_ms)
     context.report("LYRICS", 100, "Letra encontrada" if document else "Letra não encontrada")

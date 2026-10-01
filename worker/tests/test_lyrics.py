@@ -228,3 +228,53 @@ def test_searches_without_a_duration_filter_when_the_duration_is_unknown(make_co
     lyrics.run(context)
 
     assert "duration" not in FakeSession.calls[0][1]
+
+
+def run_with_vocals(make_context, monkeypatch, onset, synced=SYNCED_LRC):
+    serve(monkeypatch, lambda endpoint, params: found(synced=synced))
+    monkeypatch.setattr(lyrics, "detect_vocal_onset", lambda path: onset)
+    context = lyrics_context(make_context)
+    context.song_dir.mkdir(parents=True, exist_ok=True)
+    (context.song_dir / "voz.mp3").write_bytes(b"x")
+    lyrics.run(context)
+    return context
+
+
+def test_shifts_the_lyrics_to_where_the_voice_really_starts(make_context, monkeypatch):
+    context = run_with_vocals(make_context, monkeypatch, onset=25.5)
+    assert context.result["lyricsOffsetMs"] == 15500
+
+
+def test_keeps_the_offset_at_zero_when_the_voice_already_matches(make_context, monkeypatch):
+    context = run_with_vocals(make_context, monkeypatch, onset=10.4)
+    assert context.result["lyricsOffsetMs"] == 0
+
+
+def test_keeps_the_offset_at_zero_when_no_voice_is_found(make_context, monkeypatch):
+    context = run_with_vocals(make_context, monkeypatch, onset=None)
+    assert context.result["lyricsOffsetMs"] == 0
+
+
+def test_does_not_align_lyrics_without_timestamps(make_context, monkeypatch):
+    serve(monkeypatch, lambda endpoint, params: found(synced=None))
+    monkeypatch.setattr(lyrics, "detect_vocal_onset", lambda path: pytest.fail("must not analyze"))
+    context = lyrics_context(make_context)
+    context.song_dir.mkdir(parents=True, exist_ok=True)
+    (context.song_dir / "voz.mp3").write_bytes(b"x")
+    lyrics.run(context)
+    assert context.result["lyricsOffsetMs"] == 0
+
+
+def test_a_failure_while_analyzing_never_breaks_the_lyrics(make_context, monkeypatch):
+    serve(monkeypatch, lambda endpoint, params: found())
+
+    def explode(path):
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(lyrics, "detect_vocal_onset", explode)
+    context = lyrics_context(make_context)
+    context.song_dir.mkdir(parents=True, exist_ok=True)
+    (context.song_dir / "voz.mp3").write_bytes(b"x")
+    lyrics.run(context)
+    assert context.result["lyricsOffsetMs"] == 0
+    assert context.result["lyricsSource"] == "LRCLIB"

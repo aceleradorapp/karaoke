@@ -1,4 +1,4 @@
-import type { SongDTO } from '@caraoke/shared';
+import { LYRICS_OFFSET_LIMIT_MS, type SongDTO } from '@caraoke/shared';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFinishPerformanceMutation, useStartPerformanceMutation } from '../../api/performances';
 import { KaraokeEngine } from '../../lib/audio/KaraokeEngine';
@@ -6,7 +6,6 @@ import { KaraokeEngine } from '../../lib/audio/KaraokeEngine';
 export type PlayerPhase = 'choosing' | 'loading' | 'playing' | 'finished' | 'error';
 
 const COMPLETED_FRACTION = 0.9;
-const MAX_LYRICS_OFFSET_MS = 5000;
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
@@ -175,7 +174,7 @@ export function usePlayerSession(song: SongDTO): PlayerSession {
   const changeVolumeBy = useCallback((delta: number) => setVolume(volumeRef.current + delta), [setVolume]);
 
   const adjustLyricsOffset = useCallback((deltaMs: number) => {
-    setLiveOffsetMs((current) => clamp(current + deltaMs, -MAX_LYRICS_OFFSET_MS, MAX_LYRICS_OFFSET_MS));
+    setLiveOffsetMs((current) => clamp(current + deltaMs, -LYRICS_OFFSET_LIMIT_MS, LYRICS_OFFSET_LIMIT_MS));
   }, []);
 
   const hasSungForAWhile = useCallback(() => getTime() > 5, [getTime]);

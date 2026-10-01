@@ -22,6 +22,7 @@ export interface CompleteInput {
   hasMelody: boolean;
   lyricsSource: LyricsSource;
   lyricsNeedsReview: boolean;
+  lyricsOffsetMs?: number;
 }
 
 export interface FailInput {
@@ -111,6 +112,7 @@ export async function completeJob(id: string, input: CompleteInput): Promise<voi
         hasMelody: input.hasMelody,
         lyricsSource: input.lyricsSource,
         lyricsNeedsReview: input.lyricsNeedsReview,
+        ...(input.lyricsOffsetMs === undefined ? {} : { lyricsOffsetMs: input.lyricsOffsetMs }),
       },
     }),
   ]);
