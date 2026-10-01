@@ -89,3 +89,21 @@ export const finishPerformanceSchema = z.object({
 
 export type CreatePerformanceInput = z.infer<typeof createPerformanceSchema>;
 export type FinishPerformanceInput = z.infer<typeof finishPerformanceSchema>;
+
+export const PLAYLIST_NAME_MAX_LENGTH = 80;
+
+const playlistNameSchema = z
+  .string()
+  .trim()
+  .min(1, 'Informe o nome da playlist')
+  .max(PLAYLIST_NAME_MAX_LENGTH, `Use até ${PLAYLIST_NAME_MAX_LENGTH} letras`);
+
+export const createPlaylistSchema = z.object({ name: playlistNameSchema });
+export const updatePlaylistSchema = z.object({ name: playlistNameSchema });
+export const addPlaylistItemSchema = z.object({ songId: z.string().min(1) });
+export const reorderPlaylistSchema = z.object({ songIds: z.array(z.string().min(1)).max(1000) });
+
+export type CreatePlaylistInput = z.infer<typeof createPlaylistSchema>;
+export type UpdatePlaylistInput = z.infer<typeof updatePlaylistSchema>;
+export type AddPlaylistItemInput = z.infer<typeof addPlaylistItemSchema>;
+export type ReorderPlaylistInput = z.infer<typeof reorderPlaylistSchema>;

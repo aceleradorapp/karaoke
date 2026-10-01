@@ -27,7 +27,7 @@ const ORDER_BY: Record<SongSort, Prisma.SongOrderByWithRelationInput[]> = {
   popular: [{ playCount: 'desc' }, { createdAt: 'desc' }, { id: 'asc' }],
 };
 
-const LATEST_JOB = { jobs: { orderBy: { createdAt: 'desc' as const }, take: 1 } };
+export const LATEST_JOB = { jobs: { orderBy: { createdAt: 'desc' as const }, take: 1 } };
 
 function songNotFound() {
   return notFound('SONG_NOT_FOUND', 'Música não encontrada');
@@ -42,7 +42,10 @@ function buildWhere(params: ListSongsParams): Prisma.SongWhereInput {
   };
 }
 
-async function favoriteIdsOf(profileId: string | undefined, songIds: string[]): Promise<Set<string> | null> {
+export async function favoriteIdsOf(
+  profileId: string | undefined,
+  songIds: string[],
+): Promise<Set<string> | null> {
   if (!profileId) return null;
   const favorites = await prisma.favorite.findMany({
     where: { profileId, songId: { in: songIds } },

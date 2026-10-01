@@ -135,3 +135,41 @@ export interface HomeResponse {
   hero: SongDTO | null;
   rows: HomeRow[];
 }
+
+export interface PlaylistSummaryDTO {
+  id: string;
+  name: string;
+  count: number;
+  coverUrls: string[];
+  containsSong?: boolean;
+}
+
+export interface PlaylistListResponse {
+  items: PlaylistSummaryDTO[];
+}
+
+export interface PlaylistDetailDTO {
+  id: string;
+  name: string;
+  profileId: string;
+  items: SongDTO[];
+}
+
+export interface HistoryItemDTO {
+  id: string;
+  song: SongDTO;
+  startedAt: string;
+  finalScore: number | null;
+  pitchScore: number | null;
+  audienceScore: number | null;
+  completed: boolean;
+}
+
+export interface HistoryResponse {
+  items: HistoryItemDTO[];
+  nextCursor: string | null;
+}
+
+export interface FavoritesResponse {
+  items: SongDTO[];
+}

@@ -151,6 +151,85 @@ describe('performance routes', () => {
     });
   });
 
+  describe('history', () => {
+    const history = (profileId: string, query = '') =>
+      app.inject({ method: 'GET', url: `/api/profiles/${profileId}/history${query}` });
+
+    async function sing(profileId: string, songId: string, startedAt: string, completed = true) {
+      return prisma.performance.create({
+        data: {
+          profileId,
+          songId,
+          startedAt: new Date(startedAt),
+          completed,
+          finishedAt: new Date(startedAt),
+        },
+      });
+    }
+
+    it('lists the profile performances, newest first, with the song', async () => {
+      const { profile, song } = await setup();
+      const other = await createSong({ title: 'Outra' });
+      await sing(profile.id, song.id, '2026-01-01T10:00:00Z');
+      await sing(profile.id, other.id, '2026-02-01T10:00:00Z', false);
+
+      const response = await history(profile.id);
+
+      expect(response.statusCode).toBe(200);
+      const { items, nextCursor } = response.json();
+      expect(nextCursor).toBeNull();
+      expect(items.map((item: { song: { title: string } }) => item.song.title)).toEqual([
+        'Outra',
+        'Evidências',
+      ]);
+      expect(items[0]).toMatchObject({
+        completed: false,
+        finalScore: null,
+        pitchScore: null,
+        audienceScore: null,
+      });
+      expect(items[0].startedAt).toBe('2026-02-01T10:00:00.000Z');
+    });
+
+    it('shows only the performances of that profile', async () => {
+      const { profile, song } = await setup();
+      const bia = await prisma.profile.create({ data: { name: 'Bia', avatar: 'cat' } });
+      await sing(bia.id, song.id, '2026-01-01T10:00:00Z');
+
+      expect((await history(profile.id)).json().items).toEqual([]);
+    });
+
+    it('marks the songs the profile has favorited', async () => {
+      const { profile, song } = await setup();
+      await sing(profile.id, song.id, '2026-01-01T10:00:00Z');
+      await prisma.favorite.create({ data: { profileId: profile.id, songId: song.id } });
+
+      expect((await history(profile.id)).json().items[0].song.isFavorite).toBe(true);
+    });
+
+    it('pages with a cursor', async () => {
+      const { profile, song } = await setup();
+      for (let day = 1; day <= 5; day++) await sing(profile.id, song.id, `2026-01-0${day}T10:00:00Z`);
+
+      const first = (await history(profile.id, '?limit=2')).json();
+      const second = (await history(profile.id, `?limit=2&cursor=${first.nextCursor}`)).json();
+      const third = (await history(profile.id, `?limit=2&cursor=${second.nextCursor}`)).json();
+
+      const days = [...first.items, ...second.items, ...third.items].map((item: { startedAt: string }) =>
+        item.startedAt.slice(8, 10),
+      );
+      expect(days).toEqual(['05', '04', '03', '02', '01']);
+      expect(third.nextCursor).toBeNull();
+    });
+
+    it('rejects an absurd page size and answers 404 for a missing profile', async () => {
+      const { profile } = await setup();
+      expect((await history(profile.id, '?limit=0')).statusCode).toBe(400);
+      expect((await history(profile.id, '?limit=101')).statusCode).toBe(400);
+      expect((await history('nobody')).statusCode).toBe(404);
+    });
+  });
+
   it('is not available to phones', async () => {
     await prisma.setting.create({ data: { key: 'access.code', value: 'ABC234' } });
     const { profile, song } = await setup();
