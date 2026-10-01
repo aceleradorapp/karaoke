@@ -1,14 +1,16 @@
 import { LYRICS_OFFSET_LIMIT_MS, type SongDTO } from '@caraoke/shared';
 import clsx from 'clsx';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link, useLocation, useNavigate, useParams } from 'react-router';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
 import { useLyricsQuery } from '../../api/lyrics';
+import { usePlaylistQuery } from '../../api/playlists';
 import { useProfilesQuery } from '../../api/profiles';
 import { useSongQuery, useUpdateSongMutation } from '../../api/songs';
 import { Avatar } from '../../components/Avatar';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { Spinner } from '../../components/Spinner';
 import { coverGradient } from '../../lib/gradient';
+import { buildPlayQueue, locateInQueue, parseShuffleSeed, playerRoute } from '../../lib/playQueue';
 import { useAutoSave } from '../../lib/useAutoSave';
 import { useProfileStore } from '../../stores/useProfileStore';
 import { FinishedScreen } from './FinishedScreen';
@@ -71,7 +73,13 @@ function PlayerSession({ song }: { song: SongDTO }) {
   const session = usePlayerSession(song);
   const { isFullscreen, toggle: toggleFullscreen } = useFullscreen();
 
-  const [singerId, setSingerId] = useState<string | null>(currentProfile?.id ?? null);
+  const [searchParams] = useSearchParams();
+  const playlistId = searchParams.get('playlist');
+  const shuffleSeed = parseShuffleSeed(searchParams.get('shuffle'));
+  const playlist = usePlaylistQuery(playlistId ?? undefined);
+  const carriedSingerId = (location.state as { singerId?: string } | null)?.singerId;
+
+  const [singerId, setSingerId] = useState<string | null>(carriedSingerId ?? currentProfile?.id ?? null);
   const [isConfirmingExit, setIsConfirmingExit] = useState(false);
   const baseOffsetMs = useRef(song.lyricsOffsetMs);
 
@@ -112,6 +120,18 @@ function PlayerSession({ song }: { song: SongDTO }) {
     },
     isPerforming || session.phase === 'choosing',
   );
+
+  const queueStep = useMemo(
+    () => (playlist.data ? locateInQueue(buildPlayQueue(playlist.data.items, shuffleSeed), song.id) : null),
+    [playlist.data, shuffleSeed, song.id],
+  );
+
+  const goToNextSong = useCallback(() => {
+    const next = queueStep?.next;
+    if (!next || !playlistId) return;
+    session.stop();
+    navigate(playerRoute(next.id, playlistId, shuffleSeed), { replace: true, state: { singerId } });
+  }, [queueStep, playlistId, shuffleSeed, session, navigate, singerId]);
 
   const isLyricsLoading = song.lyricsUrl !== null && lyrics.isLoading;
   const effectiveOffsetMs = baseOffsetMs.current + session.liveOffsetMs;
@@ -165,6 +185,16 @@ function PlayerSession({ song }: { song: SongDTO }) {
               songTitle={song.title}
               onSingAgain={() => void session.restart()}
               onBack={leave}
+              sequence={
+                queueStep
+                  ? {
+                      position: queueStep.index + 1,
+                      total: queueStep.total,
+                      nextTitle: queueStep.next?.title ?? null,
+                      onNext: goToNextSong,
+                    }
+                  : null
+              }
             />
           </div>
         )}

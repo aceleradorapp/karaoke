@@ -10,7 +10,7 @@ function mediaUrl(songId: string, filename: string, version?: Date): string {
   return `${MEDIA_PREFIX}/${songId}/${filename}${suffix}`;
 }
 
-function coverUrlOf(song: SongSummary): string | null {
+export function coverUrlOf(song: SongSummary): string | null {
   return song.hasCover ? mediaUrl(song.id, 'capa.jpg', song.updatedAt) : null;
 }
 

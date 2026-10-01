@@ -8,4 +8,4 @@ Crie com `/nova-spec <nome>` ou copiando `_TEMPLATE.md`.
 ## Índice
 | Nº | Spec | Status |
 |---|---|---|
-| — | *(nenhuma ainda)* | — |
+| 001 | [Página avançada de sincronização da letra](001-sincronizacao-avancada.md) | rascunho |

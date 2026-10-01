@@ -1,6 +1,7 @@
-import type { CreatePerformanceInput, FinishPerformanceInput } from '@caraoke/shared';
+import type { CreatePerformanceInput, FinishPerformanceInput, HistoryResponse } from '@caraoke/shared';
 import { prisma } from '../../db.js';
 import { conflict, notFound } from '../../utils/errors.js';
+import { LATEST_JOB, favoriteIdsOf, toListedSongDTO } from '../songs/service.js';
 
 export interface FinishPerformanceResult {
   finalScore: number | null;
@@ -43,4 +44,41 @@ export async function finishPerformance(
     },
   });
   return { finalScore: null };
+}
+
+export async function listHistory(
+  profileId: string,
+  limit: number,
+  cursor?: string,
+): Promise<HistoryResponse> {
+  const profile = await prisma.profile.findUnique({ where: { id: profileId }, select: { id: true } });
+  if (!profile) throw notFound('PROFILE_NOT_FOUND', 'Perfil não encontrado');
+
+  const performances = await prisma.performance.findMany({
+    where: { profileId },
+    orderBy: [{ startedAt: 'desc' }, { id: 'asc' }],
+    take: limit + 1,
+    ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+    include: { song: { include: LATEST_JOB } },
+  });
+
+  const hasMore = performances.length > limit;
+  const page = hasMore ? performances.slice(0, limit) : performances;
+  const favoriteIds = await favoriteIdsOf(
+    profileId,
+    page.map((performance) => performance.songId),
+  );
+
+  return {
+    items: page.map((performance) => ({
+      id: performance.id,
+      song: toListedSongDTO(performance.song, favoriteIds),
+      startedAt: performance.startedAt.toISOString(),
+      finalScore: performance.finalScore,
+      pitchScore: performance.pitchScore,
+      audienceScore: performance.audienceScore,
+      completed: performance.completed,
+    })),
+    nextCursor: hasMore ? (page.at(-1)?.id ?? null) : null,
+  };
 }

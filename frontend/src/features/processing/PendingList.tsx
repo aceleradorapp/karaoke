@@ -11,8 +11,6 @@ interface PendingListProps {
   onCancel: (job: JobDTO) => void;
 }
 
-const ICON_BUTTON_CLASSES = 'size-11 px-0';
-
 export function PendingList({ jobs, onReorder, onCancel }: PendingListProps) {
   const [draggedId, setDraggedId] = useState<string | null>(null);
 
@@ -55,7 +53,7 @@ export function PendingList({ jobs, onReorder, onCancel }: PendingListProps) {
               <>
                 <Button
                   variant="ghost"
-                  className={ICON_BUTTON_CLASSES}
+                  size="icon"
                   aria-label={`Mover ${job.song.title} para cima`}
                   disabled={index === 0}
                   onClick={() => moveTo(job.id, index - 1)}
@@ -64,7 +62,7 @@ export function PendingList({ jobs, onReorder, onCancel }: PendingListProps) {
                 </Button>
                 <Button
                   variant="ghost"
-                  className={ICON_BUTTON_CLASSES}
+                  size="icon"
                   aria-label={`Mover ${job.song.title} para baixo`}
                   disabled={index === jobs.length - 1}
                   onClick={() => moveTo(job.id, index + 1)}
