@@ -26,6 +26,9 @@ function renderQueue(active: JobDTO[], recent: JobDTO[] = [], extra: MockRoutes 
   return fetchMock;
 }
 
+const confirmInDialog = (label: string) =>
+  fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: label }));
+
 const titlesInOrder = (section: string) =>
   within(screen.getByRole('region', { name: section }))
     .getAllByText(/^Música \d+$/)
@@ -116,7 +119,10 @@ describe('QueuePage', () => {
     });
 
     fireEvent.click(await screen.findByRole('button', { name: 'Cancelar Espera' }));
+    confirmInDialog('Cancelar música');
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: 'Cancelar Rodando' }));
+    confirmInDialog('Cancelar música');
 
     await waitFor(() => {
       expect(requestsTo(fetchMock, 'POST', `/api/jobs/${waiting.id}/cancel`)).toHaveLength(1);
@@ -134,6 +140,7 @@ describe('QueuePage', () => {
     });
 
     fireEvent.click(await screen.findByRole('button', { name: /^Cancelar/ }));
+    confirmInDialog('Cancelar música');
 
     await waitFor(() =>
       expect(useToastStore.getState().toasts[0]?.message).toBe('Esta música já terminou de ser processada'),
@@ -163,8 +170,83 @@ describe('QueuePage', () => {
     const fetchMock = renderQueue([], [done], { [`DELETE /api/jobs/${done.id}`]: { status: 204 } });
 
     fireEvent.click(await screen.findByRole('button', { name: /^Remover/ }));
+    confirmInDialog('Remover');
 
     await waitFor(() => expect(requestsTo(fetchMock, 'DELETE', `/api/jobs/${done.id}`)).toHaveLength(1));
+  });
+
+  describe('confirmations', () => {
+    const finished = () =>
+      buildJob({
+        status: 'FAILED',
+        error: 'x',
+        finishedAt: '2026-10-01T10:00:00.000Z',
+        song: { title: 'Evidências', artist: 'A', coverUrl: null },
+      });
+
+    it('asks before removing a finished song from the list and says the song is kept', async () => {
+      const job = finished();
+      const fetchMock = renderQueue([], [job], { [`DELETE /api/jobs/${job.id}`]: { status: 204 } });
+
+      fireEvent.click(await screen.findByRole('button', { name: /^Remover/ }));
+
+      const dialog = await screen.findByRole('dialog', { name: 'Remover da lista' });
+      expect(dialog).toHaveTextContent('Remover “Evidências” da lista de concluídas?');
+      expect(dialog).toHaveTextContent('a música continua na biblioteca');
+      expect(requestsTo(fetchMock, 'DELETE', `/api/jobs/${job.id}`)).toHaveLength(0);
+    });
+
+    it('does not remove anything when the user goes back', async () => {
+      const job = finished();
+      const fetchMock = renderQueue([], [job], { [`DELETE /api/jobs/${job.id}`]: { status: 204 } });
+      fireEvent.click(await screen.findByRole('button', { name: /^Remover/ }));
+
+      fireEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Voltar' }));
+
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      expect(requestsTo(fetchMock, 'DELETE', `/api/jobs/${job.id}`)).toHaveLength(0);
+    });
+
+    it('asks before canceling and warns that the processed work is lost', async () => {
+      const running = buildJob({
+        status: 'RUNNING',
+        song: { title: 'Evidências', artist: 'A', coverUrl: null },
+      });
+      const fetchMock = renderQueue([running], [], {
+        [`POST /api/jobs/${running.id}/cancel`]: { status: 204 },
+      });
+
+      fireEvent.click(await screen.findByRole('button', { name: 'Cancelar Evidências' }));
+
+      const dialog = await screen.findByRole('dialog', { name: 'Cancelar processamento' });
+      expect(dialog).toHaveTextContent('Cancelar “Evidências”?');
+      expect(dialog).toHaveTextContent('você poderá tentar de novo');
+      expect(requestsTo(fetchMock, 'POST', `/api/jobs/${running.id}/cancel`)).toHaveLength(0);
+    });
+
+    it('does not cancel when the dialog is dismissed with Escape', async () => {
+      const running = buildJob({ status: 'RUNNING' });
+      const fetchMock = renderQueue([running], [], {
+        [`POST /api/jobs/${running.id}/cancel`]: { status: 204 },
+      });
+      fireEvent.click(await screen.findByRole('button', { name: /^Cancelar/ }));
+      await screen.findByRole('dialog');
+
+      fireEvent.keyDown(document, { key: 'Escape' });
+
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      expect(requestsTo(fetchMock, 'POST', `/api/jobs/${running.id}/cancel`)).toHaveLength(0);
+    });
+
+    it('closes the dialog after confirming', async () => {
+      const job = finished();
+      renderQueue([], [job], { [`DELETE /api/jobs/${job.id}`]: { status: 204 } });
+      fireEvent.click(await screen.findByRole('button', { name: /^Remover/ }));
+
+      confirmInDialog('Remover');
+
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    });
   });
 
   describe('reordering', () => {
