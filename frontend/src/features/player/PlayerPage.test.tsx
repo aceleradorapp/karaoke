@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { LyricsDoc, ProfileDTO, SongDTO } from '@caraoke/shared';
 import { buildPlayQueue } from '../../lib/playQueue';
 import { useProfileStore } from '../../stores/useProfileStore';
+import { useToastStore } from '../../stores/useToastStore';
 import { mockApi, requestsTo, type MockRoutes } from '../../test/mockApi';
 import { buildProcessingSong, buildSong } from '../../test/songBuilder';
 import { PlayerPage } from './PlayerPage';
@@ -98,6 +99,21 @@ const ANA: ProfileDTO = {
 };
 const BIA: ProfileDTO = { ...ANA, id: 'p2', name: 'Bia', avatar: 'cat' };
 
+const APP_SETTINGS = {
+  'processing.device': 'auto',
+  'processing.demucsModel': 'htdemucs',
+  'processing.whisperModel': 'small',
+  'processing.autoAlign': true,
+  'scoring.mode': 'pitch+audience',
+  'scoring.audienceWeight': 0.2,
+  'scoring.voteSeconds': 20,
+  'scoring.micLatencyMs': 150,
+  'scoring.micDeviceId': null,
+  'ui.defaultTheme': 'cinema',
+  'player.lyricsEffectEnabled': true,
+  'player.lyricsEffect': 'smooth',
+};
+
 const LYRICS_URL = '/media/s1/letra.json?v=1';
 const LYRICS: LyricsDoc = {
   version: 1,
@@ -126,6 +142,8 @@ function baseRoutes(song: SongDTO = readySong(), extra: MockRoutes = {}): MockRo
   return {
     'GET /api/songs/s1': { body: song },
     'GET /api/profiles': { body: { items: [ANA, BIA] } },
+    'GET /api/settings': { body: APP_SETTINGS },
+    'PATCH /api/settings': { body: APP_SETTINGS },
     [`GET ${LYRICS_URL}`]: { body: LYRICS },
     'POST /api/performances': { status: 201, body: { id: 'perf1' } },
     'POST /api/performances/perf1/finish': { body: { finalScore: null } },
@@ -351,7 +369,9 @@ describe('PlayerPage', () => {
 
       latestEngine().time = 21;
 
-      await waitFor(() => expect(screen.getByText('Primeira linha').closest('.lyric-fill')).not.toBeNull());
+      await waitFor(() =>
+        expect(document.querySelector('p.lyric-enter')?.textContent?.trim()).toBe('Primeira linha'),
+      );
       expect(screen.getByText('Segunda linha')).toBeInTheDocument();
     });
 
@@ -584,6 +604,181 @@ describe('PlayerPage', () => {
       await waitFor(() =>
         expect(requestsTo(fetchMock, 'POST', '/api/performances/perf1/finish')).toHaveLength(1),
       );
+    });
+  });
+
+  describe('the lyrics effect', () => {
+    const settingsBody = (changes: Record<string, unknown>) => ({ ...APP_SETTINGS, ...changes });
+    const patchedSettings = (fetchMock: ReturnType<typeof mockApi>) =>
+      requestsTo(fetchMock, 'PATCH', '/api/settings').map(([, init]) => JSON.parse(String(init?.body)));
+    const patchedSong = (fetchMock: ReturnType<typeof mockApi>) =>
+      requestsTo(fetchMock, 'PATCH', '/api/songs/s1').map(([, init]) => JSON.parse(String(init?.body)));
+    const wordProgress = (word: string) =>
+      Number((screen.getByText(word).closest('.lyric-fill') as HTMLElement).style.getPropertyValue('--p'));
+
+    it('starts on, with the fill-little-by-little model and the normal time', async () => {
+      renderPlayer();
+      await startSinging();
+
+      expect(await screen.findByRole('button', { name: /Efeito: ligado/ })).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      );
+      expect(screen.getByRole('combobox', { name: 'Modelo do efeito' })).toHaveValue('smooth');
+      expect(screen.getByRole('slider', { name: 'Tempo de preenchimento' })).toHaveValue('100');
+    });
+
+    it('turns the effect off, paints the whole line at once and remembers the choice', async () => {
+      const { fetchMock } = renderPlayer(
+        baseRoutes(readySong(), {
+          'PATCH /api/settings': { body: settingsBody({ 'player.lyricsEffectEnabled': false }) },
+        }),
+      );
+      await startSinging();
+      latestEngine().time = 20.1;
+      await waitFor(() => expect(wordProgress('Primeira')).toBeLessThan(1));
+
+      fireEvent.click(await screen.findByRole('button', { name: /Efeito: ligado/ }));
+
+      expect(await screen.findByRole('button', { name: /Efeito: desligado/ })).toHaveAttribute(
+        'aria-pressed',
+        'false',
+      );
+      await waitFor(() => expect(wordProgress('Primeira')).toBe(1));
+      expect(wordProgress('linha')).toBe(1);
+      await waitFor(() =>
+        expect(patchedSettings(fetchMock)).toEqual([{ 'player.lyricsEffectEnabled': false }]),
+      );
+    });
+
+    it('turns the effect back on', async () => {
+      renderPlayer(
+        baseRoutes(readySong(), {
+          'GET /api/settings': { body: settingsBody({ 'player.lyricsEffectEnabled': false }) },
+          'PATCH /api/settings': { body: APP_SETTINGS },
+        }),
+      );
+      await startSinging();
+
+      fireEvent.click(await screen.findByRole('button', { name: /Efeito: desligado/ }));
+
+      expect(await screen.findByRole('button', { name: /Efeito: ligado/ })).toBeInTheDocument();
+    });
+
+    it('turns it on and off with the E key', async () => {
+      const { fetchMock } = renderPlayer(
+        baseRoutes(readySong(), {
+          'PATCH /api/settings': { body: settingsBody({ 'player.lyricsEffectEnabled': false }) },
+        }),
+      );
+      await startSinging();
+      await screen.findByRole('button', { name: /Efeito: ligado/ });
+
+      act(() => {
+        document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'e', bubbles: true }));
+      });
+
+      expect(await screen.findByRole('button', { name: /Efeito: desligado/ })).toBeInTheDocument();
+      await waitFor(() => expect(patchedSettings(fetchMock)).toHaveLength(1));
+    });
+
+    it('changes the model, paints whole words and saves the choice for good', async () => {
+      const { fetchMock } = renderPlayer(
+        baseRoutes(readySong(), {
+          'PATCH /api/settings': { body: settingsBody({ 'player.lyricsEffect': 'words' }) },
+        }),
+      );
+      await startSinging();
+      latestEngine().time = 20.1;
+
+      fireEvent.change(await screen.findByRole('combobox', { name: 'Modelo do efeito' }), {
+        target: { value: 'words' },
+      });
+
+      await waitFor(() => expect([wordProgress('Primeira'), wordProgress('linha')]).toEqual([1, 0]));
+      await waitFor(() => expect(patchedSettings(fetchMock)).toEqual([{ 'player.lyricsEffect': 'words' }]));
+    });
+
+    it('comes back with the model that was saved', async () => {
+      renderPlayer(
+        baseRoutes(readySong(), {
+          'GET /api/settings': { body: settingsBody({ 'player.lyricsEffect': 'words' }) },
+        }),
+      );
+      await startSinging();
+
+      await waitFor(() =>
+        expect(screen.getByRole('combobox', { name: 'Modelo do efeito' })).toHaveValue('words'),
+      );
+    });
+
+    it('goes back to the previous choice and warns when the choice cannot be saved', async () => {
+      renderPlayer(baseRoutes(readySong(), { 'PATCH /api/settings': { status: 500 } }));
+      await startSinging();
+
+      fireEvent.click(await screen.findByRole('button', { name: /Efeito: ligado/ }));
+
+      await waitFor(() => expect(screen.getByRole('button', { name: /Efeito: ligado/ })).toBeInTheDocument());
+      expect(useToastStore.getState().toasts.map((toast) => toast.message)).toContain(
+        'Não foi possível guardar a escolha do efeito da letra',
+      );
+    });
+
+    it('lets the user finish painting earlier or later and saves the time for this song', async () => {
+      const { fetchMock } = renderPlayer();
+      await startSinging();
+
+      fireEvent.click(await screen.findByRole('button', { name: 'Terminar de pintar mais cedo' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Terminar de pintar mais cedo' }));
+      expect(screen.getByRole('slider', { name: 'Tempo de preenchimento' })).toHaveValue('90');
+      fireEvent.click(screen.getByRole('button', { name: 'Terminar de pintar mais tarde' }));
+      expect(screen.getByRole('slider', { name: 'Tempo de preenchimento' })).toHaveValue('95');
+
+      await waitFor(() => expect(patchedSong(fetchMock)).toEqual([{ fillPercent: 95 }]), { timeout: 3000 });
+    });
+
+    it('starts from the time saved for the song', async () => {
+      renderPlayer(baseRoutes(readySong({ fillPercent: 70 })));
+      await startSinging();
+      expect(await screen.findByRole('slider', { name: 'Tempo de preenchimento' })).toHaveValue('70');
+    });
+
+    it('paints the line sooner with a smaller time', async () => {
+      renderPlayer(baseRoutes(readySong({ fillPercent: 50 })));
+      await startSinging();
+
+      latestEngine().time = 22;
+
+      await waitFor(() => expect(wordProgress('linha')).toBe(1));
+    });
+
+    it('goes back to the normal time with one click', async () => {
+      renderPlayer(baseRoutes(readySong({ fillPercent: 70 })));
+      await startSinging();
+
+      fireEvent.click(await screen.findByRole('button', { name: 'Voltar o tempo para 100%' }));
+
+      expect(screen.getByRole('slider', { name: 'Tempo de preenchimento' })).toHaveValue('100');
+    });
+
+    it('does not let the time go beyond the limits', async () => {
+      renderPlayer(baseRoutes(readySong({ fillPercent: 20 })));
+      await startSinging();
+
+      expect(await screen.findByRole('button', { name: 'Terminar de pintar mais cedo' })).toBeDisabled();
+    });
+
+    it('locks the model and the time while the effect is off', async () => {
+      renderPlayer(
+        baseRoutes(readySong(), {
+          'GET /api/settings': { body: settingsBody({ 'player.lyricsEffectEnabled': false }) },
+        }),
+      );
+      await startSinging();
+
+      expect(await screen.findByRole('combobox', { name: 'Modelo do efeito' })).toBeDisabled();
+      expect(screen.getByRole('slider', { name: 'Tempo de preenchimento' })).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'Terminar de pintar mais tarde' })).toBeDisabled();
     });
   });
 

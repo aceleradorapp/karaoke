@@ -33,6 +33,27 @@ describe('settings routes', () => {
     expect(response.json()).toEqual(DEFAULT_APP_SETTINGS);
   });
 
+  it('has the lyrics effect on, with the smooth model, by default', async () => {
+    const settings = (await app.inject({ method: 'GET', url: '/api/settings' })).json();
+    expect(settings['player.lyricsEffectEnabled']).toBe(true);
+    expect(settings['player.lyricsEffect']).toBe('smooth');
+  });
+
+  it('saves the lyrics effect choice and refuses an unknown model', async () => {
+    const saved = await patch({ 'player.lyricsEffectEnabled': false, 'player.lyricsEffect': 'words' });
+    expect(saved.statusCode).toBe(200);
+    expect(saved.json()).toMatchObject({
+      'player.lyricsEffectEnabled': false,
+      'player.lyricsEffect': 'words',
+    });
+    expect((await app.inject({ method: 'GET', url: '/api/settings' })).json()['player.lyricsEffect']).toBe(
+      'words',
+    );
+
+    expect((await patch({ 'player.lyricsEffect': 'rainbow' })).statusCode).toBe(400);
+    expect((await patch({ 'player.lyricsEffectEnabled': 'yes' })).statusCode).toBe(400);
+  });
+
   it('never exposes the access code', async () => {
     await prisma.setting.create({ data: { key: 'access.code', value: 'ABC234' } });
     const response = await app.inject({ method: 'GET', url: '/api/settings' });

@@ -19,6 +19,8 @@ const SETTINGS: AppSettings = {
   'scoring.micLatencyMs': 150,
   'scoring.micDeviceId': null,
   'ui.defaultTheme': 'cinema',
+  'player.lyricsEffectEnabled': true,
+  'player.lyricsEffect': 'smooth',
 };
 
 const WORKER = {

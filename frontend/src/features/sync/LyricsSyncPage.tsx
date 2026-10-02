@@ -22,9 +22,12 @@ import { useSongQuery } from '../../api/songs';
 import { Button } from '../../components/Button';
 import { SaveIndicator } from '../../components/SaveIndicator';
 import { Spinner } from '../../components/Spinner';
-import { formatOffsetSeconds, formatPreciseTime } from '../../lib/format';
+import { formatOffsetSeconds } from '../../lib/format';
+import type { LyricsEffectSettings } from '../../lib/lyrics/effects';
 import { toast } from '../../stores/useToastStore';
+import { LyricsEffectControls } from '../player/LyricsEffectControls';
 import { LyricsView } from '../player/LyricsView';
+import { useLyricsEffectChoice, useSongFillPercent } from '../player/useLyricsEffect';
 import { LineList } from './LineList';
 import { SyncTimeline } from './SyncTimeline';
 import { TapSyncPanel } from './TapSyncPanel';
@@ -103,6 +106,13 @@ function SyncWorkbench({ song, doc }: { song: SongDTO; doc: LyricsDoc }) {
   const preview = useSyncPreview(song);
   const editor = useLyricsEditor(song, doc);
   const original = useOriginalLyricsQuery(song.id);
+  const effectChoice = useLyricsEffectChoice();
+  const fill = useSongFillPercent(song);
+  const effect: LyricsEffectSettings = {
+    enabled: effectChoice.enabled,
+    id: effectChoice.id,
+    fillPercent: fill.value,
+  };
 
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [zoomSeconds, setZoomSeconds] = useState<number>(DEFAULT_ZOOM_SECONDS);
@@ -415,6 +425,36 @@ function SyncWorkbench({ song, doc }: { song: SongDTO; doc: LyricsDoc }) {
           </Panel>
 
           <Panel
+            title="Como vai aparecer no karaokê"
+            action={<SaveIndicator status={fill.autoSave.status} onRetry={fill.autoSave.retry} />}
+          >
+            <div className="flex min-h-48 items-center justify-center rounded-xl bg-black px-4 py-8 text-white">
+              <div className="w-full">
+                <LyricsView
+                  doc={lyricsForPreview}
+                  getTime={preview.getTime}
+                  offsetMs={0}
+                  durationSec={preview.duration}
+                  effect={effect}
+                />
+              </div>
+            </div>
+            <LyricsEffectControls
+              enabled={effectChoice.enabled}
+              effectId={effectChoice.id}
+              fillPercent={fill.value}
+              onEnabledChange={effectChoice.setEnabled}
+              onEffectChange={effectChoice.setId}
+              onFillPercentChange={fill.set}
+            />
+            <p className="text-sm text-muted">
+              O começo de cada linha é o da linha do tempo. O <strong>Tempo</strong> muda só quando termina de
+              pintar (100% = até o fim da linha; menos termina antes, mais termina depois) e vale para esta
+              música. O modelo vale para todas.
+            </p>
+          </Panel>
+
+          <Panel
             title="Marcar tocando"
             action={
               !isTapping && (
@@ -477,22 +517,6 @@ function SyncWorkbench({ song, doc }: { song: SongDTO; doc: LyricsDoc }) {
                 (Shift: 1 s) · Enter marca · Ctrl+Z desfaz.
               </p>
             </div>
-          </Panel>
-
-          <Panel title="Como vai aparecer no karaokê">
-            <div className="flex min-h-48 items-center justify-center rounded-xl bg-black px-4 py-8 text-white">
-              <div className="w-full">
-                <LyricsView
-                  doc={lyricsForPreview}
-                  getTime={preview.getTime}
-                  offsetMs={0}
-                  durationSec={preview.duration}
-                />
-              </div>
-            </div>
-            <p className="text-sm text-muted">
-              A letra começa em {lines[0] ? formatPreciseTime(lines[0].start) : '—'}.
-            </p>
           </Panel>
         </>
       )}

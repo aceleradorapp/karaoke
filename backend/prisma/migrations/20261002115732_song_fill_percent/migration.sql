@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `songs` ADD COLUMN `fillPercent` INTEGER NOT NULL DEFAULT 100;

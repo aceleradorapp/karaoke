@@ -33,6 +33,7 @@ Overlay com o perfil atual pré-selecionado e os outros perfis em linha (o convi
 | ← / → | −5 s / +5 s |
 | ↑ / ↓ | Volume ±10% |
 | [ / ] | Atraso da letra −100 ms / +100 ms (salva em `lyricsOffsetMs` ao sair) |
+| E | Liga/desliga o efeito de pintar a letra |
 | N | Próxima música (playlist) |
 | Esc | Sair (confirma se estiver no meio) |
 | F | Tela cheia (`document.documentElement.requestFullscreen()`) |
@@ -128,7 +129,13 @@ export function findLineIndex(lines: LyricLine[], t: number): number {
 ```
 (Testes unitários obrigatórios.)
 
-### Preenchimento progressivo
+### Efeito de pintar a letra (modelos)
+O efeito é uma função registrada em `frontend/src/lib/lyrics/effects.ts` (`LYRICS_EFFECTS`), que recebe a linha, o tempo e o `fillPercent` e devolve o progresso (0..1) de cada palavra; o `LyricsView` só aplica o resultado em `--p`. Para criar um modelo novo: acrescentar o id em `shared/src/lyricsEffects.ts` e implementar `progress` no registro (o TypeScript obriga a implementar todos).
+- **Liga/desliga** e **modelo** são globais (`player.lyricsEffectEnabled`, `player.lyricsEffect` em `/api/settings`). Desligado = todas as palavras com `--p:1` assim que a linha começa.
+- **`fillPercent`** é por música (`songs.fillPercent`, padrão 100): o começo da linha não muda; o instante em que termina de pintar é `start + (end − start) × fillPercent/100` (menor = termina antes). Aparece no player e na página de sincronizar.
+- Modelos: `smooth` (Preencher aos poucos, padrão): barra contínua repartida entre as palavras pelo número de letras; `words` (Palavra por palavra): cada palavra fica inteira colorida quando chega a sua parte da linha (a primeira, no instante em que a linha começa). Com `words` vindos do Whisper, usam-se os tempos reais de cada palavra, também escalados pelo `fillPercent`.
+
+### Preenchimento progressivo (modelo `smooth`)
 - **Com `words`:** cada palavra é um `<span>`; a palavra atual recebe `--p` (0→1) = `(t - w.start)/(w.end - w.start)`; as anteriores, `--p:1`.
 - **Sem `words` (LRCLIB por linha):** preenchimento da linha inteira com `--p = (t - line.start) / (line.end - line.start)`, limitado a 0..1.
 - CSS do efeito karaokê:

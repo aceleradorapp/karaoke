@@ -227,6 +227,17 @@ describe('song routes', () => {
       expect(vi.mocked(emitToAll).mock.calls.map(([event]) => event)).toEqual(['song:updated']);
     });
 
+    it('starts every song with the normal fill time and saves a new one', async () => {
+      const song = await createSong();
+      expect((await get(`/api/songs/${song.id}`)).json().fillPercent).toBe(100);
+
+      const response = await patch(song.id, { fillPercent: 65 });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json().fillPercent).toBe(65);
+      expect((await prisma.song.findUniqueOrThrow({ where: { id: song.id } })).fillPercent).toBe(65);
+    });
+
     it('rejects invalid changes', async () => {
       const song = await createSong();
 
@@ -236,6 +247,9 @@ describe('song routes', () => {
         { artist: '' },
         { lyricsOffsetMs: 60001 },
         { lyricsOffsetMs: 1.5 },
+        { fillPercent: 19 },
+        { fillPercent: 151 },
+        { fillPercent: 80.5 },
       ]) {
         expect((await patch(song.id, payload)).statusCode).toBe(400);
       }
