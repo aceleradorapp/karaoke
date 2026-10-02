@@ -62,10 +62,8 @@ export function PlayerControls(props: PlayerControlsProps) {
         <span className="w-12 text-sm tabular-nums">{formatDuration(props.duration)}</span>
       </div>
 
-      {props.lyricsEffect}
-
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-        <div className="flex items-center gap-1">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={props.onTogglePlay}
@@ -94,6 +92,7 @@ export function PlayerControls(props: PlayerControlsProps) {
             <Mic aria-hidden="true" className="size-5" />
             Voz guia: {props.voiceGuide ? 'ligada' : 'desligada'}
           </button>
+          {props.lyricsEffect}
         </div>
 
         <div className="flex items-center gap-2">

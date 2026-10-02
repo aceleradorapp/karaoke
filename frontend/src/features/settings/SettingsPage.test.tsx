@@ -113,6 +113,22 @@ describe('SettingsPage', () => {
     expect(patchBodies(fetchMock)[1]).toMatchObject({ 'ui.defaultTheme': 'neon' });
   });
 
+  it('chooses how the lyrics are painted, which the player only turns on and off', async () => {
+    const fetchMock = renderPage({ 'PATCH /api/settings': { body: SETTINGS } });
+    const section = await screen.findByRole('region', { name: 'Letra' });
+
+    expect(within(section).getByLabelText('Como pintar a letra')).toHaveValue('smooth');
+    fireEvent.change(within(section).getByLabelText('Como pintar a letra'), { target: { value: 'words' } });
+    await waitFor(() =>
+      expect(patchBodies(fetchMock).at(-1)).toMatchObject({ 'player.lyricsEffect': 'words' }),
+    );
+
+    fireEvent.click(within(section).getByRole('switch', { name: 'Pintar a letra enquanto se canta' }));
+    await waitFor(() =>
+      expect(patchBodies(fetchMock).at(-1)).toMatchObject({ 'player.lyricsEffectEnabled': false }),
+    );
+  });
+
   describe('scoring', () => {
     const scoring = () => screen.findByRole('region', { name: 'Pontuação' });
 

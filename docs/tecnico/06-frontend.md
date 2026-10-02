@@ -265,10 +265,11 @@ Pódio (1º, 2º e 3º com avatares grandes) da melhor média no período; abas 
 Seções:
 1. **Processamento:** dispositivo (Automático / GPU / CPU) + detectado ("GPU NVIDIA GeForce GT 1030, 2 GB: no modo automático será usada a CPU, porque a GPU tem pouca memória"); modelo Demucs; modelo Whisper; alinhar automaticamente; botão "Atualizar yt-dlp".
 2. **Pontuação:** modo (Afinação + plateia / Só afinação / Só plateia / Desligada); peso da plateia; tempo de votação; microfone (lista de `enumerateDevices`), **medidor de nível ao vivo** e latência (ms) com botão "Calibrar" (Fase 7).
-3. **Aparência:** tema padrão.
-4. **Acesso pelo celular:** código atual + "Gerar novo código".
-5. **Armazenamento:** espaço usado, número de músicas.
-6. **Perfis:** link para `/perfis/gerenciar`.
+3. **Letra:** ligar/desligar o efeito de pintar e o modelo do efeito (o player só tem o botão liga/desliga).
+4. **Aparência:** tema padrão.
+5. **Acesso pelo celular:** código atual + "Gerar novo código".
+6. **Armazenamento:** espaço usado, número de músicas.
+7. **Perfis:** link para `/perfis/gerenciar`.
 
 ## 6.7 Estado
 - **Servidor (TanStack Query):** chaves `['songs', params]`, `['song', id]`, `['home', profileId]`, `['jobs', scope]`, `['playlists', profileId]`, `['playlist', id]`, `['favorites', profileId]`, `['history', profileId]`, `['ranking', period]`, `['settings']`, `['system']`.

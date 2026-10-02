@@ -20,12 +20,12 @@ import { getSocket } from '../../realtime/socket';
 import { toast } from '../../stores/useToastStore';
 import { FinishedScreen } from './FinishedScreen';
 import { PitchMeter } from './PitchMeter';
-import { LyricsEffectControls } from './LyricsEffectControls';
+import { LyricsEffectToggle } from './LyricsEffectControls';
 import { LyricsView } from './LyricsView';
 import { PlayerControls } from './PlayerControls';
 import { SingerPicker } from './SingerPicker';
 import { useIdle } from './useIdle';
-import { useLyricsEffectChoice, useSongFillPercent } from './useLyricsEffect';
+import { useLyricsEffectChoice } from './useLyricsEffect';
 import { usePitchScoring } from './usePitchScoring';
 import { usePlayerSession, type PlayerSession } from './usePlayerSession';
 import { VotingScreen } from './VotingScreen';
@@ -103,7 +103,6 @@ function PlayerSession({ song }: { song: SongDTO }) {
   const closeVoting = useCloseVotingMutation();
   useVotingEvents(session);
   const effectChoice = useLyricsEffectChoice();
-  const fill = useSongFillPercent(song);
   const { isFullscreen, toggle: toggleFullscreen } = useFullscreen();
 
   const [searchParams] = useSearchParams();
@@ -187,7 +186,7 @@ function PlayerSession({ song }: { song: SongDTO }) {
   const effect: LyricsEffectSettings = {
     enabled: effectChoice.enabled,
     id: effectChoice.id,
-    fillPercent: fill.value,
+    fillPercent: song.fillPercent,
   };
 
   return (
@@ -353,14 +352,10 @@ function PlayerSession({ song }: { song: SongDTO }) {
                 onToggleFullscreen={toggleFullscreen}
                 onExit={requestExit}
                 lyricsEffect={
-                  <LyricsEffectControls
+                  <LyricsEffectToggle
                     variant="player"
                     enabled={effectChoice.enabled}
-                    effectId={effectChoice.id}
-                    fillPercent={fill.value}
                     onEnabledChange={effectChoice.setEnabled}
-                    onEffectChange={effectChoice.setId}
-                    onFillPercentChange={fill.set}
                   />
                 }
               />
