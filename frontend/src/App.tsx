@@ -8,6 +8,7 @@ import { ManageProfilesPage } from './features/profiles/ManageProfilesPage';
 import { StageLayout } from './features/layout/StageLayout';
 import { SettingsPage } from './features/settings/SettingsPage';
 import { QueuePage } from './features/processing/QueuePage';
+import { SingQueuePage } from './features/singQueue/SingQueuePage';
 import { SongDetailPage } from './features/songs/SongDetailPage';
 import { UploadPage } from './features/upload/UploadPage';
 import { YoutubePage } from './features/youtube/YoutubePage';
@@ -50,6 +51,7 @@ export function App() {
             <Route path="/youtube" element={<YoutubePage />} />
             <Route path="/enviar" element={<UploadPage />} />
             <Route path="/fila" element={<QueuePage />} />
+            <Route path="/proximos" element={<SingQueuePage />} />
             <Route path="/" element={<HomePage />} />
             <Route path="/biblioteca" element={<LibraryPage />} />
             <Route path="/favoritas" element={<FavoritesPage />} />

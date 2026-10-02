@@ -2,11 +2,28 @@ import clsx from 'clsx';
 import { Menu, Search, Smartphone, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router';
+import { useSingQueueQuery } from '../../api/singQueue';
 import { AccessQrModal } from '../mobile/AccessQrModal';
 import { QueueIndicator } from '../processing/QueueIndicator';
 import { NAV_ITEMS } from './navItems';
 import { ProfileMenu } from './ProfileMenu';
 import { SearchBox } from './SearchBox';
+
+function SingQueueCount() {
+  const count = useSingQueueQuery().data?.length ?? 0;
+  if (count === 0) return null;
+  return (
+    <>
+      <span
+        aria-hidden="true"
+        className="ml-2 inline-flex min-w-6 items-center justify-center rounded-full bg-primary px-1.5 text-sm font-semibold text-primary-contrast"
+      >
+        {count}
+      </span>
+      <span className="sr-only">, {count} na fila</span>
+    </>
+  );
+}
 
 const ICON_BUTTON_CLASSES =
   'inline-flex size-11 shrink-0 items-center justify-center rounded-lg hover:bg-surface-2';
@@ -58,6 +75,7 @@ export function TopBar() {
               }
             >
               {item.label}
+              {item.showsSingQueueCount && <SingQueueCount />}
             </NavLink>
           ))}
         </nav>

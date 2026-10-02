@@ -2,11 +2,13 @@ export interface NavItem {
   to: string;
   label: string;
   end?: boolean;
+  showsSingQueueCount?: boolean;
 }
 
 export const NAV_ITEMS: NavItem[] = [
   { to: '/', label: 'Início', end: true },
   { to: '/biblioteca', label: 'Biblioteca' },
+  { to: '/proximos', label: 'Próximos', showsSingQueueCount: true },
   { to: '/youtube', label: 'YouTube' },
   { to: '/enviar', label: 'Enviar' },
   { to: '/playlists', label: 'Playlists' },
