@@ -2,6 +2,14 @@
 
 > Entradas mais recentes no topo. Use `/fim-sessao` para registrar.
 
+## 2026-10-02 (7) — Fase 5B concluída: convidados no celular e fila de cantores
+**Pedido do Michael:** o convidado escolher pelo celular o nome dele e as músicas que vai cantar; a TV com uma fila de cantores. Respostas padrão adotadas (ele pediu "se organize da melhor forma"): o celular cria convidado; ranking com família e convidados juntos e filtro "Só a família"; ninguém vota em si mesmo (as duas últimas valem para a Fase 7).
+**Feito:** ADR-008 e documento técnico (F5B-01); backend: celular lista perfis e cria convidado (sempre convidado, tema padrão), importação grava quem pediu (F5B-02); tabela `sing_requests`, `/api/sing-queue`, limite de 3 pedidos por pessoa, `singQueue:changed`, `requestId` em `POST /performances` (F5B-03); celular: "Quem é você?", aba Músicas com "Cantar", "Quero cantar esta" na importação, aba Fila com Próximos + Preparando (F5B-04); palco: página Próximos (chamar, subir, descer, tirar), contador na barra, faixa "Vez de…" no início, player "Vez de Ana! 🎤" e "Chamar o próximo" no fim (F5B-05).
+**Verificado (F5B-06):** 322 testes backend, 749 frontend, 24 shared, 196 worker, typecheck ok; roteiro no navegador com palco + 2 celulares, 37/37 (identidade, limite, ordem ao vivo, reordenar, tirar só o próprio pedido, chamar, pedido sai ao começar, fim → próximo, perfil apagado → "Quem é você?", sem rolagem horizontal de 360 a 1920 px).
+**Bugs achados só no navegador (corrigidos):** a TV não via o convidado recém-criado no celular (lista de perfis em cache) → novo evento `profiles:changed`; o botão "Quero cantar" cortava os títulos no celular → botão compacto "Cantar" e título em até 2 linhas; títulos iguais de artistas diferentes deixavam o botão ambíguo → o nome acessível inclui o artista.
+**Observação:** o roteiro tocou uma música de teste até o fim (soma 1 no `playCount` dela) e apagou os perfis de teste ao final.
+**Próximos passos:** Fase 7 (pontuação, votação pelo celular usando a identidade, ranking).
+
 ## 2026-10-02 (6) — Fase 5 concluída
 **Teste com celular real (Michael):** entrou pelo QR, buscou, a prévia tocou (endereço `nip.io`) e importou. Antes, o Vite tinha ficado com a configuração antiga (sem `allowedHosts`) porque o arquivo mudou durante a troca de branch do merge; resolvido fazendo o Vite reler o `vite.config.ts`.
 **Sobre a demora (medido):** cada busca nova no YouTube leva 3,5–4,5 s (consulta via yt-dlp; repetida fica em cache e sai em 0,03 s); o "Importar" só registra (milissegundos); o tempo longo é o processamento (separar a voz na CPU ≈ 1,5× a duração + letra/palavras ~1 min); o modo de desenvolvimento deixa a 1ª abertura do celular mais lenta (a versão final, Fase 8, empacota tudo).

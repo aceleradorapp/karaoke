@@ -10,6 +10,7 @@ interface SingerPickerProps {
   selectedId: string | null;
   songTitle: string;
   songArtist: string;
+  title?: string;
   onSelect: (profileId: string) => void;
   onStart: () => void;
   onBack: () => void;
@@ -21,6 +22,7 @@ export function SingerPicker({
   selectedId,
   songTitle,
   songArtist,
+  title = 'Quem vai cantar esta?',
   onSelect,
   onStart,
   onBack,
@@ -32,7 +34,7 @@ export function SingerPicker({
         <h1 className="font-display text-4xl leading-tight sm:text-6xl">{songTitle}</h1>
       </div>
 
-      <h2 className="text-2xl font-semibold">Quem vai cantar esta?</h2>
+      <h2 className="text-2xl font-semibold">{title}</h2>
 
       {isLoading ? (
         <Spinner className="size-8" />

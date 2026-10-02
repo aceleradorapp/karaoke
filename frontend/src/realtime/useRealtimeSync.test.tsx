@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { JobDTO } from '@caraoke/shared';
 import { jobsQueryKey } from '../api/jobs';
 import { SETTINGS_QUERY_KEY } from '../api/settings';
+import { SING_QUEUE_QUERY_KEY } from '../api/singQueue';
 import type { RealtimeSocket } from './socket';
 import { useRealtimeSync } from './useRealtimeSync';
 
@@ -75,7 +76,7 @@ describe('useRealtimeSync', () => {
     socket.emit('connect');
 
     const invalidatedKeys = invalidate.mock.calls.map(([filters]) => filters?.queryKey);
-    expect(invalidatedKeys).toEqual([['jobs'], ['songs'], ['home'], ['system']]);
+    expect(invalidatedKeys).toEqual([['jobs'], ['songs'], ['home'], ['system'], ['singQueue'], ['profiles']]);
   });
 
   it('refreshes the song lists when a song changes or is deleted', () => {
@@ -89,9 +90,42 @@ describe('useRealtimeSync', () => {
     expect(invalidate).toHaveBeenCalledTimes(4);
   });
 
+  it('replaces the singers queue with the one sent by the server', () => {
+    const { socket, queryClient } = setup();
+    const request = { id: 'r1', position: 1, song: { id: 'song1', status: 'READY' } };
+
+    socket.emit('singQueue:changed', { items: [request] });
+
+    expect(queryClient.getQueryData(SING_QUEUE_QUERY_KEY)).toEqual([request]);
+  });
+
+  it('updates the song inside the singers queue when it becomes ready', () => {
+    const { socket, queryClient } = setup();
+    queryClient.setQueryData(SING_QUEUE_QUERY_KEY, [
+      { id: 'r1', song: { id: 'song1', status: 'PROCESSING' } },
+      { id: 'r2', song: { id: 'song2', status: 'READY' } },
+    ]);
+
+    socket.emit('song:updated', { id: 'song1', status: 'READY' });
+
+    expect(queryClient.getQueryData(SING_QUEUE_QUERY_KEY)).toEqual([
+      { id: 'r1', song: { id: 'song1', status: 'READY' } },
+      { id: 'r2', song: { id: 'song2', status: 'READY' } },
+    ]);
+  });
+
+  it('reloads the profiles when someone creates a guest on a phone', () => {
+    const { socket, queryClient } = setup();
+    const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
+
+    socket.emit('profiles:changed');
+
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['profiles'] });
+  });
+
   it('stops listening when the component goes away', () => {
     const { socket, unmount } = setup();
-    expect(socket.totalListeners()).toBe(7);
+    expect(socket.totalListeners()).toBe(9);
 
     unmount();
 

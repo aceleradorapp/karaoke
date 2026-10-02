@@ -1,11 +1,12 @@
 import { importYoutubeSchema, type YoutubeSearchResult } from '@caraoke/shared';
 import { ArrowLeftRight } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
+import { useAddSingRequestMutation } from '../../api/singQueue';
 import { useImportYoutubeMutation } from '../../api/youtube';
 import { Button } from '../../components/Button';
 import { Modal } from '../../components/Modal';
+import { useActingProfileId } from '../../lib/actingProfile';
 import { isMobileApp } from '../../lib/mobileApp';
-import { useProfileStore } from '../../stores/useProfileStore';
 import { toast } from '../../stores/useToastStore';
 
 const FORM_ID = 'import-youtube-form';
@@ -20,8 +21,10 @@ type FieldErrors = Partial<Record<'artist' | 'title', string>>;
 
 function ImportForm({ video, onClose, onImported }: ImportFormProps) {
   const importVideo = useImportYoutubeMutation();
-  const stageProfileId = useProfileStore((state) => state.currentProfile?.id);
-  const profileId = isMobileApp() ? undefined : stageProfileId;
+  const addSingRequest = useAddSingRequestMutation();
+  const profileId = useActingProfileId();
+  const canAskToSing = isMobileApp() && profileId !== undefined;
+  const [wantsToSing, setWantsToSing] = useState(true);
   const [artist, setArtist] = useState(video.suggested.artist);
   const [title, setTitle] = useState(video.suggested.title);
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -57,8 +60,18 @@ function ImportForm({ video, onClose, onImported }: ImportFormProps) {
       else toast.success('Adicionada à fila de processamento');
       onImported(video.youtubeId);
       onClose();
+      if (canAskToSing && wantsToSing && profileId) await askToSing(profileId, result.song.id);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Não foi possível importar a música');
+    }
+  }
+
+  async function askToSing(singerId: string, songId: string) {
+    try {
+      await addSingRequest.mutateAsync({ profileId: singerId, songId });
+      toast.success('Você está na fila para cantar');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível entrar na fila para cantar');
     }
   }
 
@@ -101,6 +114,18 @@ function ImportForm({ video, onClose, onImported }: ImportFormProps) {
             </span>
           )}
         </label>
+
+        {canAskToSing && (
+          <label className="flex min-h-11 items-center gap-3 text-base">
+            <input
+              type="checkbox"
+              checked={wantsToSing}
+              onChange={(event) => setWantsToSing(event.target.checked)}
+              className="size-5 accent-primary"
+            />
+            Quero cantar esta
+          </label>
+        )}
       </form>
 
       <div className="mt-6 flex flex-wrap justify-end gap-3">

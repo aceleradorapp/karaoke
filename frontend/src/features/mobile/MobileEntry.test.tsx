@@ -1,8 +1,9 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useMobileAccessStore } from '../../stores/useMobileAccessStore';
+import { useMobileProfileStore } from '../../stores/useMobileProfileStore';
 import { mockApi, type MockRoutes } from '../../test/mockApi';
 import { MobileEntry } from './MobileEntry';
 import { MobileLayout, useMobileAccessEvents } from './MobileLayout';
@@ -33,6 +34,8 @@ function renderAt(path: string, routes: MockRoutes = {}) {
         <Routes>
           <Route path="/m" element={<MobileEntry />} />
           <Route element={<MobileLayout />}>
+            <Route path="/m/quem-sou" element={<p>Tela quem é você</p>} />
+            <Route path="/m/musicas" element={<p>Tela de músicas</p>} />
             <Route path="/m/buscar" element={<p>Tela de busca</p>} />
             <Route path="/m/fila" element={<p>Tela da fila</p>} />
           </Route>
@@ -51,9 +54,12 @@ const CHECK_DENIED: MockRoutes = {
   },
 };
 
+const CARLA = { id: 'g1', name: 'Carla', avatar: 'frog' };
+
 describe('MobileEntry', () => {
   beforeEach(() => {
     useMobileAccessStore.setState({ code: null, status: 'unknown' });
+    useMobileProfileStore.setState({ profile: CARLA });
     fakeSocket.handlers.clear();
   });
 
@@ -62,10 +68,10 @@ describe('MobileEntry', () => {
     window.history.pushState({}, '', '/');
   });
 
-  it('saves the code of the QR code, checks it and opens the search', async () => {
+  it('saves the code of the QR code, checks it and opens the songs', async () => {
     const { fetchMock } = renderAt('/m?c=k7p2qx', CHECK_OK);
 
-    expect(await screen.findByText('Tela de busca')).toBeInTheDocument();
+    expect(await screen.findByText('Tela de músicas')).toBeInTheDocument();
     expect(useMobileAccessStore.getState()).toMatchObject({ code: 'K7P2QX', status: 'ok' });
     const [, init] = fetchMock.mock.calls[0] ?? [];
     expect((init as RequestInit).headers).toHaveProperty('X-Access-Code', 'K7P2QX');
@@ -89,8 +95,15 @@ describe('MobileEntry', () => {
     useMobileAccessStore.setState({ code: 'K7P2QX' });
     const { fetchMock } = renderAt('/m', CHECK_OK);
 
-    expect(await screen.findByText('Tela de busca')).toBeInTheDocument();
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(await screen.findByText('Tela de músicas')).toBeInTheDocument();
+    expect(fetchMock.mock.calls.filter(([url]) => url === '/api/system/access/check')).toHaveLength(1);
+  });
+
+  it('asks who the person is the first time', async () => {
+    useMobileProfileStore.setState({ profile: null });
+    renderAt('/m?c=K7P2QX', CHECK_OK);
+
+    expect(await screen.findByText('Tela quem é você')).toBeInTheDocument();
   });
 
   it('asks to scan the QR code when there is no code at all', async () => {
@@ -111,6 +124,7 @@ describe('MobileEntry', () => {
 
 describe('MobileLayout', () => {
   beforeEach(() => {
+    useMobileProfileStore.setState({ profile: CARLA });
     fakeSocket.handlers.clear();
   });
 
@@ -119,13 +133,16 @@ describe('MobileLayout', () => {
     window.history.pushState({}, '', '/');
   });
 
-  it('shows the page with the three tabs at the bottom', () => {
+  it('shows who is using the phone and the four tabs at the bottom', () => {
     useMobileAccessStore.setState({ code: 'K7P2QX', status: 'ok' });
     renderAt('/m/fila');
 
     expect(screen.getByText('Tela da fila')).toBeInTheDocument();
+    expect(screen.getByText('Carla')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'trocar' })).toHaveAttribute('href', '/m/quem-sou');
     const tabs = screen.getByRole('navigation', { name: 'Seções do celular' });
-    expect(tabs.querySelectorAll('a')).toHaveLength(3);
+    expect(tabs.querySelectorAll('a')).toHaveLength(4);
+    expect(screen.getByRole('link', { name: 'Músicas' })).toHaveAttribute('href', '/m/musicas');
     expect(screen.getByRole('link', { name: 'Fila' })).toHaveAttribute('aria-current', 'page');
     expect(screen.getByRole('link', { name: 'Buscar' })).toHaveAttribute('href', '/m/buscar');
     expect(screen.getByRole('link', { name: 'Enviar' })).toHaveAttribute('href', '/m/enviar');
@@ -140,6 +157,34 @@ describe('MobileLayout', () => {
 
     expect(await screen.findByText('Tela da fila')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Buscar' })).toHaveAttribute('href', '/m/buscar?q=evidencias');
+  });
+
+  it('sends a phone that does not know who is using it to "Quem é você?", without the tabs', async () => {
+    useMobileAccessStore.setState({ code: 'K7P2QX', status: 'ok' });
+    useMobileProfileStore.setState({ profile: null });
+    renderAt('/m/fila');
+
+    expect(await screen.findByText('Tela quem é você')).toBeInTheDocument();
+    expect(screen.queryByRole('navigation', { name: 'Seções do celular' })).not.toBeInTheDocument();
+  });
+
+  it('forgets the person when the profile was deleted on the TV', async () => {
+    useMobileAccessStore.setState({ code: 'K7P2QX', status: 'ok' });
+    renderAt('/m/fila', { 'GET /api/profiles': { body: { items: [] } } });
+
+    expect(await screen.findByText('Tela quem é você')).toBeInTheDocument();
+    expect(useMobileProfileStore.getState().profile).toBeNull();
+  });
+
+  it('keeps the person while the profile still exists', async () => {
+    useMobileAccessStore.setState({ code: 'K7P2QX', status: 'ok' });
+    const { fetchMock } = renderAt('/m/fila', {
+      'GET /api/profiles': { body: { items: [{ ...CARLA, theme: 'cinema', isGuest: true }] } },
+    });
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/profiles', expect.anything()));
+    expect(screen.getByText('Tela da fila')).toBeInTheDocument();
+    expect(useMobileProfileStore.getState().profile).toEqual(CARLA);
   });
 
   it('sends a phone without a code to the scan screen', async () => {

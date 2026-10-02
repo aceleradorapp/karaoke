@@ -21,7 +21,7 @@ export interface PlayerSession {
   duration: number;
   liveOffsetMs: number;
   getTime: () => number;
-  start: (singerId: string) => Promise<void>;
+  start: (singerId: string, requestId?: string | null) => Promise<void>;
   restart: () => Promise<void>;
   togglePlay: () => void;
   seekBy: (seconds: number) => void;
@@ -77,8 +77,12 @@ export function usePlayerSession(song: SongDTO): PlayerSession {
   );
 
   const beginPerformance = useCallback(
-    async (instance: KaraokeEngine, profileId: string) => {
-      const { id } = await startPerformance.mutateAsync({ profileId, songId: song.id });
+    async (instance: KaraokeEngine, profileId: string, requestId?: string | null) => {
+      const { id } = await startPerformance.mutateAsync({
+        profileId,
+        songId: song.id,
+        ...(requestId ? { requestId } : {}),
+      });
       performanceId.current = id;
       voiceGuideUsed.current = false;
       instance.setVoiceGuide(false);
@@ -97,7 +101,7 @@ export function usePlayerSession(song: SongDTO): PlayerSession {
   }, []);
 
   const start = useCallback(
-    async (profileId: string) => {
+    async (profileId: string, requestId?: string | null) => {
       if (!song.instrumentalUrl) {
         setError('Esta música não tem o áudio instrumental');
         setPhase('error');
@@ -115,7 +119,7 @@ export function usePlayerSession(song: SongDTO): PlayerSession {
         await instance.load(song.instrumentalUrl, song.vocalsUrl);
         setDuration(instance.duration);
         setHasVocals(instance.hasVocals);
-        await beginPerformance(instance, profileId);
+        await beginPerformance(instance, profileId, requestId);
       } catch (caught) {
         instance.destroy();
         engine.current = null;

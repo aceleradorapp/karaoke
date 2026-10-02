@@ -1,8 +1,11 @@
 import type { FastifyInstance } from 'fastify';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { resetDatabase } from '../../../test/database.js';
 import { buildApp } from '../../app.js';
 import { prisma } from '../../db.js';
+import { emitToAll } from '../../realtime.js';
+
+vi.mock('../../realtime.js', () => ({ emitToRoom: vi.fn(), emitToAll: vi.fn(), disconnectRoom: vi.fn() }));
 
 describe('profile routes', () => {
   let app: FastifyInstance;
@@ -106,5 +109,62 @@ describe('profile routes', () => {
     const touch = await app.inject({ method: 'POST', url: '/api/profiles/unknown/touch' });
     expect(patch.statusCode).toBe(404);
     expect(touch.statusCode).toBe(404);
+  });
+
+  it('tells the screens when profiles are created, changed or deleted', async () => {
+    vi.mocked(emitToAll).mockClear();
+    const { id } = (await createProfile({ name: 'Ana', avatar: 'lion' })).json();
+    await app.inject({ method: 'PATCH', url: `/api/profiles/${id}`, payload: { name: 'Ana Maria' } });
+    await app.inject({ method: 'DELETE', url: `/api/profiles/${id}` });
+
+    const events = vi.mocked(emitToAll).mock.calls.map(([event]) => event);
+    expect(events.filter((event) => event === 'profiles:changed')).toHaveLength(3);
+  });
+
+  describe('from a phone', () => {
+    const PHONE = { remoteAddress: '192.168.0.50', headers: { 'x-access-code': 'ABC234' } };
+
+    beforeEach(async () => {
+      await prisma.setting.create({ data: { key: 'access.code', value: 'ABC234' } });
+    });
+
+    it('lists the profiles so the guest can say who they are', async () => {
+      await createProfile({ name: 'Ana', avatar: 'lion' });
+
+      const response = await app.inject({ method: 'GET', url: '/api/profiles', ...PHONE });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json().items.map((profile: { name: string }) => profile.name)).toEqual(['Ana']);
+    });
+
+    it('always creates a guest with the default theme, whatever the phone asks', async () => {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/profiles',
+        ...PHONE,
+        payload: { name: 'Carla', avatar: 'frog', theme: 'neon', isGuest: false },
+      });
+
+      expect(response.statusCode).toBe(201);
+      expect(response.json()).toMatchObject({
+        name: 'Carla',
+        avatar: 'frog',
+        theme: 'cinema',
+        isGuest: true,
+      });
+    });
+
+    it('cannot edit, touch or delete profiles', async () => {
+      const { id } = (await createProfile({ name: 'Ana', avatar: 'lion' })).json();
+
+      const attempts = await Promise.all([
+        app.inject({ method: 'PATCH', url: `/api/profiles/${id}`, ...PHONE, payload: { name: 'X' } }),
+        app.inject({ method: 'POST', url: `/api/profiles/${id}/touch`, ...PHONE }),
+        app.inject({ method: 'DELETE', url: `/api/profiles/${id}`, ...PHONE }),
+      ]);
+
+      expect(attempts.map((response) => response.statusCode)).toEqual([401, 401, 401]);
+      expect(await prisma.profile.count()).toBe(1);
+    });
   });
 });

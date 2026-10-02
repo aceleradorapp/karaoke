@@ -128,17 +128,20 @@ describe('youtube import route', () => {
     expect(events).toEqual(['song:updated', 'job:updated']);
   });
 
-  it('is available to phones that have the access code', async () => {
+  it('is available to phones that have the access code and records who asked for it', async () => {
     await prisma.setting.create({ data: { key: 'access.code', value: 'ABC234' } });
+    const guest = await prisma.profile.create({ data: { name: 'Carla', avatar: 'frog', isGuest: true } });
 
     const response = await app.inject({
       method: 'POST',
       url: '/api/youtube/import',
-      payload: VALID_BODY,
+      payload: { ...VALID_BODY, profileId: guest.id },
       remoteAddress: '192.168.0.50',
       headers: { 'x-access-code': 'ABC234' },
     });
 
     expect(response.statusCode).toBe(201);
+    const stored = await prisma.song.findUniqueOrThrow({ where: { id: response.json().song.id } });
+    expect(stored.addedById).toBe(guest.id);
   });
 });

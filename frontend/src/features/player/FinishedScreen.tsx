@@ -7,15 +7,29 @@ export interface PlaylistSequence {
   onNext: () => void;
 }
 
+export interface NextSinger {
+  singerName: string;
+  songTitle: string;
+  onCall: () => void;
+}
+
 interface FinishedScreenProps {
   songTitle: string;
   onSingAgain: () => void;
   onBack: () => void;
   sequence?: PlaylistSequence | null;
+  nextSinger?: NextSinger | null;
 }
 
-export function FinishedScreen({ songTitle, onSingAgain, onBack, sequence }: FinishedScreenProps) {
+export function FinishedScreen({
+  songTitle,
+  onSingAgain,
+  onBack,
+  sequence,
+  nextSinger,
+}: FinishedScreenProps) {
   const hasNext = sequence?.nextTitle != null;
+  const hasPrimaryAction = hasNext || Boolean(nextSinger);
 
   return (
     <div className="flex flex-col items-center gap-8 px-4 text-center">
@@ -27,17 +41,27 @@ export function FinishedScreen({ songTitle, onSingAgain, onBack, sequence }: Fin
       </div>
       <p className="text-2xl">{sequence && !hasNext ? 'Fim da playlist! 🎉' : 'Mandou bem! 🎤'}</p>
       {hasNext && <p className="text-lg text-muted">A seguir: {sequence?.nextTitle}</p>}
+      {nextSinger && (
+        <p className="text-lg text-muted">
+          A seguir: {nextSinger.singerName} — {nextSinger.songTitle}
+        </p>
+      )}
       <div className="flex flex-wrap justify-center gap-3">
         {hasNext && (
           <Button size="lg" onClick={sequence?.onNext} autoFocus>
             Próxima música
           </Button>
         )}
+        {nextSinger && (
+          <Button size="lg" onClick={nextSinger.onCall} autoFocus>
+            Chamar o próximo
+          </Button>
+        )}
         <Button
           size="lg"
-          variant={hasNext ? 'secondary' : 'primary'}
+          variant={hasPrimaryAction ? 'secondary' : 'primary'}
           onClick={onSingAgain}
-          autoFocus={!hasNext}
+          autoFocus={!hasPrimaryAction}
         >
           Cantar de novo
         </Button>

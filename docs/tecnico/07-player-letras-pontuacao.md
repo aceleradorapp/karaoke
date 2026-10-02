@@ -25,6 +25,10 @@
 ### Antes de começar: "Quem vai cantar esta?"
 Overlay com o perfil atual pré-selecionado e os outros perfis em linha (o convidado também pode ser escolhido). Botão **Começar** (Enter). Isso cria a `Performance` (`POST /performances`) com o perfil escolhido.
 
+**Vindo da fila de cantores** (`?pedido=<requestId>`, ADR-008): o título vira **"Vez de Ana! 🎤"** e quem pediu já vem selecionado (dá para trocar). O `POST /performances` leva o `requestId`, e o pedido sai da fila. Se o pedido não existir mais (removido em outro lugar), o player funciona como uma música avulsa.
+
+**Fim da música e a fila de cantores:** fora de uma playlist, se houver um pedido com música pronta, a tela de fim mostra "A seguir: João — Azul da Cor do Mar" e o botão **Chamar o próximo** (`/player/<songId>?pedido=<id>`, substituindo a página atual). A playlist tem prioridade quando o player foi aberto por ela.
+
 ### Atalhos de teclado
 | Tecla | Ação |
 |---|---|
@@ -250,6 +254,7 @@ TELA DE NOTA: contador animado de 0 até a nota, estrelas, frase por faixa:
 ### Celular (`/m/votar`)
 - Ao receber `vote:open` (ou ao abrir a página e `GET /performances/voting/current` retornar algo): tela cheia com o avatar, o nome de quem cantou, a música, **5 estrelas grandes** e a contagem regressiva.
 - `voterToken`: UUID gerado uma vez e salvo em `localStorage` (`caraoke.voterToken`).
+- `voterProfileId`: a identidade do celular (ADR-008). Quem está cantando vê "É a sua vez! A plateia está votando" em vez das estrelas (o backend também recusa com `CANNOT_VOTE_FOR_SELF`).
 - Depois de votar: "Obrigado! 🎉" até chegar o `score:final`, que mostra a nota final por 5 s e volta para a aba anterior.
 
 ## 7.7 Estado do player (`usePlayerStore`)
