@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import { AlertCircle, Check, FileAudio, UploadCloud } from 'lucide-react';
 import { useRef, useState, type ChangeEvent, type DragEvent } from 'react';
 import { Button } from '../../components/Button';
+import { isMobileApp } from '../../lib/mobileApp';
 import { useProfileStore } from '../../stores/useProfileStore';
 import { useUploadQueue, type UploadItem } from './useUploadQueue';
 
@@ -60,8 +61,13 @@ function UploadRow({ item, onRetry }: { item: UploadItem; onRetry: () => void })
   );
 }
 
-export function UploadPanel() {
-  const profileId = useProfileStore((state) => state.currentProfile?.id);
+interface UploadPanelProps {
+  isCompact?: boolean;
+}
+
+export function UploadPanel({ isCompact = false }: UploadPanelProps) {
+  const stageProfileId = useProfileStore((state) => state.currentProfile?.id);
+  const profileId = isMobileApp() ? undefined : stageProfileId;
   const { items, addFiles, retry, clearFinished } = useUploadQueue(profileId);
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -95,7 +101,9 @@ export function UploadPanel() {
         )}
       >
         <UploadCloud aria-hidden="true" className="size-12 text-muted" />
-        <p className="text-lg">Arraste os arquivos de áudio até aqui</p>
+        <p className="text-lg">
+          {isCompact ? 'Escolha músicas guardadas no celular' : 'Arraste os arquivos de áudio até aqui'}
+        </p>
         <input
           ref={inputRef}
           type="file"
@@ -111,10 +119,12 @@ export function UploadPanel() {
         </p>
       </div>
 
-      <p className="text-sm text-muted">
-        Você também pode copiar os arquivos direto para a pasta <code>storage/entrada/upload</code> no PC:
-        eles entram na fila sozinhos.
-      </p>
+      {!isCompact && (
+        <p className="text-sm text-muted">
+          Você também pode copiar os arquivos direto para a pasta <code>storage/entrada/upload</code> no PC:
+          eles entram na fila sozinhos.
+        </p>
+      )}
 
       {items.length > 0 && (
         <section aria-label="Arquivos enviados" className="flex flex-col gap-3">

@@ -30,6 +30,14 @@ const INTERNAL_PREFIX = '/api/internal/';
 const API_PREFIX = '/api/';
 const MEDIA_PREFIX = '/media/';
 
+const COVER_PATTERN = /^\/media\/[^/]+\/capa\.jpg$/;
+const ACCESS_CODE_QUERY = 'c';
+
+function queryValue(url: string, name: string): string | null {
+  const query = url.split('?')[1];
+  return query ? new URLSearchParams(query).get(name) : null;
+}
+
 const ACCESS_DENIED_MESSAGE = 'Código de acesso inválido. Escaneie o QR code novamente.';
 
 function isMobileRouteAllowed(method: string, path: string): boolean {
@@ -56,8 +64,13 @@ export function registerAccessControl(app: FastifyInstance): void {
     if (LOOPBACK_ADDRESSES.has(request.ip)) return;
 
     const accessCode = await getAccessCode();
-    const hasValidCode = accessCode !== null && safeEqual(request.headers['x-access-code'], accessCode);
-    const isAllowed = !path.startsWith(MEDIA_PREFIX) && isMobileRouteAllowed(request.method, path);
+    const isCover = request.method === 'GET' && COVER_PATTERN.test(path);
+    const presented = isCover
+      ? (request.headers['x-access-code'] ?? queryValue(request.url, ACCESS_CODE_QUERY))
+      : request.headers['x-access-code'];
+    const hasValidCode = accessCode !== null && safeEqual(presented, accessCode);
+    const isAllowed =
+      isCover || (!path.startsWith(MEDIA_PREFIX) && isMobileRouteAllowed(request.method, path));
     if (!hasValidCode || !isAllowed) {
       throw unauthorized('ACCESS_DENIED', ACCESS_DENIED_MESSAGE);
     }

@@ -4,10 +4,11 @@ import { apiGet, apiSend } from './client';
 
 export const SETTINGS_QUERY_KEY = ['settings'] as const;
 
-export function useSettingsQuery() {
+export function useSettingsQuery(isEnabled = true) {
   return useQuery({
     queryKey: SETTINGS_QUERY_KEY,
     queryFn: () => apiGet<AppSettings>('/settings'),
+    enabled: isEnabled,
   });
 }
 

@@ -131,10 +131,17 @@ describe('StageLayout', () => {
     expect(currentLocation()).toBe('/');
   });
 
-  it('links to the processing queue and has the QR code placeholder disabled', () => {
+  it('links to the processing queue and opens the QR code for the phone', async () => {
+    mockApi({
+      'GET /api/jobs?scope=active': { body: { items: [] } },
+      'GET /api/system/access': { body: { code: 'K7P2QX', urls: ['http://192.168.98.10:5173/m?c=K7P2QX'] } },
+    });
     renderLayout();
 
     expect(screen.getByRole('link', { name: 'Fila de processamento' })).toHaveAttribute('href', '/fila');
-    expect(screen.getByRole('button', { name: /QR code de acesso/ })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'QR code para usar o celular' }));
+
+    expect(await screen.findByRole('dialog', { name: 'Usar o celular' })).toBeInTheDocument();
+    expect(await screen.findByText('K7P2QX')).toBeInTheDocument();
   });
 });

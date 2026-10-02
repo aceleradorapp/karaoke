@@ -14,7 +14,7 @@
 | 2 | Importação e processamento | ✅ |
 | 3 | Biblioteca e player | ✅ |
 | 4 | Playlists, favoritas e histórico | ✅ |
-| 5 | Celular e QR code | ⬜ (próxima) |
+| 5 | Celular e QR code | 🟨 (falta só o teste com um celular de verdade) |
 | 6 | Letras inteligentes | ✅ (feita antes da 5; só F6-02, transcrever músicas sem letra, ficou pausada) |
 | 7 | Pontuação e ranking | ⬜ |
 | 8 | Publicação (futuro) | ⬜ |
@@ -112,11 +112,11 @@
 
 | ID | Status | Tarefa | Docs | Modelo |
 |---|---|---|---|---|
-| F5-01 | ⬜ | API `system/access` (IPs da rede, regenerar, check) + autenticação do socket por código | T-04 §4.6 Sistema, §4.7 | 🟡 |
-| F5-02 | ⬜ | Modal do QR code no palco | T-08 §8.1 | 🟢 |
-| F5-03 | ⬜ | `MobileLayout` + `/m` (validação do código) + client com `X-Access-Code` | T-08 §8.1 §8.2, T-06 §6.2 | 🟡 |
-| F5-04 | ⬜ | `/m/buscar`, `/m/enviar`, `/m/fila` (reutilizando os componentes) | T-08 §8.2 | 🟡 |
-| F5-05 | ⬜ | ✔ Verificação com um celular real na rede (inclui o firewall do Windows) | T-02 §2.5 | 🟢 |
+| F5-01 | ✅ 2026-10-02 | API `system/access` (IPs da rede, regenerar, check) + autenticação do socket por código | T-04 §4.6 Sistema, §4.7 | 🟡 |
+| F5-02 | ✅ 2026-10-02 | Modal do QR code no palco | T-08 §8.1 | 🟢 |
+| F5-03 | ✅ 2026-10-02 | `MobileLayout` + `/m` (validação do código) + client com `X-Access-Code` | T-08 §8.1 §8.2, T-06 §6.2 | 🟡 |
+| F5-04 | ✅ 2026-10-02 | `/m/buscar`, `/m/enviar`, `/m/fila` (reutilizando os componentes) | T-08 §8.2 | 🟡 |
+| F5-05 | 🟨 26/26 checagens com celular emulado (iPhone 13 pelo IP da rede); falta o teste do Michael com um celular de verdade | ✔ Verificação com um celular real na rede (inclui o firewall do Windows) | T-02 §2.5 | 🟢 |
 
 ## Fase 6 — Letras inteligentes (sincronia)  ⭐ *prioridade do Michael*
 | ID | Status | Tarefa | Docs | Modelo |

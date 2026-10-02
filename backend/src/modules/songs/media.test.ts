@@ -79,11 +79,22 @@ describe('media files', () => {
     }
   });
 
-  it('keeps the files away from phones, even with the access code', async () => {
+  it('keeps the audio away from phones, even with the access code', async () => {
     await prisma.setting.create({ data: { key: 'access.code', value: 'ABC234' } });
 
-    const response = await get('/media/song1/capa.jpg', '192.168.0.50', { 'x-access-code': 'ABC234' });
+    const response = await get('/media/song1/instrumental.mp3', '192.168.0.50', {
+      'x-access-code': 'ABC234',
+    });
 
     expect(response.statusCode).toBe(401);
+  });
+
+  it('shows the cover to a phone that has the access code', async () => {
+    await prisma.setting.create({ data: { key: 'access.code', value: 'ABC234' } });
+
+    const response = await get('/media/song1/capa.jpg?c=ABC234', '192.168.0.50');
+
+    expect(response.statusCode).toBe(200);
+    expect(response.rawPayload.equals(COVER_BYTES)).toBe(true);
   });
 });
