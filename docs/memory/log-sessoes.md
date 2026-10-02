@@ -2,6 +2,11 @@
 
 > Entradas mais recentes no topo. Use `/fim-sessao` para registrar.
 
+## 2026-10-02 (6) — Fase 5 concluída
+**Teste com celular real (Michael):** entrou pelo QR, buscou, a prévia tocou (endereço `nip.io`) e importou. Antes, o Vite tinha ficado com a configuração antiga (sem `allowedHosts`) porque o arquivo mudou durante a troca de branch do merge; resolvido fazendo o Vite reler o `vite.config.ts`.
+**Sobre a demora (medido):** cada busca nova no YouTube leva 3,5–4,5 s (consulta via yt-dlp; repetida fica em cache e sai em 0,03 s); o "Importar" só registra (milissegundos); o tempo longo é o processamento (separar a voz na CPU ≈ 1,5× a duração + letra/palavras ~1 min); o modo de desenvolvimento deixa a 1ª abertura do celular mais lenta (a versão final, Fase 8, empacota tudo).
+**Próximos passos:** Fase 7 (pontuação e ranking, inclusive a votação pelo celular). Ideia anotada: mostrar na fila uma estimativa de tempo restante.
+
 ## 2026-10-02 (5) — Teste com celular real: prévia do YouTube e tela branca
 **Relato do Michael:** na 1ª tentativa a busca ficou carregando e a tela ficou branca; na 2ª, buscou e importou, mas a prévia mostrou só "assistir no YouTube".
 **Diagnóstico:** a API de busca responde normalmente pela rede (2,3 s) e o fluxo funciona também no motor do Safari (WebKit). A prévia: o YouTube recusa o player embutido quando a página vem de um endereço IP (`http://192.168...`) e aceita nomes (`localhost`, `*.nip.io`); nenhuma variação do iframe contorna (sem referrer dá "Erro 153"). A tela branca não se repetiu; não deu para ver o erro no aparelho.
