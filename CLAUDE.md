@@ -14,6 +14,7 @@ Roda em um PC da casa, na rede local.
 | `docs/memory/contexto.md` | Visão, requisitos, hardware, decisões menores |
 | `docs/memory/decisoes/` | ADRs (decisões e o porquê) |
 | `docs/memory/log-sessoes.md` | Diário das sessões |
+| `docs/memory/sincronizacao-da-letra.md` | **Guia da sincronização da letra** (alinhamento, página de sincronizar, efeito de pintar, números medidos, armadilhas, o que falta). Leia antes de mexer em letra |
 | `docs/specs/` | Specs de funcionalidades **novas** que ainda não estão no documento técnico |
 | `vault/` | Ideias, pesquisas, referências (Obsidian) |
 | `frontend/` `backend/` `shared/` `worker/` | Código (criado na Fase 0) |

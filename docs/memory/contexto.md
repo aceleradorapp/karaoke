@@ -65,3 +65,6 @@ i5-4460 (4 núcleos) · 8 GB de RAM · GeForce GT 1030 com 2 GB → o Demucs rod
 
 ## Perguntas em aberto
 - O celular deve poder colocar músicas na fila de quem vai cantar? (backlog)
+
+## Sincronização da letra
+É a prioridade do Michael (a sincronia decide o sucesso do app). O estado, as decisões, os números medidos e o que falta estão em [`sincronizacao-da-letra.md`](sincronizacao-da-letra.md).
