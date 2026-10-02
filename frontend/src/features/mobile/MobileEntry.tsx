@@ -6,7 +6,7 @@ import { Spinner } from '../../components/Spinner';
 import { reconnectSocket } from '../../realtime/socket';
 import { useMobileAccessStore } from '../../stores/useMobileAccessStore';
 
-export const MOBILE_HOME = '/m/buscar';
+export const MOBILE_HOME = '/m/musicas';
 
 type CheckState = 'checking' | 'ok' | 'invalid' | 'missing' | 'offline';
 
