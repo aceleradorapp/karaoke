@@ -1,7 +1,13 @@
 import type { LyricLine, LyricsDoc } from '@caraoke/shared';
 import clsx from 'clsx';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { countdownDots, findLineIndex, lineProgress, wordProgress } from '../../lib/lyrics/timing';
+import {
+  DEFAULT_EFFECT_SETTINGS,
+  computeProgress,
+  tokensOf,
+  type LyricsEffectSettings,
+} from '../../lib/lyrics/effects';
+import { countdownDots, findLineIndex } from '../../lib/lyrics/timing';
 
 const COUNTDOWN_TOTAL_DOTS = 3;
 const MILLISECONDS_PER_SECOND = 1000;
@@ -11,6 +17,7 @@ interface LyricsViewProps {
   getTime: () => number;
   offsetMs: number;
   durationSec: number;
+  effect?: LyricsEffectSettings;
 }
 
 function CountdownDots({ lit }: { lit: number }) {
@@ -36,33 +43,21 @@ interface CurrentLineProps {
 
 function CurrentLine({ line, fillRefs }: CurrentLineProps) {
   fillRefs.current = [];
-  const words = line.words?.length ? line.words : null;
 
   return (
     <p className="lyric-enter text-center font-display text-[clamp(2rem,4.5vw,4rem)] leading-tight">
-      {words ? (
-        words.map((word, index) => (
-          <span key={`${index}-${word.start}`}>
-            <span
-              ref={(element) => {
-                fillRefs.current[index] = element;
-              }}
-              className="lyric-fill"
-            >
-              {word.text}
-            </span>{' '}
-          </span>
-        ))
-      ) : (
-        <span
-          ref={(element) => {
-            fillRefs.current[0] = element;
-          }}
-          className="lyric-fill"
-        >
-          {line.text}
+      {tokensOf(line).map((token, index) => (
+        <span key={`${index}-${token.text}`}>
+          <span
+            ref={(element) => {
+              fillRefs.current[index] = element;
+            }}
+            className="lyric-fill"
+          >
+            {token.text}
+          </span>{' '}
         </span>
-      )}
+      ))}
     </p>
   );
 }
@@ -108,28 +103,31 @@ function UnsyncedLyrics({ doc, getTime, offsetMs, durationSec }: LyricsViewProps
   );
 }
 
-function SyncedLyrics({ doc, getTime, offsetMs }: LyricsViewProps & { doc: LyricsDoc }) {
+function SyncedLyrics({
+  doc,
+  getTime,
+  offsetMs,
+  effect = DEFAULT_EFFECT_SETTINGS,
+}: LyricsViewProps & { doc: LyricsDoc }) {
   const [lineIndex, setLineIndex] = useState(-1);
   const [litDots, setLitDots] = useState<number | null>(null);
   const fillRefs = useRef<Array<HTMLSpanElement | null>>([]);
   const lastIndex = useRef(-1);
   const lastDots = useRef<number | null>(null);
 
+  const { enabled, id, fillPercent } = effect;
   const paint = useCallback(
     (seconds: number) => {
       const line = doc.lines[findLineIndex(doc.lines, seconds)];
       if (!line) return;
 
-      const words = line.words?.length ? line.words : null;
-      if (words) {
-        words.forEach((word, wordIndex) =>
-          fillRefs.current[wordIndex]?.style.setProperty('--p', String(wordProgress(word, seconds))),
-        );
-      } else {
-        fillRefs.current[0]?.style.setProperty('--p', String(lineProgress(line, seconds)));
-      }
+      const progress = computeProgress(
+        { enabled, id, fillPercent },
+        { line, tokens: tokensOf(line), time: seconds },
+      );
+      progress.forEach((value, index) => fillRefs.current[index]?.style.setProperty('--p', String(value)));
     },
-    [doc],
+    [doc, enabled, id, fillPercent],
   );
 
   useEffect(() => {

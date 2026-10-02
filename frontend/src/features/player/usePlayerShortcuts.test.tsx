@@ -6,6 +6,7 @@ function buildHandlers(): { [K in keyof PlayerShortcutHandlers]: ReturnType<type
   return {
     togglePlay: vi.fn(),
     toggleVoiceGuide: vi.fn(),
+    toggleLyricsEffect: vi.fn(),
     seekBy: vi.fn(),
     changeVolumeBy: vi.fn(),
     adjustLyricsOffset: vi.fn(),
@@ -41,6 +42,12 @@ describe('usePlayerShortcuts', () => {
     press('v');
     press('V');
     expect(handlers.toggleVoiceGuide).toHaveBeenCalledTimes(2);
+  });
+
+  it('turns the lyrics effect on and off with E', () => {
+    press('e');
+    press('E');
+    expect(handlers.toggleLyricsEffect).toHaveBeenCalledTimes(2);
   });
 
   it('jumps five seconds with the left and right arrows', () => {

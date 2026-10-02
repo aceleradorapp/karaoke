@@ -90,6 +90,7 @@ model Song {
   lyricsSource     LyricsSource @default(NONE)             // letra.json existe se != NONE
   lyricsNeedsReview Boolean     @default(false)
   lyricsOffsetMs   Int          @default(0)                // ajuste fino (+ atrasa a letra)
+  fillPercent      Int          @default(100)              // tempo de preenchimento da letra: 100 = até o fim da linha (20..150)
 
   playCount        Int          @default(0)
   addedById        String?
@@ -249,6 +250,8 @@ Guardadas na tabela `settings`. O backend expõe um objeto tipado (`shared/types
 | `scoring.micLatencyMs` | number | `150` | Compensação de latência do microfone |
 | `scoring.micDeviceId` | string \| null | `null` | `deviceId` do microfone no navegador do palco |
 | `ui.defaultTheme` | string | `"cinema"` | Tema da tela de perfis |
+| `player.lyricsEffectEnabled` | boolean | `true` | Efeito que pinta a letra enquanto se canta; desligado, a linha inteira fica colorida ao começar |
+| `player.lyricsEffect` | `"smooth" \| "words"` | `"smooth"` | Modelo do efeito (`smooth` = preenche aos poucos; `words` = palavra por palavra). Novos modelos entram em `shared/src/lyricsEffects.ts` e `frontend/src/lib/lyrics/effects.ts` |
 | `access.code` | string | gerado (6 chars A-Z0-9, sem 0/O/1/I) | Código do QR code |
 
 ## 3.4 Regras de negócio no banco

@@ -142,6 +142,21 @@ vi.mock('./SyncTimeline', () => ({
 type FakeEngineInstance = InstanceType<typeof audioMock.FakeEngine>;
 const latestEngine = () => audioMock.state.instances.at(-1) as FakeEngineInstance;
 
+const APP_SETTINGS = {
+  'processing.device': 'auto',
+  'processing.demucsModel': 'htdemucs',
+  'processing.whisperModel': 'small',
+  'processing.autoAlign': true,
+  'scoring.mode': 'pitch+audience',
+  'scoring.audienceWeight': 0.2,
+  'scoring.voteSeconds': 20,
+  'scoring.micLatencyMs': 150,
+  'scoring.micDeviceId': null,
+  'ui.defaultTheme': 'cinema',
+  'player.lyricsEffectEnabled': true,
+  'player.lyricsEffect': 'smooth',
+};
+
 const LYRICS_URL = '/media/s1/letra.json?v=1';
 const LYRICS: LyricsDoc = {
   version: 1,
@@ -183,6 +198,9 @@ function baseRoutes(
     'GET /api/songs/s1': { body: song },
     [`GET ${LYRICS_URL}`]: { body: lyrics },
     'PUT /api/songs/s1/lyrics': { body: song },
+    'PATCH /api/songs/s1': { body: song },
+    'GET /api/settings': { body: APP_SETTINGS },
+    'PATCH /api/settings': { body: APP_SETTINGS },
     'GET /api/songs/s1/lyrics/original': {
       status: 404,
       body: { error: { code: 'NO_ORIGINAL_LYRICS', message: 'Sem original' } },
@@ -649,6 +667,66 @@ describe('LyricsSyncPage', () => {
 
       expect(await screen.findByText('Linha 1 de 3')).toBeInTheDocument();
       expect(latestEngine().seeks.at(-1)).toBe(23);
+    });
+  });
+
+  describe('the preview with the fill effect', () => {
+    const patchedSong = (fetchMock: ReturnType<typeof mockApi>) =>
+      requestsTo(fetchMock, 'PATCH', '/api/songs/s1').map(([, init]) => JSON.parse(String(init?.body)));
+
+    it('sits right below the timeline, so the result can be seen while adjusting', async () => {
+      await renderReady();
+
+      const timeline = screen.getByRole('region', { name: 'Linha do tempo' });
+      const preview = screen.getByRole('region', { name: 'Como vai aparecer no karaokê' });
+
+      expect(timeline.compareDocumentPosition(preview) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(preview.nextElementSibling).toBe(screen.getByRole('region', { name: 'Marcar tocando' }));
+    });
+
+    it('has the effect controls, starting from the time saved for the song', async () => {
+      await renderReady(baseRoutes(readySong({ fillPercent: 80 })));
+
+      const preview = screen.getByRole('region', { name: 'Como vai aparecer no karaokê' });
+      expect(within(preview).getByRole('button', { name: /Efeito: ligado/ })).toBeInTheDocument();
+      expect(within(preview).getByRole('combobox', { name: 'Modelo do efeito' })).toHaveValue('smooth');
+      expect(within(preview).getByRole('slider', { name: 'Tempo de preenchimento' })).toHaveValue('80');
+    });
+
+    it('saves the fill time for this song by itself', async () => {
+      const { fetchMock } = await renderReady();
+      const preview = screen.getByRole('region', { name: 'Como vai aparecer no karaokê' });
+
+      fireEvent.click(within(preview).getByRole('button', { name: 'Terminar de pintar mais cedo' }));
+      fireEvent.click(within(preview).getByRole('button', { name: 'Terminar de pintar mais cedo' }));
+
+      await waitFor(() => expect(patchedSong(fetchMock)).toEqual([{ fillPercent: 90 }]), SAVE_TIMEOUT);
+    });
+
+    it('saves the model choice in the settings of the app', async () => {
+      const { fetchMock } = await renderReady();
+      const preview = screen.getByRole('region', { name: 'Como vai aparecer no karaokê' });
+
+      fireEvent.change(within(preview).getByRole('combobox', { name: 'Modelo do efeito' }), {
+        target: { value: 'words' },
+      });
+
+      await waitFor(() =>
+        expect(
+          requestsTo(fetchMock, 'PATCH', '/api/settings').map(([, init]) => JSON.parse(String(init?.body))),
+        ).toEqual([{ 'player.lyricsEffect': 'words' }]),
+      );
+    });
+
+    it('does not touch the lyrics when only the effect changes', async () => {
+      const { fetchMock } = await renderReady();
+      const preview = screen.getByRole('region', { name: 'Como vai aparecer no karaokê' });
+
+      fireEvent.click(within(preview).getByRole('button', { name: 'Terminar de pintar mais tarde' }));
+      await waitFor(() => expect(patchedSong(fetchMock)).toHaveLength(1), SAVE_TIMEOUT);
+
+      expect(savedBodies(fetchMock)).toHaveLength(0);
+      expect(timelineStarts()).toBe('10,18,27,40');
     });
   });
 

@@ -61,6 +61,7 @@ model Song {
   lyricsSource      LyricsSource @default(NONE)
   lyricsNeedsReview Boolean      @default(false)
   lyricsOffsetMs    Int          @default(0)
+  fillPercent       Int          @default(100)
   playCount         Int          @default(0)
   addedById         String?
   addedBy           Profile?     @relation("SongAddedBy", fields: [addedById], references: [id], onDelete: SetNull)

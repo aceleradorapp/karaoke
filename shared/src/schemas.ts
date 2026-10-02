@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { FILL_PERCENT_MAX, FILL_PERCENT_MIN, LYRICS_EFFECT_IDS } from './lyricsEffects.js';
 import { isAvatarId } from './avatars.js';
 import { isThemeId } from './themes.js';
 
@@ -43,6 +44,8 @@ export const appSettingsSchema = z.object({
   'scoring.micLatencyMs': z.number().int().min(0).max(1000),
   'scoring.micDeviceId': z.string().nullable(),
   'ui.defaultTheme': themeSchema,
+  'player.lyricsEffectEnabled': z.boolean(),
+  'player.lyricsEffect': z.enum(LYRICS_EFFECT_IDS),
 });
 
 export const updateSettingsSchema = appSettingsSchema
@@ -71,6 +74,7 @@ export const updateSongSchema = z
     title: z.string().trim().min(1, 'Informe o título').max(SONG_TEXT_MAX_LENGTH).optional(),
     artist: z.string().trim().min(1, 'Informe o artista').max(SONG_TEXT_MAX_LENGTH).optional(),
     lyricsOffsetMs: z.number().int().min(-LYRICS_OFFSET_LIMIT_MS).max(LYRICS_OFFSET_LIMIT_MS).optional(),
+    fillPercent: z.number().int().min(FILL_PERCENT_MIN).max(FILL_PERCENT_MAX).optional(),
   })
   .refine((changes) => Object.keys(changes).length > 0, 'Nenhuma alteração informada');
 

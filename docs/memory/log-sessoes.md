@@ -2,6 +2,18 @@
 
 > Entradas mais recentes no topo. Use `/fim-sessao` para registrar.
 
+## 2026-10-02 — Efeito da letra no player (modelos, liga/desliga e tempo de preenchimento)
+**Pedido do Michael:** a música ficou sincronizada e começa no momento certo, mas o tempo que a letra leva para ir ficando amarela não bate. Quer ligar/desligar o efeito no player, escolher o modelo (gravado para sempre), ter um modelo que pinta palavras inteiras e controlar quando termina de pintar (o começo não muda), no player e na página de sincronizar; a pré-visualização "Como vai aparecer no karaokê" deve ficar logo abaixo da linha do tempo; novos modelos poderão ser pedidos depois.
+**Feito (F6-07):**
+- Registro de modelos (`LYRICS_EFFECTS`): `smooth` "Preencher aos poucos" (o de antes, padrão) e `words` "Palavra por palavra" (cada palavra inteira na vez dela, a primeira ao começar a linha). Para criar outro: id em `shared/src/lyricsEffects.ts` + função no registro.
+- Player: linha de controles com botão "Efeito: ligado/desligado" (tecla E; desligado = a linha inteira colorida ao começar), combo do modelo e "Tempo" (−/+ de 5 em 5, controle deslizante 20–150%, voltar a 100%). O modelo e o liga/desliga ficam nas configurações do app (valem sempre); o tempo é **por música** (coluna nova `songs.fillPercent`, padrão 100, migration `song_fill_percent`) e salva sozinho.
+- Página de sincronizar: pré-visualização logo abaixo da linha do tempo, com os mesmos controles (e o aviso de salvando).
+- Letra do player passou a ser dividida em palavras (cada uma com o seu preenchimento).
+**Verificado:** typecheck, build e testes (shared 24, backend 271, frontend 656). No Chromium com a música real: 43 de 44 checagens na 1ª rodada completa (a restante era um estouro de 14 px no celular do controle de Tempo, corrigido e conferido). Medido tocando: "aos poucos" termina em 5,84 s para uma linha de 5,89 s; com 50% termina em 2,88 s (metade); "palavra por palavra" só tem 0 e 1, em ordem (1→2→…→9 palavras) e termina antes do fim da linha; efeito desligado pinta tudo ao começar; tecla E; modelo e tempo continuam depois de recarregar.
+**Bugs achados só no navegador (corrigidos):** controle de Tempo largo demais em 375 px na página de sincronizar. Também: o elemento `<output>` tem papel "status" e confundia com o indicador de carregamento (trocado por texto comum; o valor é anunciado pelo próprio controle deslizante).
+**Decisões:** o tempo é por música porque o erro vem do fim das linhas, que varia de música para música (a escolha de modelo e liga/desliga é global); a coluna nova foi criada sem perguntar por ser aditiva e ter padrão 100; os valores iniciais ficaram: efeito ligado, "Preencher aos poucos", 100%.
+**Pendências:** F6-02 (Whisper, precisa de coluna de tipo de job), F6-05 (palavra a palavra com tempos reais, depende do Whisper), Fase 5.
+
 ## 2026-10-01 (noite, 7) — Fase 6 (parte 1): sincronia das letras com a voz
 **Pedido do Michael:** inverter as fases (6 antes da 5) porque a sincronia das músicas decide o sucesso do app.
 **Experimento (Whisper `small` na CPU, voz de "À Sua Maneira"):** alinha bem a maioria das linhas (primeira linha em 34,75 s, igual ao início da voz), mas leva ≈ 9 min 40 s para 4:18 de música (≈ 2,3× a duração) e erra onde o texto não bate com o canto (uma linha ficou 44 s fora). Já o método por voz abaixo roda em segundos e coincidiu com o Whisper em 12 de 16 linhas (nas outras o Whisper é que errava).

@@ -1,6 +1,7 @@
 import { act, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { LyricsDoc } from '@caraoke/shared';
+import type { LyricsEffectSettings } from '../../lib/lyrics/effects';
 import { LyricsView } from './LyricsView';
 
 const FRAME_MS = 20;
@@ -58,9 +59,17 @@ describe('LyricsView', () => {
     vi.useRealTimers();
   });
 
-  function show(doc: LyricsDoc | null, offsetMs = 0, durationSec = 100) {
+  function show(doc: LyricsDoc | null, offsetMs = 0, durationSec = 100, effect?: LyricsEffectSettings) {
     const getTime = () => time;
-    return render(<LyricsView doc={doc} getTime={getTime} offsetMs={offsetMs} durationSec={durationSec} />);
+    return render(
+      <LyricsView
+        doc={doc}
+        getTime={getTime}
+        offsetMs={offsetMs}
+        durationSec={durationSec}
+        effect={effect}
+      />,
+    );
   }
 
   const advanceTo = (seconds: number) =>
@@ -69,6 +78,9 @@ describe('LyricsView', () => {
       vi.advanceTimersByTime(FRAME_MS * 2);
     });
   const fillOf = (text: string) => screen.getByText(text).closest('.lyric-fill') as HTMLElement;
+  const progressOf = (text: string) => Number(fillOf(text).style.getPropertyValue('--p'));
+  const sungLine = () => document.querySelector('p.lyric-enter')?.textContent?.trim() ?? null;
+  const upcomingLine = () => document.querySelector('p.opacity-60')?.textContent ?? null;
 
   describe('synced lyrics', () => {
     it('shows the line being sung and previews the next one', () => {
@@ -76,8 +88,8 @@ describe('LyricsView', () => {
 
       advanceTo(21);
 
-      expect(screen.getByText('Primeira linha')).toBeInTheDocument();
-      expect(screen.getByText('Segunda linha')).toBeInTheDocument();
+      expect(sungLine()).toBe('Primeira linha');
+      expect(upcomingLine()).toBe('Segunda linha');
     });
 
     it('moves to the next line exactly when it starts', () => {
@@ -86,19 +98,20 @@ describe('LyricsView', () => {
 
       advanceTo(24);
 
-      expect(screen.getByText('Segunda linha').closest('.lyric-fill')).not.toBeNull();
-      expect(screen.getByText('Terceira linha')).toBeInTheDocument();
-      expect(screen.queryByText('Primeira linha')).not.toBeInTheDocument();
+      expect(sungLine()).toBe('Segunda linha');
+      expect(upcomingLine()).toBe('Terceira linha');
     });
 
-    it('fills the current line progressively', () => {
+    it('fills the current line little by little, word after word', () => {
       show(SYNCED);
 
       advanceTo(22);
-      expect(fillOf('Primeira linha').style.getPropertyValue('--p')).toBe('0.5');
+      expect(progressOf('Primeira')).toBeCloseTo(0.8125, 3);
+      expect(progressOf('linha')).toBe(0);
 
       advanceTo(23);
-      expect(fillOf('Primeira linha').style.getPropertyValue('--p')).toBe('0.75');
+      expect(progressOf('Primeira')).toBe(1);
+      expect(progressOf('linha')).toBeCloseTo(0.35, 3);
     });
 
     it('stays on the last line after the song ends', () => {
@@ -106,18 +119,19 @@ describe('LyricsView', () => {
 
       advanceTo(500);
 
-      expect(screen.getByText('Terceira linha')).toBeInTheDocument();
-      expect(fillOf('Terceira linha').style.getPropertyValue('--p')).toBe('1');
+      expect(sungLine()).toBe('Terceira linha');
+      expect(progressOf('Terceira')).toBe(1);
+      expect(progressOf('linha')).toBe(1);
     });
 
     it('delays the lyrics when the offset is positive', () => {
       show(SYNCED, 1000);
 
       advanceTo(24.5);
-      expect(screen.getByText('Primeira linha').closest('.lyric-fill')).not.toBeNull();
+      expect(sungLine()).toBe('Primeira linha');
 
       advanceTo(25);
-      expect(screen.getByText('Segunda linha').closest('.lyric-fill')).not.toBeNull();
+      expect(sungLine()).toBe('Segunda linha');
     });
 
     it('brings the lyrics earlier when the offset is negative', () => {
@@ -125,7 +139,7 @@ describe('LyricsView', () => {
 
       advanceTo(18.5);
 
-      expect(screen.getByText('Primeira linha').closest('.lyric-fill')).not.toBeNull();
+      expect(sungLine()).toBe('Primeira linha');
     });
 
     it('reacts to an offset changed while playing', () => {
@@ -134,12 +148,92 @@ describe('LyricsView', () => {
         <LyricsView doc={SYNCED} getTime={getTime} offsetMs={0} durationSec={100} />,
       );
       advanceTo(24.2);
-      expect(screen.getByText('Segunda linha').closest('.lyric-fill')).not.toBeNull();
+      expect(sungLine()).toBe('Segunda linha');
 
       rerender(<LyricsView doc={SYNCED} getTime={getTime} offsetMs={1000} durationSec={100} />);
       advanceTo(24.2);
 
-      expect(screen.getByText('Primeira linha').closest('.lyric-fill')).not.toBeNull();
+      expect(sungLine()).toBe('Primeira linha');
+    });
+  });
+
+  describe('fill effect', () => {
+    const effect = (overrides: Partial<LyricsEffectSettings> = {}): LyricsEffectSettings => ({
+      enabled: true,
+      id: 'smooth',
+      fillPercent: 100,
+      ...overrides,
+    });
+
+    it('paints the whole line as soon as it starts when the effect is off', () => {
+      show(SYNCED, 0, 100, effect({ enabled: false }));
+
+      advanceTo(20.1);
+
+      expect(progressOf('Primeira')).toBe(1);
+      expect(progressOf('linha')).toBe(1);
+    });
+
+    it('paints the line only when it starts, not before', () => {
+      show(SYNCED, 0, 100, effect({ enabled: false }));
+
+      advanceTo(18);
+
+      expect(sungLine()).toBeNull();
+    });
+
+    it('paints whole words, one at a time, with the words model', () => {
+      show(SYNCED, 0, 100, effect({ id: 'words' }));
+
+      advanceTo(20.1);
+      expect([progressOf('Primeira'), progressOf('linha')]).toEqual([1, 0]);
+
+      advanceTo(22.4);
+      expect([progressOf('Primeira'), progressOf('linha')]).toEqual([1, 0]);
+
+      advanceTo(22.6);
+      expect([progressOf('Primeira'), progressOf('linha')]).toEqual([1, 1]);
+    });
+
+    it('finishes painting sooner with a smaller percent', () => {
+      show(SYNCED, 0, 100, effect({ fillPercent: 50 }));
+
+      advanceTo(22);
+
+      expect(progressOf('Primeira')).toBe(1);
+      expect(progressOf('linha')).toBe(1);
+    });
+
+    it('finishes painting later with a bigger percent, but still starts on time', () => {
+      show(SYNCED, 0, 100, effect({ fillPercent: 150 }));
+
+      advanceTo(20);
+      expect(progressOf('Primeira')).toBe(0);
+
+      advanceTo(23);
+      expect(progressOf('linha')).toBeLessThan(1);
+    });
+
+    it('reacts to a change of the effect while playing', () => {
+      const getTime = () => time;
+      const { rerender } = render(
+        <LyricsView doc={SYNCED} getTime={getTime} offsetMs={0} durationSec={100} effect={effect()} />,
+      );
+      advanceTo(20.1);
+      expect(progressOf('linha')).toBe(0);
+
+      rerender(
+        <LyricsView
+          doc={SYNCED}
+          getTime={getTime}
+          offsetMs={0}
+          durationSec={100}
+          effect={effect({ enabled: false })}
+        />,
+      );
+      advanceTo(20.1);
+
+      expect(progressOf('linha')).toBe(1);
     });
   });
 
@@ -161,12 +255,12 @@ describe('LyricsView', () => {
       show(SYNCED);
 
       advanceTo(18);
-      expect(screen.getByText('Primeira linha')).toBeInTheDocument();
-      expect(screen.queryByText('Primeira linha')?.closest('.lyric-fill')).toBeNull();
+      expect(upcomingLine()).toBe('Primeira linha');
+      expect(sungLine()).toBeNull();
 
       advanceTo(20.5);
       expect(screen.queryByRole('img', { name: /Começa em/ })).not.toBeInTheDocument();
-      expect(screen.getByText('Primeira linha').closest('.lyric-fill')).not.toBeNull();
+      expect(sungLine()).toBe('Primeira linha');
     });
 
     it('also counts down after a long instrumental break', () => {
