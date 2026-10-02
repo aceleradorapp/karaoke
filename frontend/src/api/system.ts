@@ -31,3 +31,26 @@ export function useUpdateYtdlpMutation() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['system'] }),
   });
 }
+
+export interface AccessInfo {
+  code: string;
+  urls: string[];
+}
+
+const ACCESS_QUERY_KEY = ['system', 'access'] as const;
+
+export function useAccessQuery(isEnabled: boolean) {
+  return useQuery({
+    queryKey: ACCESS_QUERY_KEY,
+    queryFn: () => apiGet<AccessInfo>('/system/access'),
+    enabled: isEnabled,
+  });
+}
+
+export function useRegenerateAccessMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => apiSend<AccessInfo>('POST', '/system/access/regenerate'),
+    onSuccess: (access) => queryClient.setQueryData(ACCESS_QUERY_KEY, access),
+  });
+}

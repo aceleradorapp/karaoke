@@ -2,6 +2,7 @@ import clsx from 'clsx';
 import { Menu, Search, Smartphone, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router';
+import { AccessQrModal } from '../mobile/AccessQrModal';
 import { QueueIndicator } from '../processing/QueueIndicator';
 import { NAV_ITEMS } from './navItems';
 import { ProfileMenu } from './ProfileMenu';
@@ -14,6 +15,7 @@ export function TopBar() {
   const { pathname } = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isAccessOpen, setIsAccessOpen] = useState(false);
 
   useEffect(() => {
     setIsMenuOpen(false);
@@ -78,13 +80,14 @@ export function TopBar() {
 
         <button
           type="button"
-          disabled
-          aria-label="QR code de acesso (em breve)"
-          title="Em breve"
-          className={clsx(ICON_BUTTON_CLASSES, 'max-sm:hidden disabled:opacity-40')}
+          aria-label="QR code para usar o celular"
+          title="Usar o celular"
+          onClick={() => setIsAccessOpen(true)}
+          className={clsx(ICON_BUTTON_CLASSES, 'max-sm:hidden')}
         >
           <Smartphone aria-hidden="true" />
         </button>
+        <AccessQrModal isOpen={isAccessOpen} onClose={() => setIsAccessOpen(false)} />
 
         <ProfileMenu />
       </div>
