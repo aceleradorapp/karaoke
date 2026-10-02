@@ -58,6 +58,7 @@ Remote: `origin` = https://github.com/aceleradorapp/karaoke.git
 ```powershell
 npm install               # dependências JS (workspaces)
 npm run worker:setup      # cria o venv do Python e instala as dependências de IA
+npm run worker:melody     # gera a melodia (pontuação) das músicas que ainda não têm
 npm run db:migrate        # migrations Prisma
 npm run db:seed           # settings padrão + perfil inicial
 npm run dev               # api (3333) + web (5173) + worker

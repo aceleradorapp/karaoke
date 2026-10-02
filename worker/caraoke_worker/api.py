@@ -43,6 +43,9 @@ class Api:
             payload["step"] = step
         self._request("POST", f"/api/internal/jobs/{job_id}/fail", json=payload)
 
+    def mark_melody(self, song_id: str) -> None:
+        self._request("POST", f"/api/internal/songs/{song_id}/melody")
+
     def _request(self, method: str, path: str, **kwargs: Any) -> requests.Response:
         response = self._session.request(
             method, f"{self._base_url}{path}", timeout=REQUEST_TIMEOUT_SECONDS, **kwargs

@@ -84,6 +84,45 @@ const engineMock = vi.hoisted(() => {
 
 vi.mock('../../lib/audio/KaraokeEngine', () => ({ KaraokeEngine: engineMock.FakeEngine }));
 
+const socketMock = vi.hoisted(() => {
+  type Handler = (...args: unknown[]) => void;
+  const handlers = new Map<string, Set<Handler>>();
+  return {
+    handlers,
+    socket: {
+      on(event: string, handler: Handler) {
+        if (!handlers.has(event)) handlers.set(event, new Set());
+        handlers.get(event)?.add(handler);
+      },
+      off(event: string, handler: Handler) {
+        handlers.get(event)?.delete(handler);
+      },
+    },
+    emit(event: string, ...args: unknown[]) {
+      for (const handler of handlers.get(event) ?? []) handler(...args);
+    },
+  };
+});
+
+vi.mock('../../realtime/socket', () => ({ getSocket: () => socketMock.socket }));
+
+const microphoneMock = vi.hoisted(() => ({ note: 57 as number | null, fail: true, closed: 0 }));
+
+vi.mock('../../lib/pitch/microphone', () => ({
+  MicrophonePitch: {
+    open: () =>
+      microphoneMock.fail
+        ? Promise.reject(new Error('sem microfone'))
+        : Promise.resolve({
+            sample: () => microphoneMock.note,
+            level: () => 0.2,
+            close: () => {
+              microphoneMock.closed += 1;
+            },
+          }),
+  },
+}));
+
 type FakeEngineInstance = InstanceType<typeof engineMock.FakeEngine>;
 const engines = () => engineMock.state.instances as FakeEngineInstance[];
 const latestEngine = () => engines().at(-1) as FakeEngineInstance;
@@ -185,6 +224,10 @@ describe('PlayerPage', () => {
     engineMock.state.failLoad = false;
     engineMock.state.hasVocals = true;
     engineMock.state.deferLoad = false;
+    socketMock.handlers.clear();
+    microphoneMock.fail = true;
+    microphoneMock.note = 57;
+    microphoneMock.closed = 0;
     useProfileStore.setState({ currentProfile: ANA });
     Object.defineProperty(document, 'fullscreenElement', { value: null, configurable: true });
   });
@@ -1078,6 +1121,165 @@ describe('PlayerPage', () => {
 
       expect(await screen.findByRole('button', { name: 'Próxima música' })).toBeInTheDocument();
       expect(screen.queryByRole('button', { name: 'Chamar o próximo' })).not.toBeInTheDocument();
+    });
+  });
+
+  describe('the score', () => {
+    const PERFORMANCE = 'perf1';
+    const finishWith = (body: unknown, extra: MockRoutes = {}) =>
+      baseRoutes(readySong(), { 'POST /api/performances/perf1/finish': { body }, ...extra });
+    const inSeconds = (seconds: number) => new Date(Date.now() + seconds * 1000).toISOString();
+    const FINAL = {
+      performanceId: PERFORMANCE,
+      pitchScore: null,
+      audienceScore: 82,
+      finalScore: 82,
+      votes: 3,
+    };
+
+    async function singToTheEnd(routes: MockRoutes) {
+      const rendered = renderPlayer(routes);
+      await startSinging();
+      act(() => latestEngine().finishSong());
+      return rendered;
+    }
+
+    it('asks the audience to vote, counting down and counting the votes as they arrive', async () => {
+      await singToTheEnd(finishWith({ voting: { endsAt: inSeconds(20) } }));
+
+      expect(await screen.findByText('Plateia, deem sua nota pelo celular!')).toBeInTheDocument();
+      expect(screen.getByRole('timer', { name: 'Tempo para votar' })).toHaveTextContent(/^(19|20)segundos$/);
+      expect(screen.getByText('votos')).toBeInTheDocument();
+
+      act(() => socketMock.emit('vote:progress', { performanceId: PERFORMANCE, count: 2 }));
+      expect(screen.getByText('2')).toBeInTheDocument();
+      act(() => socketMock.emit('vote:progress', { performanceId: 'other', count: 9 }));
+      expect(screen.queryByText('9')).not.toBeInTheDocument();
+    });
+
+    it('shows the final score with its phrase and parts when the voting ends', async () => {
+      await singToTheEnd(finishWith({ voting: { endsAt: inSeconds(20) } }));
+      await screen.findByText('Plateia, deem sua nota pelo celular!');
+
+      act(() => socketMock.emit('score:final', FINAL));
+
+      expect(await screen.findByRole('status', { name: 'Nota 82' })).toBeInTheDocument();
+      expect(screen.getByText('Mandou bem!')).toBeInTheDocument();
+      expect(screen.getByText('👏 Plateia 82 (3 votos)')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Cantar de novo' })).toBeInTheDocument();
+    });
+
+    it('ignores the score of another performance', async () => {
+      await singToTheEnd(finishWith({ voting: { endsAt: inSeconds(20) } }));
+      await screen.findByText('Plateia, deem sua nota pelo celular!');
+
+      act(() => socketMock.emit('score:final', { ...FINAL, performanceId: 'other' }));
+
+      expect(screen.getByText('Plateia, deem sua nota pelo celular!')).toBeInTheDocument();
+    });
+
+    it('closes the voting earlier from the TV', async () => {
+      const { fetchMock } = await singToTheEnd(
+        finishWith(
+          { voting: { endsAt: inSeconds(20) } },
+          {
+            'POST /api/performances/perf1/voting/close': {
+              body: { ...FINAL, finalScore: 96, audienceScore: 96 },
+            },
+          },
+        ),
+      );
+
+      fireEvent.click(await screen.findByRole('button', { name: 'Encerrar votação' }));
+
+      expect(await screen.findByRole('status', { name: 'Nota 96' })).toBeInTheDocument();
+      expect(screen.getByText('Lenda do karaokê!')).toBeInTheDocument();
+      expect(requestsTo(fetchMock, 'POST', '/api/performances/perf1/voting/close')).toHaveLength(1);
+    });
+
+    it('stops waiting a few seconds after the time is up', async () => {
+      await singToTheEnd(finishWith({ voting: { endsAt: inSeconds(-6) } }));
+
+      expect(await screen.findByText('Fim da música')).toBeInTheDocument();
+      expect(screen.queryByRole('status', { name: /^Nota/ })).not.toBeInTheDocument();
+    });
+
+    it('shows the score right away when the audience does not vote', async () => {
+      await singToTheEnd(finishWith({ finalScore: 64 }));
+
+      expect(await screen.findByRole('status', { name: 'Nota 64' })).toBeInTheDocument();
+      expect(screen.getByText('Tá no caminho!')).toBeInTheDocument();
+      expect(screen.queryByText('Plateia, deem sua nota pelo celular!')).not.toBeInTheDocument();
+    });
+
+    it('keeps the plain finish screen when there is no score', async () => {
+      await singToTheEnd(finishWith({ finalScore: null }));
+
+      expect(await screen.findByText('Mandou bem! 🎤')).toBeInTheDocument();
+    });
+
+    describe('with a microphone', () => {
+      const MELODY_URL = '/media/s1/melodia.json';
+      const melodySong = () => readySong({ melodyUrl: MELODY_URL });
+      const melodyRoutes = (extra: MockRoutes = {}) =>
+        baseRoutes(melodySong(), {
+          [`GET ${MELODY_URL}`]: { body: { version: 1, step: 0.02, start: 0, midi: Array(500).fill(57) } },
+          'POST /api/performances/perf1/finish': { body: { finalScore: 100 } },
+          ...extra,
+        });
+
+      it('shows the live pitch and sends the pitch score at the end', async () => {
+        microphoneMock.fail = false;
+        const { fetchMock } = renderPlayer(melodyRoutes());
+        await startSinging();
+
+        const meter = await screen.findByRole('group', { name: 'Afinação ao vivo' });
+        latestEngine().time = 5;
+        await waitFor(() => expect(meter).toHaveTextContent('Nota alvoLáLáNota: 100'), { timeout: 3000 });
+        act(() => latestEngine().finishSong());
+
+        await waitFor(() =>
+          expect(requestsTo(fetchMock, 'POST', '/api/performances/perf1/finish')).toHaveLength(1),
+        );
+        expect(bodyOf(fetchMock, 'POST', '/api/performances/perf1/finish')).toMatchObject({
+          pitchScore: 100,
+        });
+      });
+
+      it('sings without the pitch when there is no microphone', async () => {
+        const { fetchMock } = renderPlayer(melodyRoutes());
+        await startSinging();
+
+        expect(screen.queryByRole('group', { name: 'Afinação ao vivo' })).not.toBeInTheDocument();
+        act(() => latestEngine().finishSong());
+        await waitFor(() =>
+          expect(requestsTo(fetchMock, 'POST', '/api/performances/perf1/finish')).toHaveLength(1),
+        );
+        expect(bodyOf(fetchMock, 'POST', '/api/performances/perf1/finish')).toMatchObject({
+          pitchScore: null,
+        });
+      });
+
+      it('does not use the microphone when the score is only from the audience', async () => {
+        microphoneMock.fail = false;
+        renderPlayer(
+          melodyRoutes({ 'GET /api/settings': { body: { ...APP_SETTINGS, 'scoring.mode': 'audience' } } }),
+        );
+        await startSinging();
+
+        expect(screen.queryByRole('group', { name: 'Afinação ao vivo' })).not.toBeInTheDocument();
+      });
+
+      it('releases the microphone when leaving', async () => {
+        microphoneMock.fail = false;
+        const { unmount } = renderPlayer(melodyRoutes());
+        await startSinging();
+        await screen.findByRole('group', { name: 'Afinação ao vivo' });
+
+        unmount();
+
+        expect(microphoneMock.closed).toBe(1);
+      });
     });
   });
 });

@@ -8,6 +8,7 @@ import { ManageProfilesPage } from './features/profiles/ManageProfilesPage';
 import { StageLayout } from './features/layout/StageLayout';
 import { SettingsPage } from './features/settings/SettingsPage';
 import { QueuePage } from './features/processing/QueuePage';
+import { RankingPage } from './features/ranking/RankingPage';
 import { SingQueuePage } from './features/singQueue/SingQueuePage';
 import { SongDetailPage } from './features/songs/SongDetailPage';
 import { UploadPage } from './features/upload/UploadPage';
@@ -27,6 +28,7 @@ import { MobileSearchPage } from './features/mobile/MobileSearchPage';
 import { MobileUploadPage } from './features/mobile/MobileUploadPage';
 import { MobileSongsPage } from './features/mobile/MobileSongsPage';
 import { MobileWhoAmIPage } from './features/mobile/MobileWhoAmIPage';
+import { MobileVotePage } from './features/mobile/MobileVotePage';
 
 export function App() {
   return (
@@ -40,6 +42,7 @@ export function App() {
           <Route path="/m/buscar" element={<MobileSearchPage />} />
           <Route path="/m/enviar" element={<MobileUploadPage />} />
           <Route path="/m/fila" element={<MobileQueuePage />} />
+          <Route path="/m/votar" element={<MobileVotePage />} />
           <Route path="/m/*" element={<Navigate to="/m/musicas" replace />} />
         </Route>
         <Route path="/perfis" element={<ProfilesPage />} />
@@ -52,6 +55,7 @@ export function App() {
             <Route path="/enviar" element={<UploadPage />} />
             <Route path="/fila" element={<QueuePage />} />
             <Route path="/proximos" element={<SingQueuePage />} />
+            <Route path="/ranking" element={<RankingPage />} />
             <Route path="/" element={<HomePage />} />
             <Route path="/biblioteca" element={<LibraryPage />} />
             <Route path="/favoritas" element={<FavoritesPage />} />

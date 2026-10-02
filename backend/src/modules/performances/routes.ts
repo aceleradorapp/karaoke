@@ -1,8 +1,9 @@
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
-import { createPerformanceSchema, finishPerformanceSchema } from '@caraoke/shared';
+import { castVoteSchema, createPerformanceSchema, finishPerformanceSchema } from '@caraoke/shared';
 import { z } from 'zod';
 import { finishPerformance, listHistory, startPerformance } from './service.js';
+import { castVote, closeVoting, currentVoting } from './voting.js';
 
 const CREATED = 201;
 const DEFAULT_HISTORY_LIMIT = 30;
@@ -26,6 +27,18 @@ export async function performanceRoutes(app: FastifyInstance): Promise<void> {
     '/performances/:id/finish',
     { schema: { params: idParamsSchema, body: finishPerformanceSchema } },
     async (request) => finishPerformance(request.params.id, request.body),
+  );
+
+  typedApp.get('/performances/voting/current', async () => currentVoting());
+
+  typedApp.post(
+    '/performances/:id/votes',
+    { schema: { params: idParamsSchema, body: castVoteSchema } },
+    async (request) => castVote(request.params.id, request.body),
+  );
+
+  typedApp.post('/performances/:id/voting/close', { schema: { params: idParamsSchema } }, async (request) =>
+    closeVoting(request.params.id),
   );
 
   typedApp.get(

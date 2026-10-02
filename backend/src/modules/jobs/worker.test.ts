@@ -270,6 +270,35 @@ describe('worker job routes', () => {
     });
   });
 
+  describe('melody of an existing song', () => {
+    it('marks that the song has a melody and tells the screens', async () => {
+      const { song } = await createJobFixture({ status: 'DONE' });
+      vi.mocked(emitToAll).mockClear();
+
+      const response = await app.inject({
+        method: 'POST',
+        url: `/api/internal/songs/${song.id}/melody`,
+        headers: HEADERS,
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect((await prisma.song.findUniqueOrThrow({ where: { id: song.id } })).hasMelody).toBe(true);
+      const update = vi.mocked(emitToAll).mock.calls.find(([event]) => event === 'song:updated');
+      expect(update?.[1]).toMatchObject({ id: song.id, melodyUrl: `/media/${song.id}/melodia.json` });
+    });
+
+    it('answers 404 for an unknown song and 401 without the token', async () => {
+      const unknown = await app.inject({
+        method: 'POST',
+        url: '/api/internal/songs/nope/melody',
+        headers: HEADERS,
+      });
+      const withoutToken = await app.inject({ method: 'POST', url: '/api/internal/songs/nope/melody' });
+      expect(unknown.statusCode).toBe(404);
+      expect(withoutToken.statusCode).toBe(401);
+    });
+  });
+
   it('requires the worker token on every internal job route', async () => {
     const { job } = await createJobFixture({ status: 'RUNNING' });
     const calls = [

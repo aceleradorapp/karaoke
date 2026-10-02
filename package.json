@@ -22,6 +22,7 @@
     "db:migrate": "npm run db:migrate -w backend",
     "db:seed": "npm run db:seed -w backend",
     "db:studio": "npm run db:studio -w backend",
+    "worker:melody": "cd worker && .venv\\Scripts\\python.exe -m caraoke_worker.melody_backfill",
     "worker:setup": "powershell -ExecutionPolicy Bypass -File scripts/setup-worker.ps1"
   },
   "devDependencies": {

@@ -225,7 +225,8 @@ export class PitchScorer {
 ```
 - **Ignorar a oitava** é essencial (crianças e mulheres cantando música de voz masculina e vice-versa).
 - Medidor ao vivo: barra mostrando a nota alvo × a nota cantada (opcional, mas legal) + nota parcial.
-- Testes unitários do `PitchScorer` com dados sintéticos (afinado = ~100; meio tom = ~75–85; aleatório = baixa; silêncio = 0).
+- Testes unitários do `PitchScorer` com dados sintéticos. Medido com a fórmula acima: afinado (inclusive uma oitava acima) = 100; **um semitom inteiro fora o tempo todo = 95** (curva generosa; a expectativa original de 75–85 não bate com a fórmula: reajustar `pointsFor`/a curva quando houver teste com microfone de verdade); notas aleatórias < 45; silêncio = 0.
+- **Implementação (2026-10-02):** `lib/pitch/PitchScorer.ts`, `lib/pitch/detectPitch.ts` (função pura `detectMidi`) e `lib/pitch/microphone.ts` (`MicrophonePitch.open`, `listMicrophones`). **Desvio:** o microfone usa um `AudioContext` próprio, e não o do `KaraokeEngine` (que encapsula o contexto com tipos mínimos para teste); a amostragem é por relógio e o atraso entre os dois fica coberto pela calibração da latência. Sem teste com microfone real por enquanto (decisão do Michael).
 
 ### Calibração da latência (configurações)
 Botão "Calibrar": toca 4 bipes curtos pelas caixas e mede quando o microfone os capta (pico de RMS); latência = média(captado − emitido). Salva `scoring.micLatencyMs`. Fallback: slider manual de 0–400 ms.
@@ -249,6 +250,7 @@ TELA DE NOTA: contador animado de 0 até a nota, estrelas, frase por faixa:
    [Cantar de novo] [Próxima] [Voltar]
 ```
 - Se o usuário sair no meio (Esc), chama `finish` com `completed=false` e **sem votação/nota**.
+- **Implementação (2026-10-02):** fases do player `playing → finishing ("Calculando a nota…") → voting → finished` (`usePlayerSession`); a nota aparece no `FinishedScreen` (`ScoreReveal`: contagem animada, estrelas, frase, detalhamento, confete CSS ≥ 85, sem animação com `prefers-reduced-motion`). A tela de votação (`VotingScreen`) tem contagem regressiva, número de votos (`vote:progress`), QR pequeno e o botão **Encerrar votação** (`POST /performances/:id/voting/close`). Se o `score:final` não chegar até 5 s depois do fim do tempo, mostra o fim sem nota. A afinação (`usePitchScoring`) só liga com modo de afinação + `melodyUrl` + microfone aberto; sem microfone, a música segue normalmente e `pitchScore=null`. O medidor ao vivo (`PitchMeter`) mostra a nota alvo, a cantada (verde/âmbar/vermelho) e a nota parcial.
 - Voz guia ligada em algum momento → `voiceGuideUsed=true` (aparece no histórico com o ícone 🗣; **não** penaliza a nota no MVP).
 
 ### Celular (`/m/votar`)

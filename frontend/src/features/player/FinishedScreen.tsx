@@ -1,4 +1,6 @@
+import type { FinalScore } from '@caraoke/shared';
 import { Button } from '../../components/Button';
+import { ScoreReveal } from './ScoreReveal';
 
 export interface PlaylistSequence {
   position: number;
@@ -19,6 +21,7 @@ interface FinishedScreenProps {
   onBack: () => void;
   sequence?: PlaylistSequence | null;
   nextSinger?: NextSinger | null;
+  score?: FinalScore | null;
 }
 
 export function FinishedScreen({
@@ -27,9 +30,11 @@ export function FinishedScreen({
   onBack,
   sequence,
   nextSinger,
+  score,
 }: FinishedScreenProps) {
   const hasNext = sequence?.nextTitle != null;
   const hasPrimaryAction = hasNext || Boolean(nextSinger);
+  const finalScore = score?.finalScore ?? null;
 
   return (
     <div className="flex flex-col items-center gap-8 px-4 text-center">
@@ -39,7 +44,11 @@ export function FinishedScreen({
         </p>
         <h1 className="font-display text-5xl leading-tight sm:text-7xl">{songTitle}</h1>
       </div>
-      <p className="text-2xl">{sequence && !hasNext ? 'Fim da playlist! 🎉' : 'Mandou bem! 🎤'}</p>
+      {score && finalScore != null ? (
+        <ScoreReveal result={{ ...score, finalScore }} />
+      ) : (
+        <p className="text-2xl">{sequence && !hasNext ? 'Fim da playlist! 🎉' : 'Mandou bem! 🎤'}</p>
+      )}
       {hasNext && <p className="text-lg text-muted">A seguir: {sequence?.nextTitle}</p>}
       {nextSinger && (
         <p className="text-lg text-muted">

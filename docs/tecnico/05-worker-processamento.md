@@ -226,6 +226,9 @@ Saída `songDir/melodia.json`:
 ```
 Tamanho típico: 4 min ≈ 12.000 valores ≈ 60 KB. Ok.
 
+**Implementação (2026-10-02):** `caraoke_worker/melody.py` decodifica a voz direto do ffmpeg (float32 16 kHz, sem wav temporário) e passa as amostras ao `parselmouth.Sound`; `start` = tempo do 1º quadro do Praat. Falha ou voz muda → `hasMelody=false`, **sem** derrubar o job (a nota fica só com a plateia). Leva ~0,3–1 s por música na CPU.
+**Músicas antigas:** `npm run worker:melody` (`caraoke_worker.melody_backfill`) gera o `melodia.json` de toda pasta com `voz.mp3` e sem melodia, e avisa o backend por `POST /api/internal/songs/:id/melody` (marca `hasMelody` e emite `song:updated`). Pode rodar com o sistema ligado.
+
 ## 5.11 Logs e robustez
 - `logging` com nível INFO, formato `%(asctime)s [worker] %(levelname)s %(message)s`.
 - Qualquer exceção em uma etapa crítica (DOWNLOAD, SEPARATE) → `fail`. Etapas opcionais (LYRICS, COVER, MELODY) capturam os próprios erros e seguem em frente.
