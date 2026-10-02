@@ -200,3 +200,20 @@ export interface SingRequestDTO {
 export interface SingQueueResponse {
   items: SingRequestDTO[];
 }
+
+export type RankingPeriod = 'week' | 'month' | 'all';
+export type RankingScope = 'all' | 'family';
+
+export interface RankingProfile {
+  id: string;
+  name: string;
+  avatar: string;
+  isGuest: boolean;
+}
+
+export interface RankingResponse {
+  bestAverage: Array<{ profile: RankingProfile; avg: number; count: number }>;
+  mostSung: Array<{ profile: RankingProfile; count: number }>;
+  topSongs: Array<{ song: SongDTO; count: number }>;
+  champion: { profile: RankingProfile; avg: number } | null;
+}

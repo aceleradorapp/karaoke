@@ -259,7 +259,7 @@ Grade de playlists (capa 2×2 com as 4 primeiras músicas). Página da playlist:
 Listas simples com SongCard/linha; o histórico mostra data e nota.
 
 ### `/ranking`
-Pódio (1º, 2º e 3º com avatares grandes) da melhor média no período; abas Semana/Mês/Sempre; família e convidados juntos, com o filtro "Só a família" (ADR-008); listas "Quem mais cantou" e "Músicas mais cantadas"; destaque "Rei/Rainha do karaokê do mês".
+Pódio (1º, 2º e 3º com avatares grandes) da melhor média no período; abas Semana/Mês/Sempre; família e convidados juntos, com o filtro "Só a família" (ADR-008); listas "Quem mais cantou" e "Músicas mais cantadas"; destaque "Estrela do karaokê do mês" (nome neutro, sem supor gênero). Período e filtro ficam no endereço (`?periodo=week|all&familia=1`; o padrão é o mês). Convidados têm o selo "convidado".
 
 ### `/configuracoes`
 Seções:

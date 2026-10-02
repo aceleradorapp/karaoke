@@ -279,7 +279,7 @@ Ao encerrar a votação (timer de `voteSeconds` no servidor, `setTimeout` por pe
 ### Ranking
 | Método | Rota | Descrição |
 |---|---|---|
-| GET | `/api/ranking?period=week\|month\|all&scope=all\|family` | `{ bestAverage: [{ profile, avg, count }], mostSung: [{ profile, count }], topSongs: [{ song, count }], champion: { profile, avg } \| null }`. Média só com `finalScore != null`; mínimo de 3 apresentações para entrar em `bestAverage` |
+| GET | `/api/ranking?period=week\|month\|all&scope=all\|family` | `{ bestAverage: [{ profile, avg, count }], mostSung: [{ profile, count }], topSongs: [{ song, count }], champion: { profile, avg } \| null }`. Média só com `finalScore != null`; mínimo de 3 apresentações para entrar em `bestAverage`. `period`: `week` = últimos 7 dias, `month` = últimos 30 dias (padrão), `all`. `mostSung` e `topSongs` contam só músicas cantadas até o fim (`completed`). `champion` = melhor média do **mês do calendário** atual, qualquer que seja o período. `scope=family` exclui convidados. Listas com até 10 itens |
 
 ### Configurações
 | Método | Rota | Descrição |

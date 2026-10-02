@@ -111,6 +111,11 @@ export const castVoteSchema = z.object({
 });
 
 export type CastVoteInput = z.infer<typeof castVoteSchema>;
+
+export const rankingQuerySchema = z.object({
+  period: z.enum(['week', 'month', 'all']).default('month'),
+  scope: z.enum(['all', 'family']).default('all'),
+});
 export type CreatePerformanceInput = z.infer<typeof createPerformanceSchema>;
 export type FinishPerformanceInput = z.infer<typeof finishPerformanceSchema>;
 export type CreateSingRequestInput = z.infer<typeof createSingRequestSchema>;

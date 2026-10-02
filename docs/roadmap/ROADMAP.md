@@ -152,7 +152,7 @@ Branch: `feature/f5b-fila-de-cantores`.
 | F7-04 | ✅ 2026-10-02 | Backend: votação (abrir/encerrar, timer, votos, `computeFinalScore`, não votar em si mesmo) + testes | T-04 §4.6 Apresentações | 🔴 |
 | F7-05 | ✅ 2026-10-02 | Palco: medidor ao vivo, tela de votação e tela de nota animada | T-07 §7.6 | 🟡 |
 | F7-06 | ✅ 2026-10-02 | Celular: `/m/votar` | T-07 §7.6, T-08 §8.2 | 🟡 |
-| F7-07 | ⬜ | API + tela `/ranking` (família e convidados juntos, filtro "Só a família") | T-04 §4.6 Ranking, T-06 §6.6 | 🟡 |
+| F7-07 | ✅ 2026-10-02 | API + tela `/ranking` (família e convidados juntos, filtro "Só a família") | T-04 §4.6 Ranking, T-06 §6.6 | 🟡 |
 | F7-08 | ⬜ | ✔ Verificação: festa-teste com 2 celulares votando | — | 🟡 |
 
 ## Fase 8 — Publicação (futuro)
