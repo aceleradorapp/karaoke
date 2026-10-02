@@ -1,4 +1,4 @@
-import { Route, Routes } from 'react-router';
+import { Navigate, Route, Routes } from 'react-router';
 import { ThemeSync } from './components/ThemeSync';
 import { ToastViewport } from './components/ToastViewport';
 import { HomePage } from './features/home/HomePage';
@@ -19,12 +19,24 @@ import { PlaylistsPage } from './features/playlists/PlaylistsPage';
 import { LyricsSyncPage } from './features/sync/LyricsSyncPage';
 import { ProfilesPage } from './features/profiles/ProfilesPage';
 import { RequireProfile } from './features/profiles/RequireProfile';
+import { MobileEntry } from './features/mobile/MobileEntry';
+import { MobileLayout } from './features/mobile/MobileLayout';
+import { MobileQueuePage } from './features/mobile/MobileQueuePage';
+import { MobileSearchPage } from './features/mobile/MobileSearchPage';
+import { MobileUploadPage } from './features/mobile/MobileUploadPage';
 
 export function App() {
   return (
     <>
       <ThemeSync />
       <Routes>
+        <Route path="/m" element={<MobileEntry />} />
+        <Route element={<MobileLayout />}>
+          <Route path="/m/buscar" element={<MobileSearchPage />} />
+          <Route path="/m/enviar" element={<MobileUploadPage />} />
+          <Route path="/m/fila" element={<MobileQueuePage />} />
+          <Route path="/m/*" element={<Navigate to="/m/buscar" replace />} />
+        </Route>
         <Route path="/perfis" element={<ProfilesPage />} />
         <Route path="/perfis/gerenciar" element={<ManageProfilesPage />} />
         <Route element={<RequireProfile />}>

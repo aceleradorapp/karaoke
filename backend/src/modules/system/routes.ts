@@ -8,6 +8,7 @@ import { REPO_ROOT } from '../../env.js';
 import { diskUsage } from '../../services/storage.js';
 import { updateYtdlp } from '../../services/ytdlp.js';
 import { getWorkerInfo } from '../../services/workerStatus.js';
+import { getAccessInfo, regenerateAccessCode } from './access.js';
 
 function readAppVersion(): string {
   const packagePath = path.join(REPO_ROOT, 'backend', 'package.json');
@@ -35,6 +36,12 @@ export async function systemRoutes(app: FastifyInstance): Promise<void> {
       storage: { usedBytes: usage.usedBytes, songs },
     };
   });
+
+  app.get('/system/access', async () => getAccessInfo());
+
+  app.post('/system/access/regenerate', async () => regenerateAccessCode());
+
+  app.get('/system/access/check', async () => ({ ok: true as const }));
 
   app.post('/system/ytdlp/update', async () => ({ version: await updateYtdlp() }));
 }

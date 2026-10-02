@@ -5,6 +5,8 @@ import { recoverInterruptedJobs } from './modules/jobs/recovery.js';
 import { ensureDirs } from './services/storage.js';
 import { startUploadWatcher } from './services/watcher.js';
 import { startWorkerWatchdog } from './services/workerStatus.js';
+import { ensureAccessCode } from './modules/system/access.js';
+import { getAccessCode } from './modules/settings/service.js';
 
 async function main(): Promise<void> {
   await ensureDirs();
@@ -12,7 +14,8 @@ async function main(): Promise<void> {
   if (recovery.requeued + recovery.gaveUp > 0) console.info('Interrupted jobs recovered:', recovery);
 
   const app = await buildApp();
-  attachRealtime(app.server);
+  await ensureAccessCode();
+  attachRealtime(app.server, getAccessCode);
   startWorkerWatchdog();
   const uploadWatcher = startUploadWatcher();
 

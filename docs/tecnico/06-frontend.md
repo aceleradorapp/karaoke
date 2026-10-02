@@ -33,7 +33,7 @@ export default defineConfig({
 | Acesso | `localhost` (sem código) | Código no `localStorage` (`caraoke.accessCode`), enviado em `X-Access-Code` e no `auth` do socket |
 | Perfil | Precisa de perfil selecionado (Zustand + `localStorage`) | Não usa perfil no MVP |
 
-Detecção: `const isMobileApp = location.pathname.startsWith('/m')`. O client de API (`api/client.ts`) adiciona o header de código quando `isMobileApp`.
+Detecção: `isMobilePath(pathname)` em `lib/mobileApp.ts` = `/m` exato ou começando com `/m/` (não use `startsWith('/m')`, que pegaria `/musica/...`). O client de API (`api/client.ts`) e o upload (`api/uploads.ts`) adicionam `X-Access-Code` quando a página é do celular; um 401 `ACCESS_DENIED` no celular marca o acesso como recusado (tela "escaneie de novo"). O socket envia `{ client: 'mobile', code }` e reconecta depois que o código é validado. No celular o `ThemeSync` usa o tema padrão sem chamar `/api/settings` (rota proibida ao celular).
 
 ## 6.3 Rotas
 

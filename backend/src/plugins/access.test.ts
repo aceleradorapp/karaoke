@@ -65,6 +65,31 @@ describe('access control', () => {
     expect(response.statusCode).toBe(401);
   });
 
+  it('lets a phone with the code see the covers, even with the code in the address (images cannot send headers)', async () => {
+    const byQuery = await request(`/media/some-song/capa.jpg?v=1&c=${ACCESS_CODE}`, PHONE_ADDRESS);
+    const byHeader = await request('/media/some-song/capa.jpg', PHONE_ADDRESS, {
+      'x-access-code': ACCESS_CODE,
+    });
+    expect(byQuery.statusCode).toBe(404);
+    expect(byHeader.statusCode).toBe(404);
+  });
+
+  it('refuses a cover with a wrong code or without a code', async () => {
+    expect((await request('/media/some-song/capa.jpg?c=ZZZ999', PHONE_ADDRESS)).statusCode).toBe(401);
+    expect((await request('/media/some-song/capa.jpg', PHONE_ADDRESS)).statusCode).toBe(401);
+  });
+
+  it('never opens the audio to the phone, not even with the code in the address', async () => {
+    const response = await request(`/media/some-song/voz.mp3?c=${ACCESS_CODE}`, PHONE_ADDRESS);
+    expect(response.statusCode).toBe(401);
+    const lyrics = await request(`/media/some-song/letra.json?c=${ACCESS_CODE}`, PHONE_ADDRESS);
+    expect(lyrics.statusCode).toBe(401);
+  });
+
+  it('does not accept the code in the address for the API', async () => {
+    expect((await request(`/api/jobs?c=${ACCESS_CODE}`, PHONE_ADDRESS)).statusCode).toBe(401);
+  });
+
   it('does not trust a forwarded address sent by a phone', async () => {
     const response = await request('/api/system/info', PHONE_ADDRESS, { 'x-forwarded-for': '127.0.0.1' });
     expect(response.statusCode).toBe(401);

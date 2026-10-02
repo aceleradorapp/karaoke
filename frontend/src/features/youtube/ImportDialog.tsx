@@ -4,6 +4,7 @@ import { useState, type FormEvent } from 'react';
 import { useImportYoutubeMutation } from '../../api/youtube';
 import { Button } from '../../components/Button';
 import { Modal } from '../../components/Modal';
+import { isMobileApp } from '../../lib/mobileApp';
 import { useProfileStore } from '../../stores/useProfileStore';
 import { toast } from '../../stores/useToastStore';
 
@@ -19,7 +20,8 @@ type FieldErrors = Partial<Record<'artist' | 'title', string>>;
 
 function ImportForm({ video, onClose, onImported }: ImportFormProps) {
   const importVideo = useImportYoutubeMutation();
-  const profileId = useProfileStore((state) => state.currentProfile?.id);
+  const stageProfileId = useProfileStore((state) => state.currentProfile?.id);
+  const profileId = isMobileApp() ? undefined : stageProfileId;
   const [artist, setArtist] = useState(video.suggested.artist);
   const [title, setTitle] = useState(video.suggested.title);
   const [errors, setErrors] = useState<FieldErrors>({});

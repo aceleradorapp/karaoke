@@ -1,4 +1,4 @@
-import { ApiError } from './client';
+import { ApiError, accessHeaders, reportAccessDenied } from './client';
 
 const UPLOAD_URL = '/api/uploads';
 const NETWORK_ERROR_MESSAGE = 'Falha de conexão durante o envio';
@@ -40,6 +40,7 @@ export function uploadAudioFile(file: File, options: UploadOptions = {}): Promis
   return new Promise((resolve, reject) => {
     const request = new XMLHttpRequest();
     request.open('POST', UPLOAD_URL);
+    for (const [name, value] of Object.entries(accessHeaders())) request.setRequestHeader(name, value);
 
     request.upload.onprogress = (event) => {
       if (event.lengthComputable) options.onProgress?.(event.loaded / event.total);
@@ -49,7 +50,9 @@ export function uploadAudioFile(file: File, options: UploadOptions = {}): Promis
         options.onProgress?.(1);
         resolve();
       } else {
-        reject(readError(request));
+        const error = readError(request);
+        reportAccessDenied(error.status, error.code);
+        reject(error);
       }
     };
     request.onerror = () => reject(new ApiError('NETWORK_ERROR', NETWORK_ERROR_MESSAGE, 0));

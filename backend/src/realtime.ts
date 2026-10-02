@@ -1,29 +1,49 @@
 import type { Server as HttpServer } from 'node:http';
-import { Server } from 'socket.io';
+import { Server, type Socket } from 'socket.io';
 import {
+  SOCKET_ACCESS_DENIED_MESSAGE,
   SOCKET_ROOMS,
   type ClientToServerEvents,
   type ServerToClientEvents,
   type SocketHandshakeAuth,
   type SocketRoom,
 } from '@caraoke/shared';
+import { clientAddress, isLoopback } from './services/network.js';
+import { safeEqual } from './utils/safeEqual.js';
 
 type CaraokeServer = Server<ClientToServerEvents, ServerToClientEvents>;
+type CaraokeSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
+
+export type AccessCodeReader = () => Promise<string | null>;
 
 let io: CaraokeServer | null = null;
 
-function resolveRoom(auth: Partial<SocketHandshakeAuth>): SocketRoom {
+function isFromStage(socket: CaraokeSocket): boolean {
+  const address = clientAddress(socket.handshake.address, socket.handshake.headers['x-forwarded-for']);
+  return isLoopback(address);
+}
+
+function resolveRoom(socket: CaraokeSocket, fromStage: boolean): SocketRoom {
+  const auth = socket.handshake.auth as Partial<SocketHandshakeAuth>;
+  if (!fromStage) return SOCKET_ROOMS.mobile;
   return auth.client === 'mobile' ? SOCKET_ROOMS.mobile : SOCKET_ROOMS.stage;
 }
 
-export function attachRealtime(httpServer: HttpServer): CaraokeServer {
+export function attachRealtime(httpServer: HttpServer, readAccessCode: AccessCodeReader): CaraokeServer {
   io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer, {
     cors: { origin: true },
   });
 
-  io.on('connection', (socket) => {
+  io.use(async (socket, next) => {
+    if (isFromStage(socket)) return next();
     const auth = socket.handshake.auth as Partial<SocketHandshakeAuth>;
-    void socket.join(resolveRoom(auth));
+    const accessCode = await readAccessCode().catch(() => null);
+    const isValid = accessCode !== null && typeof auth.code === 'string' && safeEqual(auth.code, accessCode);
+    return isValid ? next() : next(new Error(SOCKET_ACCESS_DENIED_MESSAGE));
+  });
+
+  io.on('connection', (socket) => {
+    void socket.join(resolveRoom(socket, isFromStage(socket)));
   });
 
   return io;
@@ -42,6 +62,10 @@ export function emitToRoom<E extends keyof ServerToClientEvents>(
   ...args: Parameters<ServerToClientEvents[E]>
 ): void {
   io?.to(room).emit(event, ...args);
+}
+
+export function disconnectRoom(room: SocketRoom): void {
+  io?.in(room).disconnectSockets(true);
 }
 
 export async function closeRealtime(): Promise<void> {

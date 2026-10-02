@@ -6,6 +6,7 @@ export class FakeXhr {
   method = '';
   url = '';
   body: FormData | null = null;
+  headers: Record<string, string> = {};
   status = 0;
   responseText = '';
   aborted = false;
@@ -25,6 +26,10 @@ export class FakeXhr {
   open(method: string, url: string): void {
     this.method = method;
     this.url = url;
+  }
+
+  setRequestHeader(name: string, value: string): void {
+    this.headers[name] = value;
   }
 
   send(body: FormData): void {
