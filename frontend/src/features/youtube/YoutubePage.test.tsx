@@ -126,6 +126,18 @@ describe('YoutubePage', () => {
       );
     });
 
+    it('offers to open the video on YouTube at the same point, in case the embed is refused', async () => {
+      renderPage({ [SEARCH_URL]: { body: { items: [buildVideo()] } } });
+      await searchFor('evidencias');
+
+      fireEvent.click(await screen.findByRole('button', { name: /^Prévia de/ }));
+
+      const link = await screen.findByRole('link', { name: 'Abrir no YouTube' });
+      expect(link).toHaveAttribute('href', 'https://www.youtube.com/watch?v=abc12345678&t=89s');
+      expect(link).toHaveAttribute('target', '_blank');
+      expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+    });
+
     it('moves from the preview to the import dialog', async () => {
       renderPage({ [SEARCH_URL]: { body: { items: [buildVideo()] } } });
       await searchFor('evidencias');

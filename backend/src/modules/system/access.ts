@@ -13,6 +13,7 @@ export interface AccessInfo {
 }
 
 const MOBILE_PATH = '/m';
+const NAMED_HOST_SUFFIX = '.nip.io';
 
 function webPort(): number {
   return env.NODE_ENV === 'production' ? env.API_PORT : env.WEB_DEV_PORT;
@@ -35,9 +36,10 @@ export async function ensureAccessCode(): Promise<string> {
 }
 
 export function buildAccessUrls(code: string, addresses: string[] = listPrivateIPv4()): string[] {
-  return addresses.map(
-    (address) => `http://${address}:${webPort()}${MOBILE_PATH}?c=${encodeURIComponent(code)}`,
-  );
+  const path = `:${webPort()}${MOBILE_PATH}?c=${encodeURIComponent(code)}`;
+  const named = addresses.map((address) => `http://${address}${NAMED_HOST_SUFFIX}${path}`);
+  const plain = addresses.map((address) => `http://${address}${path}`);
+  return [...named, ...plain];
 }
 
 export async function getAccessInfo(): Promise<AccessInfo> {

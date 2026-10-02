@@ -2,6 +2,13 @@
 
 > Entradas mais recentes no topo. Use `/fim-sessao` para registrar.
 
+## 2026-10-02 (5) — Teste com celular real: prévia do YouTube e tela branca
+**Relato do Michael:** na 1ª tentativa a busca ficou carregando e a tela ficou branca; na 2ª, buscou e importou, mas a prévia mostrou só "assistir no YouTube".
+**Diagnóstico:** a API de busca responde normalmente pela rede (2,3 s) e o fluxo funciona também no motor do Safari (WebKit). A prévia: o YouTube recusa o player embutido quando a página vem de um endereço IP (`http://192.168...`) e aceita nomes (`localhost`, `*.nip.io`); nenhuma variação do iframe contorna (sem referrer dá "Erro 153"). A tela branca não se repetiu; não deu para ver o erro no aparelho.
+**Feito:** o QR passa a usar `http://<ip>.nip.io:5173/m?c=...` (o IP puro fica como "Outro endereço"); Vite libera `.nip.io` e `.sslip.io` em `allowedHosts`; a prévia ganhou o link "Abrir no YouTube" no mesmo trecho; o app ganhou um "para-raios" de erros (ErrorBoundary) que mostra "Algo deu errado", a mensagem e "Recarregar" em vez de tela branca.
+**Verificado:** testes (backend 302, frontend 707, shared 24); pelo endereço novo, num celular emulado, a prévia toca e não há erros.
+**Atenção:** o nome `nip.io` depende de DNS da internet; sem internet ou com roteador que bloqueia respostas com IP privado, use o endereço por IP (a prévia não toca, mas o resto funciona e há o link "Abrir no YouTube").
+
 ## 2026-10-02 (4) — Fase 5: celular e QR code (falta o teste com celular real)
 **Feito:** F5-01 API do código de acesso (`GET /system/access` com os endereços da rede, `POST /system/access/regenerate` que avisa e desconecta os celulares, `GET /system/access/check`) e autenticação do Socket.IO pelo código; F5-02 modal do QR code na TV (fundo branco, endereço, código, outra rede, código novo com confirmação); F5-03 página `/m` que valida o código, layout com abas e código em todas as requisições (API, upload e socket); F5-04 abas Buscar (YouTube), Enviar e Fila (somente leitura, ao vivo). A aba Buscar lembra a última pesquisa.
 **Segurança:** pelo proxy do Vite o endereço confiável é o **último** do `X-Forwarded-For` (o celular não consegue se passar pelo PC). Capas liberadas ao celular só com o código no endereço (`?c=`), porque `<img>` não manda cabeçalho; áudio e letra continuam bloqueados.

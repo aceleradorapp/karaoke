@@ -19,7 +19,8 @@ Celular: lê o QR → abre /m?c=K7P2QX
       401 → tela "Código inválido: escaneie o QR code na TV de novo"
 ```
 - QR gerado no front com `qrcode.react` (`<QRCodeSVG value={url} size={320} level="M" includeMargin />`), em fundo **branco** independentemente do tema (leitura confiável).
-- Mais de um IP (ex.: Wi-Fi + cabo): mostrar o primeiro `192.168.*`/`10.*` e um seletor "outra rede".
+- **Endereço com nome (2026-10-02):** o YouTube **recusa** a prévia embutida em páginas abertas por IP (`http://192.168...` mostra "Este vídeo não está disponível"), mas aceita nomes. Por isso o QR usa `http://<ip>.nip.io:<porta>/m?c=...` (DNS público que devolve o próprio IP; não passa tráfego por fora). O endereço só por IP continua na lista como alternativa (roteadores com proteção contra "DNS rebinding" ou sem internet podem não resolver o nome). O Vite libera esses nomes em `server.allowedHosts` (`.nip.io`, `.sslip.io`). A prévia também tem o link "Abrir no YouTube" no mesmo ponto, como reserva.
+- Mais de um endereço: mostrar o primeiro e um seletor "Outro endereço".
 - Se o celular abrir `/m` sem `?c=` e houver código salvo, tenta o salvo; se não houver, pede para escanear.
 - `access:changed` (código regenerado) → todos os celulares voltam para a tela "escaneie de novo".
 
