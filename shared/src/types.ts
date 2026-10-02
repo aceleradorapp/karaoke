@@ -85,6 +85,7 @@ export interface AppSettings {
 }
 
 export interface SingerSummary {
+  id: string;
   name: string;
   avatar: string;
 }
@@ -103,6 +104,8 @@ export interface FinalScore {
   finalScore: number | null;
   votes: number;
 }
+
+export type FinishPerformanceResult = { voting: { endsAt: string } } | { finalScore: number | null };
 
 export interface WorkerStatus {
   online: boolean;
@@ -196,4 +199,21 @@ export interface SingRequestDTO {
 
 export interface SingQueueResponse {
   items: SingRequestDTO[];
+}
+
+export type RankingPeriod = 'week' | 'month' | 'all';
+export type RankingScope = 'all' | 'family';
+
+export interface RankingProfile {
+  id: string;
+  name: string;
+  avatar: string;
+  isGuest: boolean;
+}
+
+export interface RankingResponse {
+  bestAverage: Array<{ profile: RankingProfile; avg: number; count: number }>;
+  mostSung: Array<{ profile: RankingProfile; count: number }>;
+  topSongs: Array<{ song: SongDTO; count: number }>;
+  champion: { profile: RankingProfile; avg: number } | null;
 }

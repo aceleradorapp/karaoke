@@ -9,6 +9,7 @@ import { ThemePicker } from '../profiles/ThemePicker';
 import { deviceHint } from './deviceHint';
 import { SelectField, SettingsSection, ToggleField } from './fields';
 import { MyThemeField } from './MyThemeField';
+import { ScoringSection } from './ScoringSection';
 import { YtdlpUpdater } from './YtdlpUpdater';
 
 const DEVICE_OPTIONS = [
@@ -100,6 +101,8 @@ function SettingsForm({ initialSettings }: SettingsFormProps) {
         />
         <YtdlpUpdater />
       </SettingsSection>
+
+      <ScoringSection settings={draft} onChange={change} />
     </div>
   );
 }

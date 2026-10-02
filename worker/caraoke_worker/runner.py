@@ -6,7 +6,7 @@ from typing import Any
 from .api import Api
 from .context import JobContext
 from .errors import JobCanceled
-from .steps import cover, download, lyrics, separate
+from .steps import cover, download, lyrics, melody, separate
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +27,7 @@ STEP_HANDLERS: dict[str, StepHandler] = {
     "SEPARATE": separate.run,
     "LYRICS": lyrics.run,
     "COVER": cover.run,
+    "MELODY": melody.run,
     "FINALIZE": finalize,
 }
 

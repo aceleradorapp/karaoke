@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { LYRICS_OFFSET_LIMIT_MS } from '@caraoke/shared';
 import { z } from 'zod';
+import { markSongMelody } from '../songs/service.js';
 import { claimNextJob } from './service.js';
 import { completeJob, failJob, recordProgress } from './workerService.js';
 
@@ -60,6 +61,11 @@ export async function jobsInternalRoutes(app: FastifyInstance): Promise<void> {
       return { ok: true };
     },
   );
+
+  typedApp.post('/internal/songs/:id/melody', { schema: { params: idParamsSchema } }, async (request) => {
+    await markSongMelody(request.params.id);
+    return { ok: true };
+  });
 
   typedApp.post(
     '/internal/jobs/:id/fail',

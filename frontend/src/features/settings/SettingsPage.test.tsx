@@ -113,6 +113,95 @@ describe('SettingsPage', () => {
     expect(patchBodies(fetchMock)[1]).toMatchObject({ 'ui.defaultTheme': 'neon' });
   });
 
+  describe('scoring', () => {
+    const scoring = () => screen.findByRole('region', { name: 'Pontuação' });
+
+    it('shows every option for pitch + audience, with the stored values', async () => {
+      renderPage();
+      const section = await scoring();
+
+      expect(within(section).getByLabelText('Como dar a nota')).toHaveValue('pitch+audience');
+      expect(within(section).getByRole('slider', { name: 'Peso da plateia na nota' })).toHaveAttribute(
+        'aria-valuetext',
+        '20%',
+      );
+      expect(within(section).getByRole('slider', { name: 'Tempo para votar' })).toHaveAttribute(
+        'aria-valuetext',
+        '20 s',
+      );
+      expect(within(section).getByLabelText('Microfone')).toHaveValue('');
+      expect(within(section).getByRole('slider', { name: 'Atraso do microfone' })).toHaveAttribute(
+        'aria-valuetext',
+        '150 ms',
+      );
+      expect(within(section).getByRole('button', { name: 'Calibrar' })).toBeInTheDocument();
+      expect(within(section).getByRole('button', { name: 'Testar o microfone' })).toBeInTheDocument();
+    });
+
+    it('hides the microphone when only the audience votes, and saves the choice', async () => {
+      const fetchMock = renderPage({ 'PATCH /api/settings': { body: SETTINGS } });
+      const section = await scoring();
+
+      fireEvent.change(within(section).getByLabelText('Como dar a nota'), { target: { value: 'audience' } });
+
+      await waitFor(() => expect(patchBodies(fetchMock)).toHaveLength(1));
+      expect(patchBodies(fetchMock)[0]).toMatchObject({ 'scoring.mode': 'audience' });
+      expect(within(section).queryByLabelText('Microfone')).not.toBeInTheDocument();
+      expect(
+        within(section).queryByRole('slider', { name: 'Peso da plateia na nota' }),
+      ).not.toBeInTheDocument();
+      expect(within(section).getByRole('slider', { name: 'Tempo para votar' })).toBeInTheDocument();
+    });
+
+    it('hides the voting time when only the pitch counts', async () => {
+      renderPage({ 'GET /api/settings': { body: { ...SETTINGS, 'scoring.mode': 'pitch' } } });
+      const section = await scoring();
+
+      expect(within(section).queryByRole('slider', { name: 'Tempo para votar' })).not.toBeInTheDocument();
+      expect(within(section).getByLabelText('Microfone')).toBeInTheDocument();
+    });
+
+    it('hides everything else when the score is off', async () => {
+      renderPage({ 'GET /api/settings': { body: { ...SETTINGS, 'scoring.mode': 'off' } } });
+      const section = await scoring();
+
+      expect(within(section).queryAllByRole('slider')).toHaveLength(0);
+      expect(within(section).queryByLabelText('Microfone')).not.toBeInTheDocument();
+    });
+
+    it('saves the audience weight as a fraction and the latency in milliseconds', async () => {
+      const fetchMock = renderPage({ 'PATCH /api/settings': { body: SETTINGS } });
+      const section = await scoring();
+
+      fireEvent.change(within(section).getByRole('slider', { name: 'Peso da plateia na nota' }), {
+        target: { value: '35' },
+      });
+      await waitFor(() =>
+        expect(patchBodies(fetchMock).at(-1)).toMatchObject({ 'scoring.audienceWeight': 0.35 }),
+      );
+
+      fireEvent.change(within(section).getByRole('slider', { name: 'Atraso do microfone' }), {
+        target: { value: '220' },
+      });
+      await waitFor(() =>
+        expect(patchBodies(fetchMock).at(-1)).toMatchObject({ 'scoring.micLatencyMs': 220 }),
+      );
+    });
+
+    it('explains when the microphone cannot be opened', async () => {
+      renderPage();
+      const section = await scoring();
+
+      fireEvent.click(within(section).getByRole('button', { name: 'Testar o microfone' }));
+
+      await waitFor(() =>
+        expect(useToastStore.getState().toasts[0]?.message).toBe(
+          'Não foi possível abrir o microfone. Confira a permissão do navegador.',
+        ),
+      );
+    });
+  });
+
   it('offers a retry when saving fails', async () => {
     renderPage({
       'PATCH /api/settings': { status: 500, body: { error: { code: 'X', message: 'Falhou' } } },

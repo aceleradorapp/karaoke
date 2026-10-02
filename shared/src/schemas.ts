@@ -101,6 +101,21 @@ export const finishPerformanceSchema = z.object({
   pitchScore: z.number().int().min(0).max(100).nullable(),
 });
 
+export const VOTER_TOKEN_MIN_LENGTH = 8;
+export const VOTER_TOKEN_MAX_LENGTH = 64;
+
+export const castVoteSchema = z.object({
+  voterToken: z.string().min(VOTER_TOKEN_MIN_LENGTH).max(VOTER_TOKEN_MAX_LENGTH),
+  voterProfileId: z.string().min(1).optional(),
+  stars: z.number().int().min(1).max(5),
+});
+
+export type CastVoteInput = z.infer<typeof castVoteSchema>;
+
+export const rankingQuerySchema = z.object({
+  period: z.enum(['week', 'month', 'all']).default('month'),
+  scope: z.enum(['all', 'family']).default('all'),
+});
 export type CreatePerformanceInput = z.infer<typeof createPerformanceSchema>;
 export type FinishPerformanceInput = z.infer<typeof finishPerformanceSchema>;
 export type CreateSingRequestInput = z.infer<typeof createSingRequestSchema>;

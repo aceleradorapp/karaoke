@@ -216,6 +216,7 @@ Toda mudança (criar, remover, reordenar, apresentação começou, perfil ou mú
 | DELETE | `/api/jobs/:id` | Remove um job finalizado da lista (só DONE/FAILED/CANCELED) |
 
 ### Interno (worker) — header `X-Worker-Token`
+- `POST /api/internal/songs/:id/melody` → marca `hasMelody=true` e emite `song:updated` (usado por `npm run worker:melody`, Fase 7).
 | Método | Rota | Body | Resposta |
 |---|---|---|---|
 | POST | `/api/internal/worker/heartbeat` | `{ instanceId, device, cudaAvailable, gpuName, vramMb, ytdlpVersion }` | `{ ok }`. Guarda em memória; `online` = último heartbeat há menos de 30 s. Se o `instanceId` mudar (worker reiniciou com o back-end no ar), os jobs RUNNING órfãos voltam para a fila antes de responder |
@@ -251,8 +252,9 @@ Toda mudança (criar, remover, reordenar, apresentação começou, perfil ou mú
 |---|---|---|
 | POST | `/api/performances` | `{ profileId, songId, requestId? }` → cria, incrementa `playCount`, retorna `{ id }`. Com `requestId` (veio da fila de cantores), apaga o pedido na mesma transação e emite `singQueue:changed` |
 | POST | `/api/performances/:id/finish` | `{ completed, voiceGuideUsed, pitchScore: number \| null }`. Se o modo usa plateia e `completed`: abre a votação (4.7) e responde `{ voting: { endsAt } }`; senão calcula `finalScore` na hora e responde `{ finalScore }` |
-| GET | `/api/performances/voting/current` | Votação aberta: `{ performanceId, singer: {name, avatar}, song: {title, artist}, endsAt } \| null` |
-| POST | `/api/performances/:id/votes` | `{ voterToken, voterProfileId?, stars: 1..5 }`. 409 `VOTING_CLOSED` se encerrada; 409 `ALREADY_VOTED` em caso de duplicidade; 409 `CANNOT_VOTE_FOR_SELF` se `voterProfileId` é quem cantou (ADR-008) |
+| GET | `/api/performances/voting/current` | Votação aberta: `{ performanceId, singer: {id, name, avatar}, song: {title, artist}, endsAt } \| null` |
+| POST | `/api/performances/:id/voting/close` | (palco) Encerra a votação agora ("Encerrar votação"): calcula as notas, emite `score:final` e responde o `FinalScore`. 409 `VOTING_CLOSED` se não estiver aberta |
+| POST | `/api/performances/:id/votes` | `{ voterToken, voterProfileId?, stars: 1..5 }`. 409 `VOTING_CLOSED` se encerrada; 409 `ALREADY_VOTED` em caso de duplicidade; 409 `CANNOT_VOTE_FOR_SELF` se `voterProfileId` é quem cantou (ADR-008). Resposta `{ votes }` (total até agora). `voterToken` com 8 a 64 caracteres |
 | GET | `/api/profiles/:profileId/history?limit=&cursor=` | `{ items: [{ id, song: SongDTO, startedAt, finalScore, pitchScore, audienceScore, completed }] }` |
 
 **Cálculo da nota final** (`performances/service.ts → computeFinalScore`), conforme o ADR-006:
@@ -272,10 +274,12 @@ function computeFinalScore(mode, pitch: number|null, audience: number|null, w: n
 ```
 Ao encerrar a votação (timer de `voteSeconds` no servidor, `setTimeout` por performance): grava `audienceScore` e `finalScore` e emite `score:final`. Testes unitários obrigatórios para `computeFinalScore`.
 
+**Implementação (2026-10-02):** `performances/voting.ts`. Só uma votação aberta por vez, guardada em memória: se outra música termina com a votação ainda aberta, a anterior é encerrada antes. Música deixada no meio (`completed=false`) não abre votação nem ganha nota. Sem modo de plateia, a nota final sai na resposta do `finish`. Se o backend reiniciar com uma votação aberta, ela se perde e a apresentação fica sem nota (aceitável no uso em casa).
+
 ### Ranking
 | Método | Rota | Descrição |
 |---|---|---|
-| GET | `/api/ranking?period=week\|month\|all&scope=all\|family` | `{ bestAverage: [{ profile, avg, count }], mostSung: [{ profile, count }], topSongs: [{ song, count }], champion: { profile, avg } \| null }`. Média só com `finalScore != null`; mínimo de 3 apresentações para entrar em `bestAverage` |
+| GET | `/api/ranking?period=week\|month\|all&scope=all\|family` | `{ bestAverage: [{ profile, avg, count }], mostSung: [{ profile, count }], topSongs: [{ song, count }], champion: { profile, avg } \| null }`. Média só com `finalScore != null`; mínimo de 3 apresentações para entrar em `bestAverage`. `period`: `week` = últimos 7 dias, `month` = últimos 30 dias (padrão), `all`. `mostSung` e `topSongs` contam só músicas cantadas até o fim (`completed`). `champion` = melhor média do **mês do calendário** atual, qualquer que seja o período. `scope=family` exclui convidados. Listas com até 10 itens |
 
 ### Configurações
 | Método | Rota | Descrição |

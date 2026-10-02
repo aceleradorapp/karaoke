@@ -1,14 +1,21 @@
-import { LYRICS_OFFSET_LIMIT_MS, type SongDTO } from '@caraoke/shared';
+import { LYRICS_OFFSET_LIMIT_MS, type FinalScore, type SongDTO } from '@caraoke/shared';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFinishPerformanceMutation, useStartPerformanceMutation } from '../../api/performances';
 import { KaraokeEngine } from '../../lib/audio/KaraokeEngine';
+import type { PitchScoring } from './usePitchScoring';
 
-export type PlayerPhase = 'choosing' | 'loading' | 'playing' | 'finished' | 'error';
+export type PlayerPhase = 'choosing' | 'loading' | 'playing' | 'finishing' | 'voting' | 'finished' | 'error';
 
 const COMPLETED_FRACTION = 0.9;
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
+}
+
+export interface OpenVoting {
+  performanceId: string;
+  endsAt: string;
+  votes: number;
 }
 
 export interface PlayerSession {
@@ -20,6 +27,8 @@ export interface PlayerSession {
   volume: number;
   duration: number;
   liveOffsetMs: number;
+  voting: OpenVoting | null;
+  result: FinalScore | null;
   getTime: () => number;
   start: (singerId: string, requestId?: string | null) => Promise<void>;
   restart: () => Promise<void>;
@@ -31,15 +40,21 @@ export interface PlayerSession {
   setVolume: (volume: number) => void;
   adjustLyricsOffset: (deltaMs: number) => void;
   hasSungForAWhile: () => boolean;
+  updateVotes: (performanceId: string, votes: number) => void;
+  showResult: (result: FinalScore) => void;
+  giveUpWaitingForResult: () => void;
   stop: () => void;
 }
 
-export function usePlayerSession(song: SongDTO): PlayerSession {
+export function usePlayerSession(song: SongDTO, pitch?: PitchScoring): PlayerSession {
   const engine = useRef<KaraokeEngine | null>(null);
   const performanceId = useRef<string | null>(null);
   const singerId = useRef<string | null>(null);
   const voiceGuideUsed = useRef(false);
   const volumeRef = useRef(1);
+  const votingId = useRef<string | null>(null);
+  const pitchRef = useRef(pitch);
+  pitchRef.current = pitch;
   const startPerformance = useStartPerformanceMutation();
   const finishPerformance = useFinishPerformanceMutation();
 
@@ -51,17 +66,26 @@ export function usePlayerSession(song: SongDTO): PlayerSession {
   const [volume, setVolumeState] = useState(1);
   const [duration, setDuration] = useState(0);
   const [liveOffsetMs, setLiveOffsetMs] = useState(0);
+  const [voting, setVoting] = useState<OpenVoting | null>(null);
+  const [result, setResult] = useState<FinalScore | null>(null);
 
   const getTime = useCallback(() => engine.current?.currentTime ?? 0, []);
 
   const closePerformance = useCallback(() => {
     const id = performanceId.current;
     const instance = engine.current;
-    if (!id || !instance) return;
+    if (!id || !instance) return null;
 
     performanceId.current = null;
     const completed = instance.duration > 0 && instance.currentTime >= COMPLETED_FRACTION * instance.duration;
-    finishPerformance.mutate({ id, completed, voiceGuideUsed: voiceGuideUsed.current, pitchScore: null });
+    const pitchScore = pitchRef.current?.finish() ?? null;
+    const request = finishPerformance.mutateAsync({
+      id,
+      completed,
+      voiceGuideUsed: voiceGuideUsed.current,
+      pitchScore,
+    });
+    return { id, pitchScore, request };
   }, [finishPerformance]);
 
   const closePerformanceRef = useRef(closePerformance);
@@ -69,7 +93,7 @@ export function usePlayerSession(song: SongDTO): PlayerSession {
 
   useEffect(
     () => () => {
-      closePerformanceRef.current();
+      void closePerformanceRef.current()?.request.catch(() => undefined);
       engine.current?.destroy();
       engine.current = null;
     },
@@ -87,17 +111,48 @@ export function usePlayerSession(song: SongDTO): PlayerSession {
       voiceGuideUsed.current = false;
       instance.setVoiceGuide(false);
       setVoiceGuide(false);
+      votingId.current = null;
+      setVoting(null);
+      setResult(null);
       instance.play(0);
       setIsPlaying(true);
       setPhase('playing');
+      pitchRef.current?.begin(
+        () => instance.currentTime,
+        () => instance.isPlaying,
+      );
     },
     [song.id, startPerformance],
   );
 
   const handleEnded = useCallback(() => {
     setIsPlaying(false);
-    closePerformanceRef.current();
-    setPhase('finished');
+    const closing = closePerformanceRef.current();
+    if (!closing) {
+      setPhase('finished');
+      return;
+    }
+    setPhase('finishing');
+    closing.request
+      .then((outcome) => {
+        if ('voting' in outcome) {
+          votingId.current = closing.id;
+          setVoting({ performanceId: closing.id, endsAt: outcome.voting.endsAt, votes: 0 });
+          setPhase('voting');
+          return;
+        }
+        if (outcome.finalScore != null) {
+          setResult({
+            performanceId: closing.id,
+            pitchScore: closing.pitchScore,
+            audienceScore: null,
+            finalScore: outcome.finalScore,
+            votes: 0,
+          });
+        }
+        setPhase('finished');
+      })
+      .catch(() => setPhase('finished'));
   }, []);
 
   const start = useCallback(
@@ -116,7 +171,7 @@ export function usePlayerSession(song: SongDTO): PlayerSession {
       instance.onEnded = handleEnded;
 
       try {
-        await instance.load(song.instrumentalUrl, song.vocalsUrl);
+        await Promise.all([instance.load(song.instrumentalUrl, song.vocalsUrl), pitchRef.current?.prepare()]);
         setDuration(instance.duration);
         setHasVocals(instance.hasVocals);
         await beginPerformance(instance, profileId, requestId);
@@ -183,8 +238,27 @@ export function usePlayerSession(song: SongDTO): PlayerSession {
 
   const hasSungForAWhile = useCallback(() => getTime() > 5, [getTime]);
 
+  const updateVotes = useCallback((id: string, votes: number) => {
+    setVoting((current) => (current && current.performanceId === id ? { ...current, votes } : current));
+  }, []);
+
+  const showResult = useCallback((final: FinalScore) => {
+    if (votingId.current !== final.performanceId) return;
+    votingId.current = null;
+    setVoting(null);
+    setResult(final);
+    setPhase('finished');
+  }, []);
+
+  const giveUpWaitingForResult = useCallback(() => {
+    votingId.current = null;
+    setVoting(null);
+    setPhase('finished');
+  }, []);
+
   const stop = useCallback(() => {
-    closePerformance();
+    void closePerformance()?.request.catch(() => undefined);
+    pitchRef.current?.release();
     engine.current?.destroy();
     engine.current = null;
     setIsPlaying(false);
@@ -199,6 +273,8 @@ export function usePlayerSession(song: SongDTO): PlayerSession {
     volume,
     duration,
     liveOffsetMs,
+    voting,
+    result,
     getTime,
     start,
     restart,
@@ -210,6 +286,9 @@ export function usePlayerSession(song: SongDTO): PlayerSession {
     setVolume,
     adjustLyricsOffset,
     hasSungForAWhile,
+    updateVotes,
+    showResult,
+    giveUpWaitingForResult,
     stop,
   };
 }

@@ -2,6 +2,22 @@
 
 > Entradas mais recentes no topo. Use `/fim-sessao` para registrar.
 
+## 2026-10-02 (8) — Fase 7 concluída: pontuação, votação e ranking
+**Pedido do Michael:** fazer a Fase 7, sem testar a pontuação com microfone de verdade.
+**Feito:**
+- F7-01: etapa MELODY no worker (parselmouth, ~0,3–1 s por música) e `npm run worker:melody` para as músicas antigas; as 17 ganharam melodia.
+- F7-02: `PitchScorer`, detecção com pitchy e captura do microfone.
+- F7-03: seção Pontuação nas configurações (modo, peso, tempo de voto, microfone, medidor, atraso com calibração por bipes).
+- F7-04: votação no backend (uma por vez, timer, um voto por celular, sem voto em si mesmo, encerrar pela TV, nota final por modo e peso).
+- F7-05: palco com medidor ao vivo, tela de votação e nota animada com confete.
+- F7-06: `/m/votar` abre sozinha, quem cantou vê "É a sua vez!", volta para a aba anterior depois da nota.
+- F7-07: API e tela de ranking (pódio, quem mais cantou, músicas mais cantadas, "Estrela do karaokê do mês", filtro "Só a família").
+**Verificado (F7-08):** 350 testes backend, 798 frontend, 24 shared, 205 worker, typecheck ok; festa-teste no navegador com TV + 3 celulares, 29/29 (votação abre sozinha, contagem ao vivo, encerrar → 90, tempo esgotado → 60, nota no histórico, ranking e filtro, sem rolagem de 360 a 1920 px). O medidor foi conferido com o microfone falso do Chromium; **sem teste com microfone de verdade** (decisão do Michael).
+**Bugs achados no navegador (corrigidos):** ranking com rolagem em 360 px (seções do grid sem `min-w-0`); a afinação não ligava se o "Começar" fosse clicado antes das configurações carregarem (agora o player garante as configurações antes de abrir o microfone).
+**Decisões/desvios:** o microfone usa um `AudioContext` próprio (não o do motor); um semitom inteiro fora dá 95 com a fórmula do documento (a expectativa escrita era 75–85): calibrar quando houver teste com microfone; "Rei/Rainha do mês" virou "Estrela do karaokê do mês" (nome neutro); rota nova `POST /performances/:id/voting/close`.
+**Observação:** os roteiros tocaram músicas de teste (soma no `playCount`); perfis de teste apagados e configurações restauradas no final.
+**Próximos passos:** testar com microfone de verdade quando der (calibrar a curva); F6-02 continua pausada; Fase 8 é para o futuro.
+
 ## 2026-10-02 (7) — Fase 5B concluída: convidados no celular e fila de cantores
 **Pedido do Michael:** o convidado escolher pelo celular o nome dele e as músicas que vai cantar; a TV com uma fila de cantores. Respostas padrão adotadas (ele pediu "se organize da melhor forma"): o celular cria convidado; ranking com família e convidados juntos e filtro "Só a família"; ninguém vota em si mesmo (as duas últimas valem para a Fase 7).
 **Feito:** ADR-008 e documento técnico (F5B-01); backend: celular lista perfis e cria convidado (sempre convidado, tema padrão), importação grava quem pediu (F5B-02); tabela `sing_requests`, `/api/sing-queue`, limite de 3 pedidos por pessoa, `singQueue:changed`, `requestId` em `POST /performances` (F5B-03); celular: "Quem é você?", aba Músicas com "Cantar", "Quero cantar esta" na importação, aba Fila com Próximos + Preparando (F5B-04); palco: página Próximos (chamar, subir, descer, tirar), contador na barra, faixa "Vez de…" no início, player "Vez de Ana! 🎤" e "Chamar o próximo" no fim (F5B-05).

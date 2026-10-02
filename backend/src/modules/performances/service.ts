@@ -1,12 +1,15 @@
-import type { CreatePerformanceInput, FinishPerformanceInput, HistoryResponse } from '@caraoke/shared';
+import type {
+  CreatePerformanceInput,
+  FinishPerformanceInput,
+  FinishPerformanceResult,
+  HistoryResponse,
+} from '@caraoke/shared';
 import { prisma } from '../../db.js';
 import { conflict, notFound } from '../../utils/errors.js';
+import { getAppSettings } from '../settings/service.js';
 import { publishSingQueue } from '../singQueue/service.js';
 import { LATEST_JOB, favoriteIdsOf, toListedSongDTO } from '../songs/service.js';
-
-export interface FinishPerformanceResult {
-  finalScore: number | null;
-}
+import { computeFinalScore, startVoting, usesAudience } from './voting.js';
 
 export async function startPerformance(input: CreatePerformanceInput): Promise<{ id: string }> {
   const [profile, song] = await Promise.all([
@@ -31,7 +34,10 @@ export async function finishPerformance(
   id: string,
   input: FinishPerformanceInput,
 ): Promise<FinishPerformanceResult> {
-  const performance = await prisma.performance.findUnique({ where: { id }, select: { finishedAt: true } });
+  const performance = await prisma.performance.findUnique({
+    where: { id },
+    select: { finishedAt: true, profileId: true },
+  });
   if (!performance) throw notFound('PERFORMANCE_NOT_FOUND', 'Apresentação não encontrada');
   if (performance.finishedAt) {
     throw conflict('PERFORMANCE_ALREADY_FINISHED', 'Esta apresentação já foi encerrada');
@@ -46,7 +52,18 @@ export async function finishPerformance(
       pitchScore: input.pitchScore,
     },
   });
-  return { finalScore: null };
+  if (!input.completed) return { finalScore: null };
+
+  const settings = await getAppSettings();
+  const mode = settings['scoring.mode'];
+  if (usesAudience(mode)) {
+    const endsAt = await startVoting(id, performance.profileId, settings['scoring.voteSeconds']);
+    return { voting: { endsAt: endsAt.toISOString() } };
+  }
+
+  const finalScore = computeFinalScore(mode, input.pitchScore, null, settings['scoring.audienceWeight']);
+  await prisma.performance.update({ where: { id }, data: { finalScore } });
+  return { finalScore };
 }
 
 export async function listHistory(
