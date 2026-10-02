@@ -16,7 +16,7 @@ export function mockApi(routes: MockRoutes) {
     const route = typeof handler === 'function' ? handler() : (handler ?? { status: 500 });
     return Promise.resolve(route).then((resolved) => {
       const status = resolved.status ?? 200;
-      const body = status === 204 ? null : JSON.stringify(resolved.body ?? {});
+      const body = status === 204 ? null : JSON.stringify(resolved.body === undefined ? {} : resolved.body);
       return new Response(body, { status });
     });
   });

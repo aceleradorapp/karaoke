@@ -1,9 +1,11 @@
 import clsx from 'clsx';
-import { ListOrdered, Music, Search, Upload } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { Link, Navigate, NavLink, Outlet, useLocation } from 'react-router';
-import { SOCKET_ACCESS_DENIED_MESSAGE } from '@caraoke/shared';
+import { useQueryClient } from '@tanstack/react-query';
+import { ListOrdered, Music, Search, Star, Upload } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Link, Navigate, NavLink, Outlet, useLocation, useNavigate } from 'react-router';
+import { SOCKET_ACCESS_DENIED_MESSAGE, type FinalScore, type VotingSummary } from '@caraoke/shared';
 import { useProfilesQuery } from '../../api/profiles';
+import { CURRENT_VOTING_QUERY_KEY, FINAL_SCORE_QUERY_KEY, useCurrentVotingQuery } from '../../api/voting';
 import { Avatar } from '../../components/Avatar';
 import { getSocket, type RealtimeSocket } from '../../realtime/socket';
 import { useMobileAccessStore } from '../../stores/useMobileAccessStore';
@@ -12,6 +14,9 @@ import { ScanAgain } from './MobileEntry';
 
 const SEARCH_TAB = '/m/buscar';
 export const WHO_AM_I_PATH = '/m/quem-sou';
+export const VOTE_PATH = '/m/votar';
+
+const VOTE_TAB = { to: VOTE_PATH, label: 'Votar', Icon: Star } as const;
 
 const TABS = [
   { to: '/m/musicas', label: 'Músicas', Icon: Music },
@@ -37,6 +42,34 @@ export function useMobileAccessEvents(socket: RealtimeSocket = getSocket()): voi
   }, [socket, markDenied]);
 }
 
+export function useMobileVotingEvents(socket: RealtimeSocket = getSocket()): void {
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const currentPath = useRef('');
+  currentPath.current = `${location.pathname}${location.search}`;
+
+  useEffect(() => {
+    const onVoteOpen = (voting: VotingSummary) => {
+      queryClient.setQueryData(FINAL_SCORE_QUERY_KEY, null);
+      queryClient.setQueryData(CURRENT_VOTING_QUERY_KEY, voting);
+      const path = currentPath.current;
+      if (path.startsWith(VOTE_PATH) || path.startsWith(WHO_AM_I_PATH)) return;
+      navigate(VOTE_PATH, { state: { from: path } });
+    };
+    const onScoreFinal = (score: FinalScore) => {
+      queryClient.setQueryData(FINAL_SCORE_QUERY_KEY, score);
+      queryClient.setQueryData(CURRENT_VOTING_QUERY_KEY, null);
+    };
+    socket.on('vote:open', onVoteOpen);
+    socket.on('score:final', onScoreFinal);
+    return () => {
+      socket.off('vote:open', onVoteOpen);
+      socket.off('score:final', onScoreFinal);
+    };
+  }, [socket, queryClient, navigate]);
+}
+
 function useForgetDeletedProfile(): void {
   const profileId = useMobileProfileStore((state) => state.profile?.id);
   const clearProfile = useMobileProfileStore((state) => state.clearProfile);
@@ -55,7 +88,10 @@ export function MobileLayout() {
   const location = useLocation();
   const [lastSearch, setLastSearch] = useState('');
   const isChoosingIdentity = location.pathname === WHO_AM_I_PATH;
+  const voting = useCurrentVotingQuery();
+  const tabs = voting.data ? [...TABS, VOTE_TAB] : TABS;
   useMobileAccessEvents();
+  useMobileVotingEvents();
   useForgetDeletedProfile();
 
   useEffect(() => {
@@ -98,9 +134,12 @@ export function MobileLayout() {
       {!isChoosingIdentity && (
         <nav
           aria-label="Seções do celular"
-          className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-4 border-t border-surface-2 bg-surface pb-[env(safe-area-inset-bottom)]"
+          className={clsx(
+            'fixed inset-x-0 bottom-0 z-20 grid border-t border-surface-2 bg-surface pb-[env(safe-area-inset-bottom)]',
+            tabs.length === 5 ? 'grid-cols-5' : 'grid-cols-4',
+          )}
         >
-          {TABS.map(({ to, label, Icon }) => (
+          {tabs.map(({ to, label, Icon }) => (
             <NavLink
               key={to}
               to={to === SEARCH_TAB ? `${SEARCH_TAB}${lastSearch}` : to}
