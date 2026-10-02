@@ -6,6 +6,8 @@ Cópias dos roteiros usados para verificar a sincronização da letra. **Não fa
 |---|---|
 | `editor-sincronizar.mjs` | Abre a página de sincronizar com a música real, confere a paridade navegador × worker, arrasta linhas no canvas, desfaz/refaz, usa o ímã, edita texto, volta ao original, testa o modo "Marcar tocando", confere o player e a responsividade (375/768/1366/1920 px) |
 | `efeito-da-letra.mjs` | Mede o preenchimento da letra durante a reprodução (modelos, tempo 50%/100%/150%, efeito desligado, tecla E, persistência após recarregar) e confere o layout |
+| `palavras-no-player.mjs` | Confere, tocando, que cada palavra começa a pintar no seu tempo (erro ≤ 0,2 s; medido ≤ 0,05 s), a vogal segurada enchendo aos poucos, a pausa real no modelo palavra por palavra e que a página de sincronizar preserva as palavras |
+| `mms-experimento.py` | Primeiro experimento do alinhamento forçado com o MMS, linha por linha |
 | `whisper-experimento.py` | Alinha o texto da letra com a voz usando o Whisper (stable-ts) na CPU e grava as palavras em JSON (usado para medir tempo e precisão) |
 | `paridade-alinhamento.py` | Roda o alinhamento do worker (Python) no arquivo real e compara com os tempos do Whisper |
 | `comparar-whisper.py` | Remonta as linhas a partir das palavras do Whisper (contando palavras) e compara com os inícios de voz |

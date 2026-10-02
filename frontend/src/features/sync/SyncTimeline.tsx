@@ -159,6 +159,14 @@ function drawLines(
       context.fillRect(left + width - 3, top + height / 2 - 12, 5, 24);
     }
 
+    context.fillStyle = palette.text;
+    context.globalAlpha = 0.45;
+    for (const word of line.words?.slice(1) ?? []) {
+      const x = timeToX(word.start, view);
+      if (x > left + 3 && x < left + width) context.fillRect(x, top + height - 10, 1, 10);
+    }
+    context.globalAlpha = 1;
+
     context.save();
     context.beginPath();
     context.rect(left, top, Math.max(0, width - 4), height);

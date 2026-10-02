@@ -315,3 +315,62 @@ def test_a_failure_while_analyzing_never_breaks_the_lyrics(make_context, monkeyp
 
     assert context.result["lyricsSource"] == "LRCLIB"
     assert stored_document(context)["lines"][0]["start"] == 10.0
+
+
+@pytest.fixture(autouse=True)
+def no_word_alignment_by_default(monkeypatch):
+    monkeypatch.setattr(lyrics, "align_song_words", lambda vocals, lines: None)
+
+
+def with_words(lines):
+    return [
+        {**line, "end": line["start"] + 1.5, "words": [{"start": line["start"], "end": line["start"] + 1.5, "text": line["text"]}]}
+        for line in lines
+    ]
+
+
+def run_with_words(make_context, monkeypatch, settings=None, aligner=with_words):
+    serve(monkeypatch, lambda endpoint, params: found(synced=SPREAD_LRC))
+    monkeypatch.setattr(lyrics, "analyze_vocals", lambda path: voice_at((25, 31), (33, 39), (42, 48), (55, 61)))
+    monkeypatch.setattr(lyrics, "align_song_words", lambda vocals, lines: aligner(lines))
+    context = lyrics_context(make_context, settings=settings)
+    context.song_dir.mkdir(parents=True, exist_ok=True)
+    (context.song_dir / "voz.mp3").write_bytes(b"x")
+    lyrics.run(context)
+    return context
+
+
+def test_adds_the_time_of_each_word_after_aligning_the_lines(make_context, monkeypatch):
+    context = run_with_words(make_context, monkeypatch)
+
+    document = stored_document(context)
+    assert document["source"] == "ALIGNED"
+    assert [round(line["start"]) for line in document["lines"]] == [25, 33, 42, 55]
+    assert document["lines"][0]["words"] == [{"start": 25.0, "end": 26.5, "text": "Primeira"}]
+    assert document["lines"][0]["end"] == 26.5
+    original = json.loads((context.song_dir / "letra.original.json").read_text(encoding="utf-8"))
+    assert "words" not in original["lines"][0]
+    assert context.result["lyricsSource"] == "ALIGNED"
+
+
+def test_skips_the_words_when_the_automatic_alignment_is_turned_off(make_context, monkeypatch):
+    context = run_with_words(make_context, monkeypatch, settings={"processing.autoAlign": False})
+    assert all("words" not in line for line in stored_document(context)["lines"])
+
+
+def test_keeps_the_aligned_lines_when_the_words_cannot_be_found(make_context, monkeypatch):
+    context = run_with_words(make_context, monkeypatch, aligner=lambda lines: None)
+
+    document = stored_document(context)
+    assert document["source"] == "ALIGNED"
+    assert all("words" not in line for line in document["lines"])
+
+
+def test_a_failure_while_aligning_the_words_never_breaks_the_lyrics(make_context, monkeypatch):
+    def explode(lines):
+        raise RuntimeError("model download failed")
+
+    context = run_with_words(make_context, monkeypatch, aligner=explode)
+
+    assert stored_document(context)["source"] == "ALIGNED"
+    assert context.result["lyricsSource"] == "ALIGNED"

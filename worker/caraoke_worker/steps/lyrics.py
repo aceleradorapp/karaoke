@@ -11,6 +11,7 @@ from ..lrc import build_document, parse_lrc, plain_text_lines, to_lrc
 from ..titles import clean_title
 from ..lyric_alignment import align_lines_with_vocals
 from ..vocal_onset import analyze_vocals
+from ..word_alignment import align_song_words
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +21,7 @@ REQUEST_TIMEOUT_SECONDS = 15
 DURATION_TOLERANCE_SECONDS = 5
 NOT_FOUND = 404
 ORIGINAL_FILE = "letra.original.json"
+AUTO_ALIGN_SETTING = "processing.autoAlign"
 
 
 @dataclass
@@ -132,6 +134,20 @@ def align_with_vocals(context: JobContext, document: dict[str, Any]) -> dict[str
     return build_document("ALIGNED", True, lines) if lines else None
 
 
+def add_word_timings(context: JobContext, document: dict[str, Any]) -> dict[str, Any] | None:
+    vocals = context.song_dir / "voz.mp3"
+    wants_words = context.settings.get(AUTO_ALIGN_SETTING, True)
+    if not wants_words or not document["synced"] or not document["lines"] or not vocals.exists():
+        return None
+    context.report("LYRICS", 95, "Alinhando as palavras com a voz…")
+    try:
+        lines = align_song_words(vocals, document["lines"])
+    except Exception:
+        logger.warning("Aligning the words with the vocals failed", exc_info=True)
+        return None
+    return build_document("ALIGNED", True, lines) if lines else None
+
+
 def run(context: JobContext) -> None:
     context.report("LYRICS", 0, "Buscando a letra…")
     duration = context.result.get("durationSec")
@@ -146,8 +162,9 @@ def run(context: JobContext) -> None:
 
     document, source, needs_review = build_result(match)
     if document:
-        aligned = align_with_vocals(context, document)
-        write_documents(context, aligned or document, original=document if aligned else None)
-        source = "ALIGNED" if aligned else source
+        aligned = align_with_vocals(context, document) or document
+        final = add_word_timings(context, aligned) or aligned
+        write_documents(context, final, original=document if final is not document else None)
+        source = "ALIGNED" if final is not document else source
     context.result.update(lyricsSource=source, lyricsNeedsReview=needs_review, lyricsOffsetMs=0)
     context.report("LYRICS", 100, "Letra encontrada" if document else "Letra não encontrada")
