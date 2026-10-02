@@ -14,8 +14,8 @@
 | 2 | Importação e processamento | ✅ |
 | 3 | Biblioteca e player | ✅ |
 | 4 | Playlists, favoritas e histórico | ✅ |
-| 5 | Celular e QR code | ⬜ (depois da 6) |
-| 6 | Letras inteligentes | ⬜ (próxima, prioridade do Michael) |
+| 5 | Celular e QR code | ⬜ (próxima) |
+| 6 | Letras inteligentes | ✅ (feita antes da 5; só F6-02, transcrever músicas sem letra, ficou pausada) |
 | 7 | Pontuação e ranking | ⬜ |
 | 8 | Publicação (futuro) | ⬜ |
 
@@ -108,6 +108,8 @@
 | F4-06 | ✅ 2026-10-01 (47 checagens no Chromium) | ✔ Verificação | — | 🟢 |
 
 ## Fase 5 — Celular e QR code
+> Próxima fase (2026-10-02). Começar pela F5-01. Lembrete da Fase 4: hoje o celular não tem acesso a playlists nem favoritas (a lista de rotas liberadas para o celular fica em `backend/src/plugins/access.ts`); decidir com o Michael se entra nesta fase.
+
 | ID | Status | Tarefa | Docs | Modelo |
 |---|---|---|---|---|
 | F5-01 | ⬜ | API `system/access` (IPs da rede, regenerar, check) + autenticação do socket por código | T-04 §4.6 Sistema, §4.7 | 🟡 |
@@ -125,7 +127,7 @@
 | F6-04 | ✅ 2026-10-01 (38 checagens no Chromium, com a música real) | Front: nova página de sincronização (SPEC-001): arrastar linhas (corpo e bordas), marcar tocando, ímã nos inícios de voz, alinhar tudo com a voz (no navegador), editar texto/inserir/apagar linha, desfazer/refazer, voltar ao original, auto-save | SPEC-001, T-07 §7.4 | 🔴 |
 | F6-07 | ✅ 2026-10-02 (43 de 44 checagens, a restante corrigida e conferida) | Player e sincronizar: efeito da letra com modelos (preencher aos poucos / palavra por palavra), liga/desliga (tecla E), modelo gravado nas configurações e tempo de preenchimento por música (`fillPercent`); pré-visualização da página de sincronizar logo abaixo da linha do tempo | pedido do Michael, T-07 §7.3 | 🟡 |
 | F6-05 | ✅ 2026-10-02 | Tempos reais por palavra: alinhamento forçado (MMS do torchaudio) do texto de cada linha com a voz isolada, dentro da janela da linha; fim da palavra cortado onde a voz para; página de sincronizar preserva as palavras; comando `caraoke_worker.realign` (10 de 10 checagens no Chromium, erro ≤ 0,05 s) | `docs/memory/sincronizacao-da-letra.md` §14 | 🔴 |
-| F6-06 | ⬜ | ✔ Verificação com 3 músicas brasileiras (uma sem letra sincronizada no LRCLIB) | — | 🟡 |
+| F6-06 | ✅ 2026-10-02 | ✔ Verificação com músicas brasileiras reais: "À Sua Maneira" (16/16 linhas com palavras, erro ≤ 0,05 s no player), "Ela É Demais" (39/39) e "Flores" (aprovadas de ouvido pelo Michael: "ficou muito bom"). Caso sem letra sincronizada no LRCLIB ficou com a F6-02 | — | 🟡 |
 
 ## Fase 7 — Pontuação e ranking
 | ID | Status | Tarefa | Docs | Modelo |
