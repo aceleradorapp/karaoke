@@ -98,8 +98,10 @@ describe('system access routes', () => {
 });
 
 describe('buildAccessUrls', () => {
-  it('builds one phone address per network address, with the code', () => {
+  it('offers first a named address for each network (YouTube refuses previews on pages opened by IP) and then the plain IPs', () => {
     expect(buildAccessUrls('K7P2QX', ['192.168.98.10', '10.0.0.5'])).toEqual([
+      'http://192.168.98.10.nip.io:5173/m?c=K7P2QX',
+      'http://10.0.0.5.nip.io:5173/m?c=K7P2QX',
       'http://192.168.98.10:5173/m?c=K7P2QX',
       'http://10.0.0.5:5173/m?c=K7P2QX',
     ]);

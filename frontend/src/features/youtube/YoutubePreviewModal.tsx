@@ -1,11 +1,20 @@
 import type { YoutubeSearchResult } from '@caraoke/shared';
+import { ExternalLink } from 'lucide-react';
 import { Button } from '../../components/Button';
 import { Modal } from '../../components/Modal';
 
 const PREVIEW_START_FRACTION = 0.3;
 
+function previewStart(video: YoutubeSearchResult): number {
+  return Math.floor(video.durationSec * PREVIEW_START_FRACTION);
+}
+
+export function buildWatchUrl(video: YoutubeSearchResult): string {
+  return `https://www.youtube.com/watch?v=${video.youtubeId}&t=${previewStart(video)}s`;
+}
+
 export function buildPreviewUrl(video: YoutubeSearchResult): string {
-  const start = Math.floor(video.durationSec * PREVIEW_START_FRACTION);
+  const start = previewStart(video);
   return `https://www.youtube-nocookie.com/embed/${video.youtubeId}?autoplay=1&start=${start}&rel=0`;
 }
 
@@ -43,6 +52,15 @@ export function YoutubePreviewModal({ video, canImport, onClose, onImport }: You
             />
           </div>
           <p className="text-sm text-muted">{video.title}</p>
+          <a
+            href={buildWatchUrl(video)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-11 items-center gap-2 self-start text-base text-primary underline"
+          >
+            <ExternalLink aria-hidden="true" className="size-5" />
+            Abrir no YouTube
+          </a>
         </div>
       )}
     </Modal>

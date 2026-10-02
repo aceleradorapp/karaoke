@@ -37,15 +37,15 @@ describe('AccessQrModal', () => {
     expect(screen.getByText(/mesmo Wi-Fi/)).toBeInTheDocument();
   });
 
-  it('offers the other networks of the PC and switches the QR code', async () => {
+  it('offers the other addresses of the PC and switches the QR code', async () => {
     show(access([HOME_URL, CABLE_URL]));
 
-    const select = await screen.findByLabelText('Outra rede');
+    const select = await screen.findByLabelText(/Outro endereço/);
     expect(
       within(select)
         .getAllByRole('option')
         .map((option) => option.textContent),
-    ).toEqual(['192.168.98.10', '10.0.0.5']);
+    ).toEqual(['192.168.98.10:5173', '10.0.0.5:5173']);
     fireEvent.change(select, { target: { value: CABLE_URL } });
 
     expect(screen.getByText(CABLE_URL)).toBeInTheDocument();
@@ -54,7 +54,7 @@ describe('AccessQrModal', () => {
   it('does not offer other networks when there is only one', async () => {
     show(access([HOME_URL]));
     await screen.findByText('K7P2QX');
-    expect(screen.queryByLabelText('Outra rede')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Outro endereço/)).not.toBeInTheDocument();
   });
 
   it('explains when the PC is not on any network', async () => {

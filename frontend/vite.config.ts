@@ -8,6 +8,7 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     host: true,
+    allowedHosts: ['.nip.io', '.sslip.io'],
     port: 5173,
     proxy: {
       '/api': { target: API_TARGET, xfwd: true },
