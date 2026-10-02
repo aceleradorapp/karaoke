@@ -138,7 +138,7 @@ type SongDTO = {
 | GET | `/api/health` | `{ ok: true, version }` |
 | GET | `/api/system/info` | `{ worker: { online, lastSeen, device, cudaAvailable, gpuName, vramMb, ytdlpVersion }, storage: { usedBytes, songs } }` |
 | GET | `/api/system/access` | `{ code, urls: ["http://192.168.98.10:5173/m?c=ABC123", ...] }`: um item por IPv4 privado (ignore `172.*` de WSL/Hyper-V quando houver um `192.168.*`). Porta = a do front (em dev, `WEB_DEV_PORT`; em produção, `API_PORT`) |
-| POST | `/api/system/access/regenerate` | Gera um novo código; emite `access:changed` |
+| POST | `/api/system/access/regenerate` | Gera um novo código; emite `access:changed` para os celulares e **desconecta** os sockets deles (precisam do código novo) |
 | GET | `/api/system/access/check` | Celular valida o código: `{ ok: true }` |
 | POST | `/api/system/ytdlp/update` | Executa `pip install -U yt-dlp` no venv; retorna a versão |
 
@@ -259,7 +259,7 @@ Ao encerrar a votação (timer de `voteSeconds` no servidor, `setTimeout` por pe
 ## 4.7 Tempo real (Socket.IO)
 
 - Anexado a `app.server`, com path padrão `/socket.io`.
-- **Handshake:** `auth: { client: 'stage' | 'mobile', code?: string }`. Clientes não-loopback precisam do `code` válido, senão `next(new Error('ACCESS_DENIED'))`.
+- **Handshake:** `auth: { client: 'stage' | 'mobile', code?: string }`. Clientes não-loopback precisam do `code` válido, senão `next(new Error('ACCESS_DENIED'))`, e entram sempre na sala `mobile` (mesmo dizendo `stage`). Em desenvolvimento o celular passa pelo proxy do Vite: o endereço real é o **último** do `X-Forwarded-For` (o que o proxy acrescentou), e só quando a conexão vem do próprio PC (`services/network.ts`).
 - **Salas:** `stage` (palco) e `mobile` (celulares). Os eventos vão para as duas, salvo indicação contrária.
 - Os nomes e tipos dos eventos ficam em `shared/src/events.ts` (fonte única).
 
