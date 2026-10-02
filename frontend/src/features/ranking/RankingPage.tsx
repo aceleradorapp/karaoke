@@ -41,7 +41,7 @@ function Podium({ rows }: { rows: RankingResponse['bestAverage'] }) {
         const row = top[index];
         if (!row) return null;
         return (
-          <li key={row.profile.id} className="flex w-28 flex-col items-center gap-2 sm:w-40">
+          <li key={row.profile.id} className="flex w-24 min-w-0 flex-col items-center gap-2 sm:w-40">
             <Avatar avatarId={row.profile.avatar} size={index === 0 ? 'lg' : 'md'} />
             <span className="w-full truncate text-center text-base font-semibold sm:text-lg">
               {row.profile.name}
@@ -72,7 +72,7 @@ function Podium({ rows }: { rows: RankingResponse['bestAverage'] }) {
 
 function RankingList({ title, children, isEmpty }: { title: string; children: ReactNode; isEmpty: boolean }) {
   return (
-    <section aria-label={title} className="flex flex-col gap-3 rounded-2xl bg-surface p-4 sm:p-6">
+    <section aria-label={title} className="flex min-w-0 flex-col gap-3 rounded-2xl bg-surface p-4 sm:p-6">
       <h2 className="text-xl font-semibold">{title}</h2>
       {isEmpty ? (
         <p className="text-base text-muted">Ninguém ainda neste período.</p>

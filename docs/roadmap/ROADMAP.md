@@ -17,7 +17,7 @@
 | 5 | Celular e QR code | ✅ |
 | 6 | Letras inteligentes | ✅ (feita antes da 5; só F6-02, transcrever músicas sem letra, ficou pausada) |
 | 5B | Convidados no celular e fila de cantores (ADR-008) | ✅ |
-| 7 | Pontuação e ranking | 🟨 |
+| 7 | Pontuação e ranking | ✅ (sem teste com microfone real) |
 | 8 | Publicação (futuro) | ⬜ |
 
 ---
@@ -153,7 +153,7 @@ Branch: `feature/f5b-fila-de-cantores`.
 | F7-05 | ✅ 2026-10-02 | Palco: medidor ao vivo, tela de votação e tela de nota animada | T-07 §7.6 | 🟡 |
 | F7-06 | ✅ 2026-10-02 | Celular: `/m/votar` | T-07 §7.6, T-08 §8.2 | 🟡 |
 | F7-07 | ✅ 2026-10-02 | API + tela `/ranking` (família e convidados juntos, filtro "Só a família") | T-04 §4.6 Ranking, T-06 §6.6 | 🟡 |
-| F7-08 | ⬜ | ✔ Verificação: festa-teste com 2 celulares votando | — | 🟡 |
+| F7-08 | ✅ 2026-10-02 (29/29: TV + 3 celulares; sem microfone real) | ✔ Verificação: festa-teste com 2 celulares votando | — | 🟡 |
 
 ## Fase 8 — Publicação (futuro)
 | ID | Status | Tarefa | Modelo |
