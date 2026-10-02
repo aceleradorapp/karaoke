@@ -2,6 +2,11 @@
 
 > Entradas mais recentes no topo. Use `/fim-sessao` para registrar.
 
+## 2026-10-02 (3) — Fase 6 encerrada; pronto para a Fase 5
+**Feito:** sistema reiniciado (havia 5 cópias antigas do `npm run dev` rodando ao mesmo tempo; agora roda uma só, numa janela do PowerShell chamada "Karaoke - sistema"). O Michael baixou músicas novas e aprovou a sincronia: "Ela É Demais" 39/39 linhas com palavras, "Flores" 27/37 (editada à mão). F6-06 marcada como verificada; Fase 6 dada como concluída (só a F6-02, transcrever músicas sem letra com o Whisper, ficou pausada).
+**Atenções:** o worker não recarrega o código sozinho (reiniciar o `npm run dev` depois de mexer no worker); "Anna Júlia" ficou sem palavras por ter sido baixada antes do reinício; as músicas atuais são de teste e o Michael vai apagar tudo e recriar ao final.
+**Próximos passos:** Fase 5 (celular e QR code), começando pela F5-01, em uma branch nova a partir de `develop`. O Michael vai trocar de modelo para seguir o roadmap.
+
 ## 2026-10-02 (2) — Tempos reais por palavra (Opus)
 **Pedido do Michael:** resolver de vez o tempo de pintar a letra (a música entra no momento certo, mas o amarelo não acompanha o canto), usando "À Sua Maneira" como referência; as outras músicas são só de teste e serão apagadas depois, então não é preciso realinhar a biblioteca.
 **Solução:** duas camadas — marcos (começo de cada linha pela voz, já existia) e, dentro de cada linha, **alinhamento forçado** do texto com a voz isolada (MMS do `torchaudio`, mesmo método do WhisperX, sem reconhecer fala), só na janela da linha. A vogal segurada fica dentro da palavra; o fim de cada palavra é cortado onde a voz para. Descartado: ancorar no BPM (a voz isolada é prova direta e o cantor não segue o compasso à risca) e o Whisper para letras com texto (lento e erra muito fora da janela).
