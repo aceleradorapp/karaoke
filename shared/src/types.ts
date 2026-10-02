@@ -85,6 +85,7 @@ export interface AppSettings {
 }
 
 export interface SingerSummary {
+  id: string;
   name: string;
   avatar: string;
 }
@@ -103,6 +104,8 @@ export interface FinalScore {
   finalScore: number | null;
   votes: number;
 }
+
+export type FinishPerformanceResult = { voting: { endsAt: string } } | { finalScore: number | null };
 
 export interface WorkerStatus {
   online: boolean;

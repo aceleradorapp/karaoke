@@ -252,8 +252,9 @@ Toda mudança (criar, remover, reordenar, apresentação começou, perfil ou mú
 |---|---|---|
 | POST | `/api/performances` | `{ profileId, songId, requestId? }` → cria, incrementa `playCount`, retorna `{ id }`. Com `requestId` (veio da fila de cantores), apaga o pedido na mesma transação e emite `singQueue:changed` |
 | POST | `/api/performances/:id/finish` | `{ completed, voiceGuideUsed, pitchScore: number \| null }`. Se o modo usa plateia e `completed`: abre a votação (4.7) e responde `{ voting: { endsAt } }`; senão calcula `finalScore` na hora e responde `{ finalScore }` |
-| GET | `/api/performances/voting/current` | Votação aberta: `{ performanceId, singer: {name, avatar}, song: {title, artist}, endsAt } \| null` |
-| POST | `/api/performances/:id/votes` | `{ voterToken, voterProfileId?, stars: 1..5 }`. 409 `VOTING_CLOSED` se encerrada; 409 `ALREADY_VOTED` em caso de duplicidade; 409 `CANNOT_VOTE_FOR_SELF` se `voterProfileId` é quem cantou (ADR-008) |
+| GET | `/api/performances/voting/current` | Votação aberta: `{ performanceId, singer: {id, name, avatar}, song: {title, artist}, endsAt } \| null` |
+| POST | `/api/performances/:id/voting/close` | (palco) Encerra a votação agora ("Encerrar votação"): calcula as notas, emite `score:final` e responde o `FinalScore`. 409 `VOTING_CLOSED` se não estiver aberta |
+| POST | `/api/performances/:id/votes` | `{ voterToken, voterProfileId?, stars: 1..5 }`. 409 `VOTING_CLOSED` se encerrada; 409 `ALREADY_VOTED` em caso de duplicidade; 409 `CANNOT_VOTE_FOR_SELF` se `voterProfileId` é quem cantou (ADR-008). Resposta `{ votes }` (total até agora). `voterToken` com 8 a 64 caracteres |
 | GET | `/api/profiles/:profileId/history?limit=&cursor=` | `{ items: [{ id, song: SongDTO, startedAt, finalScore, pitchScore, audienceScore, completed }] }` |
 
 **Cálculo da nota final** (`performances/service.ts → computeFinalScore`), conforme o ADR-006:
@@ -272,6 +273,8 @@ function computeFinalScore(mode, pitch: number|null, audience: number|null, w: n
 // audienceScore = round(média(stars) / 5 * 100), ou null sem votos
 ```
 Ao encerrar a votação (timer de `voteSeconds` no servidor, `setTimeout` por performance): grava `audienceScore` e `finalScore` e emite `score:final`. Testes unitários obrigatórios para `computeFinalScore`.
+
+**Implementação (2026-10-02):** `performances/voting.ts`. Só uma votação aberta por vez, guardada em memória: se outra música termina com a votação ainda aberta, a anterior é encerrada antes. Música deixada no meio (`completed=false`) não abre votação nem ganha nota. Sem modo de plateia, a nota final sai na resposta do `finish`. Se o backend reiniciar com uma votação aberta, ela se perde e a apresentação fica sem nota (aceitável no uso em casa).
 
 ### Ranking
 | Método | Rota | Descrição |

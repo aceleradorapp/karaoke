@@ -1,9 +1,12 @@
 import type { FastifyInstance } from 'fastify';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createSong } from '../../../test/fixtures.js';
 import { resetDatabase } from '../../../test/database.js';
 import { buildApp } from '../../app.js';
 import { prisma } from '../../db.js';
+import { cancelOpenVoting } from './voting.js';
+
+vi.mock('../../realtime.js', () => ({ emitToRoom: vi.fn(), emitToAll: vi.fn(), disconnectRoom: vi.fn() }));
 
 describe('performance routes', () => {
   let app: FastifyInstance;
@@ -13,6 +16,7 @@ describe('performance routes', () => {
   });
 
   beforeEach(resetDatabase);
+  afterEach(cancelOpenVoting);
 
   afterAll(async () => {
     await app.close();
@@ -96,22 +100,25 @@ describe('performance routes', () => {
       return id as string;
     }
 
-    it('stores how it ended', async () => {
+    it('stores how it ended and, scoring only the pitch, gives the score right away', async () => {
+      await prisma.setting.create({ data: { key: 'scoring.mode', value: 'pitch' } });
       const id = await started();
 
       const response = await finish(id, { completed: true, voiceGuideUsed: true, pitchScore: 87 });
 
       expect(response.statusCode).toBe(200);
-      expect(response.json()).toEqual({ finalScore: null });
+      expect(response.json()).toEqual({ finalScore: 87 });
       const stored = await prisma.performance.findUniqueOrThrow({ where: { id } });
-      expect(stored).toMatchObject({ completed: true, voiceGuideUsed: true, pitchScore: 87 });
+      expect(stored).toMatchObject({ completed: true, voiceGuideUsed: true, pitchScore: 87, finalScore: 87 });
       expect(stored.finishedAt).not.toBeNull();
     });
 
-    it('accepts a performance without a pitch score and one that was left halfway', async () => {
+    it('accepts a performance without a pitch score and one that was left halfway, with no score', async () => {
       const id = await started();
 
-      await finish(id, { completed: false, voiceGuideUsed: false, pitchScore: null });
+      const response = await finish(id, { completed: false, voiceGuideUsed: false, pitchScore: null });
+
+      expect(response.json()).toEqual({ finalScore: null });
 
       expect(await prisma.performance.findUniqueOrThrow({ where: { id } })).toMatchObject({
         completed: false,
