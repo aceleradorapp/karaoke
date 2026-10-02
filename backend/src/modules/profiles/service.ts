@@ -7,6 +7,7 @@ import {
 } from '@caraoke/shared';
 import { prisma } from '../../db.js';
 import { notFound } from '../../utils/errors.js';
+import { publishSingQueue } from '../singQueue/service.js';
 
 export function toProfileDTO(profile: Profile): ProfileDTO {
   return {
@@ -65,4 +66,5 @@ export async function touchProfile(id: string): Promise<ProfileDTO> {
 export async function deleteProfile(id: string): Promise<void> {
   await findProfileOrThrow(id);
   await prisma.profile.delete({ where: { id } });
+  await publishSingQueue();
 }

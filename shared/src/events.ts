@@ -1,10 +1,19 @@
-import type { AppSettings, FinalScore, JobDTO, SongDTO, VotingSummary, WorkerStatus } from './types.js';
+import type {
+  AppSettings,
+  FinalScore,
+  JobDTO,
+  SingQueueResponse,
+  SongDTO,
+  VotingSummary,
+  WorkerStatus,
+} from './types.js';
 
 export const SOCKET_EVENTS = {
   jobUpdated: 'job:updated',
   jobsReordered: 'jobs:reordered',
   songUpdated: 'song:updated',
   songDeleted: 'song:deleted',
+  singQueueChanged: 'singQueue:changed',
   voteOpen: 'vote:open',
   voteProgress: 'vote:progress',
   scoreFinal: 'score:final',
@@ -27,6 +36,7 @@ export interface ServerToClientEvents {
   'jobs:reordered': (payload: { ids: string[] }) => void;
   'song:updated': (song: SongDTO) => void;
   'song:deleted': (payload: { id: string }) => void;
+  'singQueue:changed': (queue: SingQueueResponse) => void;
   'vote:open': (voting: VotingSummary) => void;
   'vote:progress': (payload: { performanceId: string; count: number }) => void;
   'score:final': (score: FinalScore) => void;

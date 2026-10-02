@@ -4,6 +4,7 @@ import { prisma } from '../../db.js';
 import { emitToAll } from '../../realtime.js';
 import { deleteSongDir, moveToError } from '../../services/storage.js';
 import { conflict, notFound } from '../../utils/errors.js';
+import { publishSingQueue } from '../singQueue/service.js';
 import { toSongDTO } from './mapper.js';
 
 export type SongSort = 'recent' | 'title' | 'artist' | 'popular';
@@ -115,4 +116,5 @@ export async function deleteSong(id: string): Promise<void> {
   await prisma.song.delete({ where: { id } });
   await deleteSongDir(id);
   emitToAll('song:deleted', { id });
+  await publishSingQueue();
 }
