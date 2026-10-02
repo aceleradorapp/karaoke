@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { estimateLatencyMs, type LevelSample } from './calibration';
 import { detectMidi, frequencyToMidi } from './detectPitch';
 import { listMicrophones, MicrophonePitch } from './microphone';
 import { PitchScorer, pointsFor, semitoneDistance, type MelodyDoc } from './PitchScorer';
@@ -188,5 +189,29 @@ describe('MicrophonePitch', () => {
       { deviceId: 'a', label: 'USB Mic' },
       { deviceId: 'c', label: 'Microfone 2' },
     ]);
+  });
+});
+
+describe('estimateLatencyMs', () => {
+  function recording(emittedAt: number[], delaySec: number, peak = 0.3): LevelSample[] {
+    const samples: LevelSample[] = [];
+    for (let time = 0; time < 5; time += 0.005) {
+      const isBeep = emittedAt.some(
+        (emitted) => time >= emitted + delaySec && time < emitted + delaySec + 0.08,
+      );
+      samples.push({ time, level: isBeep ? peak : 0.005 });
+    }
+    return samples;
+  }
+
+  it('measures how long the microphone takes to hear the beeps', () => {
+    const beeps = [0.5, 1.3, 2.1, 2.9];
+    expect(estimateLatencyMs(beeps, recording(beeps, 0.18))).toBeGreaterThanOrEqual(175);
+    expect(estimateLatencyMs(beeps, recording(beeps, 0.18))).toBeLessThanOrEqual(185);
+  });
+
+  it('gives up when the beeps were not heard', () => {
+    const beeps = [0.5, 1.3, 2.1, 2.9];
+    expect(estimateLatencyMs(beeps, recording(beeps, 0.18, 0.01))).toBeNull();
   });
 });
