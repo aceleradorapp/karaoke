@@ -120,11 +120,11 @@
 | ID | Status | Tarefa | Docs | Modelo |
 |---|---|---|---|---|
 | F6-01 | ✅ 2026-10-01 | Worker: alinhar a letra do LRCLIB com a voz — atraso global ajustado com **todas** as linhas + cada linha imantada ao início de frase da voz; guarda `letra.original.json` (rápido, sem Whisper; substitui o atraso só pelo 1º som) | T-05 §5.7, SPEC-001 RF11 | 🔴 |
-| F6-02 | ⬜ | Worker: `align.py` com stable-ts (Whisper `small`, CPU ≈ 2,3× a duração): alinhar texto sem tempos e transcrever; linhas remontadas a partir das palavras; ímã nos inícios de voz | T-05 §5.8 | 🔴 |
+| F6-02 | ⏸️ | Worker: Whisper só para **transcrever** músicas sem letra (o alinhamento de letras com texto passou a ser feito pelo MMS, F6-05); precisa de job só de letra | T-05 §5.8 | 🔴 |
 | F6-03 | ✅ 2026-10-01 | API: `PUT /songs/:id/lyrics`, `GET .../lyrics/original`, `POST .../lyrics/restore` (guarda a letra original na 1ª edição). O realinhamento por voz roda no navegador (F6-04); o job com Whisper entra na F6-02 | T-04 §4.6 Músicas | 🟡 |
 | F6-04 | ✅ 2026-10-01 (38 checagens no Chromium, com a música real) | Front: nova página de sincronização (SPEC-001): arrastar linhas (corpo e bordas), marcar tocando, ímã nos inícios de voz, alinhar tudo com a voz (no navegador), editar texto/inserir/apagar linha, desfazer/refazer, voltar ao original, auto-save | SPEC-001, T-07 §7.4 | 🔴 |
 | F6-07 | ✅ 2026-10-02 (43 de 44 checagens, a restante corrigida e conferida) | Player e sincronizar: efeito da letra com modelos (preencher aos poucos / palavra por palavra), liga/desliga (tecla E), modelo gravado nas configurações e tempo de preenchimento por música (`fillPercent`); pré-visualização da página de sincronizar logo abaixo da linha do tempo | pedido do Michael, T-07 §7.3 | 🟡 |
-| F6-05 | ⬜ | Exibição palavra a palavra quando houver `words` (+ cores/terminação) | T-07 §7.3 | 🟡 |
+| F6-05 | ✅ 2026-10-02 | Tempos reais por palavra: alinhamento forçado (MMS do torchaudio) do texto de cada linha com a voz isolada, dentro da janela da linha; fim da palavra cortado onde a voz para; página de sincronizar preserva as palavras; comando `caraoke_worker.realign` (10 de 10 checagens no Chromium, erro ≤ 0,05 s) | `docs/memory/sincronizacao-da-letra.md` §14 | 🔴 |
 | F6-06 | ⬜ | ✔ Verificação com 3 músicas brasileiras (uma sem letra sincronizada no LRCLIB) | — | 🟡 |
 
 ## Fase 7 — Pontuação e ranking

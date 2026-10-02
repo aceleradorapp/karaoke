@@ -2,6 +2,15 @@
 
 > Entradas mais recentes no topo. Use `/fim-sessao` para registrar.
 
+## 2026-10-02 (2) — Tempos reais por palavra (Opus)
+**Pedido do Michael:** resolver de vez o tempo de pintar a letra (a música entra no momento certo, mas o amarelo não acompanha o canto), usando "À Sua Maneira" como referência; as outras músicas são só de teste e serão apagadas depois, então não é preciso realinhar a biblioteca.
+**Solução:** duas camadas — marcos (começo de cada linha pela voz, já existia) e, dentro de cada linha, **alinhamento forçado** do texto com a voz isolada (MMS do `torchaudio`, mesmo método do WhisperX, sem reconhecer fala), só na janela da linha. A vogal segurada fica dentro da palavra; o fim de cada palavra é cortado onde a voz para. Descartado: ancorar no BPM (a voz isolada é prova direta e o cantor não segue o compasso à risca) e o Whisper para letras com texto (lento e erra muito fora da janela).
+**Feito (F6-05):** `worker/caraoke_worker/word_alignment.py` + integração no passo da letra (respeita `processing.autoAlign`), comando `python -m caraoke_worker.realign <pasta>`, página de sincronizar preservando as palavras ao mover/esticar linhas (`lib/lyrics/wordTiming.ts`) e marcas das palavras na linha do tempo. Detalhes em `docs/memory/sincronizacao-da-letra.md` §14.
+**Verificado:** pytest 196, frontend 666, typecheck e build. Música real: 16 de 16 linhas com palavras em 71 s de CPU; as pausas internas batem com a voz (diferença ≤ 0,15 s); no Chromium cada palavra começa a pintar no seu tempo com erro ≤ 0,05 s (10 de 10 checagens).
+**Bug achado no caminho:** a palavra segurada antes de uma pausa ia até a borda da janela porque a voz da linha seguinte entrava nela; o corte agora para no primeiro silêncio ≥ 0,25 s.
+**Estado:** "À Sua Maneira" ficou com palavras alinhadas e salva. Na primeira importação depois disso, o worker baixa o modelo MMS (~1,2 GB, ~30 s).
+**Próximos passos:** o Michael ouvir e dizer se ficou perfeito; Whisper só para transcrever músicas sem letra (F6-02, pausado); Fase 5.
+
 ## 2026-10-02 — Efeito da letra no player (modelos, liga/desliga e tempo de preenchimento)
 **Pedido do Michael:** a música ficou sincronizada e começa no momento certo, mas o tempo que a letra leva para ir ficando amarela não bate. Quer ligar/desligar o efeito no player, escolher o modelo (gravado para sempre), ter um modelo que pinta palavras inteiras e controlar quando termina de pintar (o começo não muda), no player e na página de sincronizar; a pré-visualização "Como vai aparecer no karaokê" deve ficar logo abaixo da linha do tempo; novos modelos poderão ser pedidos depois.
 **Feito (F6-07):**

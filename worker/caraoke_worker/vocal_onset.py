@@ -68,13 +68,15 @@ def find_phrase_onsets(envelope: np.ndarray) -> np.ndarray:
     return np.array(onsets)
 
 
-def decode_samples(path: Path) -> np.ndarray | None:
+def decode_samples(
+    path: Path, sample_rate: int = SAMPLE_RATE, max_seconds: float = ANALYZED_SECONDS
+) -> np.ndarray | None:
     ffmpeg = find_ffmpeg()
     if ffmpeg is None:
         return None
     command = [
-        str(ffmpeg), "-v", "quiet", "-i", str(path), "-t", str(ANALYZED_SECONDS),
-        "-ac", "1", "-ar", str(SAMPLE_RATE), "-f", "f32le", "-",
+        str(ffmpeg), "-v", "quiet", "-i", str(path), "-t", str(max_seconds),
+        "-ac", "1", "-ar", str(sample_rate), "-f", "f32le", "-",
     ]  # fmt: skip
     completed = subprocess.run(command, capture_output=True, check=False)
     if completed.returncode != 0 or not completed.stdout:

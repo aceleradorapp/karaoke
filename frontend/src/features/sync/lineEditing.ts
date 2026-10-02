@@ -1,5 +1,6 @@
 import type { LyricLine } from '@caraoke/shared';
 import { MIN_LINE_GAP_SECONDS } from '../../lib/lyrics/alignment';
+import { retimeLine, shiftLine } from '../../lib/lyrics/wordTiming';
 
 export const MIN_LINE_LENGTH_SECONDS = 0.5;
 const DEFAULT_LAST_LINE_SECONDS = 4;
@@ -56,7 +57,7 @@ export function moveLine(
 
   const moved = lines.map((item, position) => {
     const isMoved = position === index || (ripple && position > index);
-    return isMoved ? { ...stripWords(item), start: item.start + delta, end: item.end + delta } : item;
+    return isMoved ? shiftLine(item, delta) : item;
   });
   return tidy(moved);
 }
@@ -67,9 +68,7 @@ export function setLineStart(lines: readonly LyricLine[], index: number, time: n
 
   const start = clamp(time, lowerBound(lines, index), upperBound(lines, index));
   const length = Math.max(line.end - line.start, MIN_LINE_LENGTH_SECONDS);
-  return tidy(
-    replaceAt(lines, index, { ...stripWords(line), start, end: Math.max(line.end, start + length) }),
-  );
+  return tidy(replaceAt(lines, index, retimeLine(line, start, Math.max(line.end, start + length))));
 }
 
 export function setLineEnd(lines: readonly LyricLine[], index: number, time: number): LyricLine[] {
@@ -78,16 +77,14 @@ export function setLineEnd(lines: readonly LyricLine[], index: number, time: num
 
   const next = lines[index + 1];
   const end = clamp(time, line.start + MIN_LINE_LENGTH_SECONDS, next ? next.start : Infinity);
-  return tidy(replaceAt(lines, index, { ...line, end }));
+  return tidy(replaceAt(lines, index, retimeLine(line, line.start, end)));
 }
 
 export function shiftAll(lines: readonly LyricLine[], deltaSeconds: number): LyricLine[] {
   const first = lines[0];
   if (!first) return [];
   const delta = Math.max(deltaSeconds, -first.start);
-  return tidy(
-    lines.map((line) => ({ ...stripWords(line), start: line.start + delta, end: line.end + delta })),
-  );
+  return tidy(lines.map((line) => shiftLine(line, delta)));
 }
 
 export function markLineStart(lines: readonly LyricLine[], index: number, time: number): LyricLine[] {
@@ -99,10 +96,8 @@ export function markLineStart(lines: readonly LyricLine[], index: number, time: 
   const length = Math.max(line.end - line.start, MIN_LINE_LENGTH_SECONDS);
 
   const marked = lines.map((item, position) => {
-    if (position === index) return { ...stripWords(item), start, end: start + length };
-    if (position > index && deficit > 0) {
-      return { ...stripWords(item), start: item.start + deficit, end: item.end + deficit };
-    }
+    if (position === index) return retimeLine(item, start, start + length);
+    if (position > index && deficit > 0) return shiftLine(item, deficit);
     return item;
   });
   return tidy(marked);
