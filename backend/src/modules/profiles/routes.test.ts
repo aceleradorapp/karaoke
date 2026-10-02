@@ -1,8 +1,11 @@
 import type { FastifyInstance } from 'fastify';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { resetDatabase } from '../../../test/database.js';
 import { buildApp } from '../../app.js';
 import { prisma } from '../../db.js';
+import { emitToAll } from '../../realtime.js';
+
+vi.mock('../../realtime.js', () => ({ emitToRoom: vi.fn(), emitToAll: vi.fn(), disconnectRoom: vi.fn() }));
 
 describe('profile routes', () => {
   let app: FastifyInstance;
@@ -106,6 +109,16 @@ describe('profile routes', () => {
     const touch = await app.inject({ method: 'POST', url: '/api/profiles/unknown/touch' });
     expect(patch.statusCode).toBe(404);
     expect(touch.statusCode).toBe(404);
+  });
+
+  it('tells the screens when profiles are created, changed or deleted', async () => {
+    vi.mocked(emitToAll).mockClear();
+    const { id } = (await createProfile({ name: 'Ana', avatar: 'lion' })).json();
+    await app.inject({ method: 'PATCH', url: `/api/profiles/${id}`, payload: { name: 'Ana Maria' } });
+    await app.inject({ method: 'DELETE', url: `/api/profiles/${id}` });
+
+    const events = vi.mocked(emitToAll).mock.calls.map(([event]) => event);
+    expect(events.filter((event) => event === 'profiles:changed')).toHaveLength(3);
   });
 
   describe('from a phone', () => {

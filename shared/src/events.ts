@@ -14,6 +14,7 @@ export const SOCKET_EVENTS = {
   songUpdated: 'song:updated',
   songDeleted: 'song:deleted',
   singQueueChanged: 'singQueue:changed',
+  profilesChanged: 'profiles:changed',
   voteOpen: 'vote:open',
   voteProgress: 'vote:progress',
   scoreFinal: 'score:final',
@@ -37,6 +38,7 @@ export interface ServerToClientEvents {
   'song:updated': (song: SongDTO) => void;
   'song:deleted': (payload: { id: string }) => void;
   'singQueue:changed': (queue: SingQueueResponse) => void;
+  'profiles:changed': () => void;
   'vote:open': (voting: VotingSummary) => void;
   'vote:progress': (payload: { performanceId: string; count: number }) => void;
   'score:final': (score: FinalScore) => void;

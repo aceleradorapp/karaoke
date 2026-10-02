@@ -87,7 +87,7 @@ export function MobileSongsPage() {
             <li key={song.id} className="flex items-center gap-3 rounded-2xl bg-surface p-3">
               <SongCover song={song} />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-base font-semibold">{song.title}</p>
+                <p className="line-clamp-2 text-base leading-snug font-semibold break-words">{song.title}</p>
                 <p className="truncate text-sm text-muted">{song.artist}</p>
                 {song.status !== 'READY' && <p className="text-sm text-primary">preparando…</p>}
               </div>
@@ -95,6 +95,7 @@ export function MobileSongsPage() {
                 <SingRequestButton
                   songId={song.id}
                   songTitle={song.title}
+                  songArtist={song.artist}
                   profileId={profileId}
                   myRequest={myRequests.get(song.id)}
                 />

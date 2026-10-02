@@ -191,7 +191,7 @@ describe('phone pages', () => {
         '/m/musicas',
       );
 
-      fireEvent.click(await screen.findByRole('button', { name: 'Quero cantar Evidências' }));
+      fireEvent.click(await screen.findByRole('button', { name: 'Quero cantar Evidências, de Artista' }));
 
       await waitFor(() => expect(requestsTo(fetchMock, 'POST', '/api/sing-queue')).toHaveLength(1));
       expect(bodyOf(fetchMock, 'POST', '/api/sing-queue')).toEqual({ profileId: 'g1', songId: song.id });
@@ -213,7 +213,7 @@ describe('phone pages', () => {
         '/m/musicas',
       );
 
-      fireEvent.click(await screen.findByRole('button', { name: 'Quero cantar Evidências' }));
+      fireEvent.click(await screen.findByRole('button', { name: 'Quero cantar Evidências, de Artista' }));
 
       await waitFor(() => expect(toasts()).toContain('Você já tem 3 músicas na fila.'));
     });
@@ -231,7 +231,7 @@ describe('phone pages', () => {
         '/m/musicas',
       );
 
-      fireEvent.click(await screen.findByRole('button', { name: 'Tirar Evidências da fila' }));
+      fireEvent.click(await screen.findByRole('button', { name: 'Tirar Evidências, de Artista da fila' }));
 
       await waitFor(() =>
         expect(requestsTo(fetchMock, 'DELETE', '/api/sing-queue/r1?profileId=g1')).toHaveLength(1),
@@ -253,7 +253,9 @@ describe('phone pages', () => {
         '/m/musicas',
       );
 
-      expect(await screen.findByRole('button', { name: 'Quero cantar Evidências' })).toBeInTheDocument();
+      expect(
+        await screen.findByRole('button', { name: 'Quero cantar Evidências, de Artista' }),
+      ).toBeInTheDocument();
     });
   });
 
@@ -351,7 +353,7 @@ describe('phone pages', () => {
       expect(within(rows[1]!).getByText('preparando…')).toBeInTheDocument();
       expect(within(rows[0]!).queryByRole('button')).not.toBeInTheDocument();
 
-      fireEvent.click(within(rows[1]!).getByRole('button', { name: 'Tirar Nova da fila' }));
+      fireEvent.click(within(rows[1]!).getByRole('button', { name: 'Tirar Nova, de Artista da fila' }));
       await waitFor(() =>
         expect(requestsTo(fetchMock, 'DELETE', '/api/sing-queue/r2?profileId=g1')).toHaveLength(1),
       );

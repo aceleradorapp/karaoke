@@ -76,7 +76,7 @@ describe('useRealtimeSync', () => {
     socket.emit('connect');
 
     const invalidatedKeys = invalidate.mock.calls.map(([filters]) => filters?.queryKey);
-    expect(invalidatedKeys).toEqual([['jobs'], ['songs'], ['home'], ['system'], ['singQueue']]);
+    expect(invalidatedKeys).toEqual([['jobs'], ['songs'], ['home'], ['system'], ['singQueue'], ['profiles']]);
   });
 
   it('refreshes the song lists when a song changes or is deleted', () => {
@@ -114,9 +114,18 @@ describe('useRealtimeSync', () => {
     ]);
   });
 
+  it('reloads the profiles when someone creates a guest on a phone', () => {
+    const { socket, queryClient } = setup();
+    const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
+
+    socket.emit('profiles:changed');
+
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['profiles'] });
+  });
+
   it('stops listening when the component goes away', () => {
     const { socket, unmount } = setup();
-    expect(socket.totalListeners()).toBe(8);
+    expect(socket.totalListeners()).toBe(9);
 
     unmount();
 

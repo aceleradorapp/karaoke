@@ -301,6 +301,7 @@ Ao encerrar a votação (timer de `voteSeconds` no servidor, `setTimeout` por pe
 | `score:final` | `{ performanceId, pitchScore, audienceScore, finalScore, votes }` | ambas | Fim da votação |
 | `settings:updated` | `AppSettings` | stage | Configurações mudaram |
 | `singQueue:changed` | `{ items: SingRequestDTO[] }` | ambas | Qualquer mudança na fila de cantores (ADR-008) |
+| `profiles:changed` | — | ambas | Perfil criado, editado ou apagado (o convidado criado no celular aparece na TV na hora) |
 | `access:changed` | `{}` | mobile | Código regenerado (o celular mostra "escaneie de novo") |
 | `worker:status` | `{ online, device, gpuName }` | stage | Worker ficou online/offline |
 

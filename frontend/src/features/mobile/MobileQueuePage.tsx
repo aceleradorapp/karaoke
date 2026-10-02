@@ -41,7 +41,7 @@ function SingQueueRow({
       {isMine && profileId && (
         <Button
           variant="ghost"
-          aria-label={`Tirar ${request.song.title} da fila`}
+          aria-label={`Tirar ${request.song.title}, de ${request.song.artist} da fila`}
           isLoading={removeRequest.isPending}
           onClick={() =>
             removeRequest.mutate(

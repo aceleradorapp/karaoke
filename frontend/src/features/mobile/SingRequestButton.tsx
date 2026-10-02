@@ -7,6 +7,7 @@ import { toast } from '../../stores/useToastStore';
 interface SingRequestButtonProps {
   songId: string;
   songTitle: string;
+  songArtist: string;
   profileId: string;
   myRequest: SingRequestDTO | undefined;
 }
@@ -15,7 +16,14 @@ function messageOf(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
 }
 
-export function SingRequestButton({ songId, songTitle, profileId, myRequest }: SingRequestButtonProps) {
+export function SingRequestButton({
+  songId,
+  songTitle,
+  songArtist,
+  profileId,
+  myRequest,
+}: SingRequestButtonProps) {
+  const songLabel = `${songTitle}, de ${songArtist}`;
   const addRequest = useAddSingRequestMutation();
   const removeRequest = useRemoveSingRequestMutation();
 
@@ -23,7 +31,8 @@ export function SingRequestButton({ songId, songTitle, profileId, myRequest }: S
     return (
       <Button
         variant="secondary"
-        aria-label={`Tirar ${songTitle} da fila`}
+        aria-label={`Tirar ${songLabel} da fila`}
+        className="shrink-0 px-3!"
         isLoading={removeRequest.isPending}
         onClick={() =>
           removeRequest.mutate(
@@ -40,7 +49,8 @@ export function SingRequestButton({ songId, songTitle, profileId, myRequest }: S
 
   return (
     <Button
-      aria-label={`Quero cantar ${songTitle}`}
+      aria-label={`Quero cantar ${songLabel}`}
+      className="shrink-0 px-3!"
       isLoading={addRequest.isPending}
       onClick={() =>
         addRequest.mutate(
@@ -53,7 +63,7 @@ export function SingRequestButton({ songId, songTitle, profileId, myRequest }: S
       }
     >
       <Mic aria-hidden="true" className="size-5" />
-      Quero cantar
+      Cantar
     </Button>
   );
 }

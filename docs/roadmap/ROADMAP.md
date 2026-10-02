@@ -16,8 +16,8 @@
 | 4 | Playlists, favoritas e histórico | ✅ |
 | 5 | Celular e QR code | ✅ |
 | 6 | Letras inteligentes | ✅ (feita antes da 5; só F6-02, transcrever músicas sem letra, ficou pausada) |
-| 5B | Convidados no celular e fila de cantores (ADR-008) | 🟨 |
-| 7 | Pontuação e ranking | ⬜ (depois da 5B) |
+| 5B | Convidados no celular e fila de cantores (ADR-008) | ✅ |
+| 7 | Pontuação e ranking | ⬜ (próxima) |
 | 8 | Publicação (futuro) | ⬜ |
 
 ---
@@ -141,7 +141,7 @@ Branch: `feature/f5b-fila-de-cantores`.
 | F5B-03 | ✅ 2026-10-02 | Backend: tabela `sing_requests`, rotas `/api/sing-queue`, `singQueue:changed`, `requestId` em `POST /performances` + testes | T-03, T-04 §4.6 Fila de cantores, §4.7 | 🔴 |
 | F5B-04 | ✅ 2026-10-02 | Celular: "Quem é você?", aba Músicas com "Quero cantar", "Quero cantar esta" na importação, aba Fila com Próximos + Preparando | T-08 §8.2 §8.4 | 🟡 |
 | F5B-05 | ✅ 2026-10-02 | Palco: página Próximos (reordenar, remover, chamar), contador na barra, faixa no início, player "Vez de Ana" e "Chamar o próximo" | T-06 §6.6 Próximos, T-07 §7.1 | 🔴 |
-| F5B-06 | ⬜ | ✔ Verificação: palco + 2 celulares (identidade, pedidos, limites, ordem, chamar o próximo) | — | 🟡 |
+| F5B-06 | ✅ 2026-10-02 (37/37 no navegador: palco + 2 celulares) | ✔ Verificação: palco + 2 celulares (identidade, pedidos, limites, ordem, chamar o próximo) | — | 🟡 |
 
 ## Fase 7 — Pontuação e ranking
 | ID | Status | Tarefa | Docs | Modelo |
