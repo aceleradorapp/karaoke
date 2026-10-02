@@ -10,7 +10,7 @@ O Michael decidiu que **a sincronia da letra com a voz é o que decide o sucesso
 
 A letra do LRCLIB vem sincronizada com **outra gravação**. No vídeo do YouTube a introdução era ~15,5 s mais longa, então a letra entrava ~15,5 s antes da voz. O ajuste manual (`lyricsOffsetMs`) ficava limitado a ±5 s. Mesmo depois de corrigir o atraso fixo, algumas linhas continuavam ~1,2 s fora (os tempos entre linhas também diferem entre gravações).
 
-**Problema ainda aberto (pedido mais recente do Michael):** a música agora *entra* no momento correto, mas **o tempo que a linha leva para ir ficando amarela não bate** com o canto. Para atacar isso foi criado o efeito configurável (seção 6). A causa provável é que o **fim (`end`) de cada linha vem do LRC** (quase sempre "começo da próxima linha" ou "começo + duração original") e **não reflete quando a pessoa realmente termina de cantar**. Ver seção 8.
+**Resolvido em 2026-10-02 (seção 14):** a música já entrava no momento certo, mas o tempo de pintar não batia porque o fim de cada linha vinha do LRC e as palavras eram repartidas por número de letras (uma vogal segurada quebrava tudo). Agora cada palavra tem o seu tempo real, medido na voz isolada por **alinhamento forçado** (MMS do `torchaudio`) dentro da janela de cada linha.
 
 ## 3. O que está pronto (tudo verificado e mesclado em `develop` e `main`)
 
@@ -71,7 +71,9 @@ Música de teste, voz separada:
 
 ## 8. O que falta e caminhos sugeridos
 
-1. **(Principal, pedido do Michael)** Fazer o tempo de pintar **bater com o canto**. Ideias, da mais barata à mais completa:
+> Atualizado em 2026-10-02: o item 1 foi resolvido com tempos por palavra (seção 14). O Whisper (item 2) deixou de ser necessário para letras que já têm texto; continua útil só para transcrever músicas sem letra nenhuma.
+
+1. **(Resolvido — ver seção 14)** Fazer o tempo de pintar **bater com o canto**. Ideias, da mais barata à mais completa:
    - Derivar o `end` de cada linha da **atividade da voz** (fim do trecho cantado que começa no `start` da linha), em vez de herdar do LRC. Os dados já existem (envelope e inícios de frase em `vocalAnalysis.ts` / `vocal_onset.py`; falta o "fim de frase"). Pode entrar no alinhamento (worker e navegador, mantendo paridade) e/ou como botão "Ajustar o fim das linhas pela voz".
    - `fillPercent` por linha, ou arrastar o **fim** da linha na linha do tempo (já existe: borda direita) e usar esse `end` como fim do preenchimento (o modelo já usa `end`).
    - **Tempos por palavra** (F6-02 + F6-05): alinhar o texto com o Whisper para obter `words` reais; os dois modelos de efeito já usam os tempos reais quando existem.
@@ -117,3 +119,26 @@ Música de teste, voz separada:
 ## 13. Commits principais (branch `main`)
 
 `07b0d41` alinhamento no worker · `e6c51e5` API da letra · `c5ca1c5` editor de sincronização · `574e889` e `1eb5d6c` efeito da letra · (anteriores: `3387201` primeira tela de sincronizar, `c5e6759` atraso automático do worker).
+
+## 14. Tempos por palavra (a solução do tempo de pintar) — 2026-10-02
+
+**Ideia:** duas camadas. (1) **Marcos:** o começo de cada linha preso ao começo real da voz (seções 3 e 7). (2) **Dentro de cada linha:** alinhamento forçado do texto da linha com a voz isolada, **só na janela da linha** (0,6 s antes do começo até 0,3 s depois do começo da próxima; 12 s para a última). O alinhador atribui cada quadro do áudio a uma letra (CTC), então uma vogal segurada fica toda dentro da palavra e a palavra seguinte só começa quando é cantada. É o mesmo método do WhisperX, mas sem reconhecer a fala: só encaixa o texto que já temos. Como cada linha tem a sua janela, um erro nunca se espalha para o resto da música (foi o que derrubou o Whisper no teste: uma linha 44 s fora).
+
+**Por que não BPM/compasso:** temos a voz isolada, que é a prova direta de quando se canta; os cantores adiantam e atrasam o compasso, então ancorar no BPM traria erro.
+
+**Implementação (worker):** `worker/caraoke_worker/word_alignment.py`
+- `MmsAligner`: `torchaudio.pipelines.MMS_FA` (multilíngue, já vem com o `torchaudio` instalado pelo `setup-worker.ps1`; o modelo, ~1,2 GB, é baixado no primeiro uso para `~/.cache/torch/hub`), com o token `*` no começo e no fim para absorver a voz de outras linhas que caia na janela.
+- `normalize_word`: minúsculas, sem acentos, só `a-z` e apóstrofo (o dicionário do MMS). Palavras que viram vazio (números, travessão) ficam com duração zero logo depois da anterior.
+- `trim_to_voice`: o fim de cada palavra é cortado onde termina o **primeiro trecho contínuo** de voz (silêncio ≥ 0,25 s), mais 0,1 s. Sem isso, a palavra segurada antes de uma pausa se estendia até a borda da janela.
+- Linha com confiança média < 0,2 fica **sem** palavras (o efeito usa o cálculo antigo só nela).
+- O fim da linha passa a ser o fim da última palavra; o começo da linha pode recuar para o começo da 1ª palavra (sem passar da linha anterior + 0,3 s).
+- No passo da letra (`steps/lyrics.py`): alinhar linhas pela voz → alinhar palavras (se `processing.autoAlign`, padrão ligado) → gravar. Falhas (por exemplo, sem internet para baixar o modelo) não quebram o job: a letra fica só com as linhas.
+- Comando para uma música já existente: `cd worker` e `.venv\Scripts\python -m caraoke_worker.realign ..\storage\biblioteca\<songId>` (usa o `letra.json` atual como base; guarda o original se ainda não existir). Depois, um PATCH qualquer na música muda o `?v=` do endereço da letra.
+
+**Implementação (front):** os efeitos já usavam `words` quando existem. A página de sincronizar agora **preserva** as palavras: mover a linha desloca as palavras; mudar começo/fim estica ou encolhe proporcionalmente (`lib/lyrics/wordTiming.ts`); só editar o texto da linha descarta as palavras dela. A linha do tempo mostra as divisões das palavras.
+
+**Números (À Sua Maneira):** 16 de 16 linhas com palavras; 71 s no total na CPU (54 s de alinhamento + carregar o modelo). As pausas internas batem com a voz: "atrás | pensei" 55,18 s (voz em 55,2), "amor | à sua maneira" 72,65 s (72,6), "tempo | a noite inteira" 81,44 s (81,3), "mandarei | cinzas" 107,72 s (107,8). O "amor" segurado da linha 14 termina em 188,8 s (a voz para em 188,7). No navegador, cada palavra começa a pintar no seu tempo com erro máximo de 0,05 s (roteiro `sincronizacao-scripts/palavras-no-player.mjs`).
+
+**Estado da música de teste:** `letra.json` com palavras (fonte MANUAL no banco), `letra.original.json` = LRCLIB original, `fillPercent` 100, efeito "Preencher aos poucos".
+
+**Próximos passos possíveis:** transcrever músicas sem letra (Whisper, ainda precisaria do job só de letra); arrastar palavras individualmente na linha do tempo; um modelo de efeito novo, se o Michael pedir.

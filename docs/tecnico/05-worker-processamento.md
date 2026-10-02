@@ -176,6 +176,9 @@ Linhas vazias do LRC (pausas instrumentais) **não** entram em `lines`. No modo 
 - `instrumental` (`"lrclib.instrumental": true`) → `source=NONE`, `message="Música instrumental"`.
 - Falha de rede no LRCLIB **não falha o job**: segue com NONE e `needsReview=true`.
 
+## 5.8a Fase 6 — Tempos por palavra (implementado em 2026-10-02)
+Depois de alinhar as linhas com a voz, o passo LYRICS faz o **alinhamento forçado** do texto de cada linha com `voz.mp3` usando `torchaudio.pipelines.MMS_FA`, só dentro da janela da linha, e grava `words` em cada linha (`worker/caraoke_worker/word_alignment.py`). Detalhes, parâmetros e números em `docs/memory/sincronizacao-da-letra.md` §14. Controlado por `processing.autoAlign`. O Whisper abaixo ficou só para **transcrever** músicas sem letra.
+
 ## 5.8 Fase 6 — Alinhamento e transcrição (`steps/align.py`)
 Usa **stable-ts** (`stable_whisper`) sobre a **voz isolada** (`voz.mp3`), o que dá muito mais precisão do que sobre a mixagem.
 ```python

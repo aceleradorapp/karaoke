@@ -1,5 +1,6 @@
 import type { LyricLine } from '@caraoke/shared';
 import { findPhraseOnsets, findVocalOnset } from './vocalAnalysis';
+import { shiftLine } from './wordTiming';
 
 export const SHIFT_LIMIT_SECONDS = 60;
 export const SNAP_TOLERANCE_SECONDS = 1.8;
@@ -98,8 +99,8 @@ export function withNewStarts(lines: readonly LyricLine[], starts: readonly numb
     const nextStart = starts[index + 1];
     const end = start + Math.max(0, line.end - line.start);
     const clampedEnd = nextStart === undefined ? end : Math.min(end, nextStart);
-    const { words: _words, ...rest } = line;
-    return { ...rest, start: roundCentiseconds(start), end: roundCentiseconds(Math.max(clampedEnd, start)) };
+    const moved = shiftLine(line, roundCentiseconds(start) - line.start);
+    return { ...moved, start: roundCentiseconds(start), end: roundCentiseconds(Math.max(clampedEnd, start)) };
   });
 }
 
@@ -148,6 +149,12 @@ export function snapLineToNearestOnset(
   const duration = Math.max(0, line.end - line.start);
   const end = next ? Math.min(target + duration, next.start) : target + duration;
   return lines.map((item, position) =>
-    position === index ? { ...item, start: roundCentiseconds(target), end: roundCentiseconds(end) } : item,
+    position === index
+      ? {
+          ...shiftLine(item, roundCentiseconds(target) - item.start),
+          start: roundCentiseconds(target),
+          end: roundCentiseconds(end),
+        }
+      : item,
   );
 }

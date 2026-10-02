@@ -145,7 +145,7 @@ describe('alignLinesWithVoice', () => {
     expect(aligned[2]?.end).toBeCloseTo((aligned[2]?.start ?? 0) + 4, 2);
   });
 
-  it('drops the words of lines whose times changed', () => {
+  it('moves the words together with their lines', () => {
     const envelope = voice(
       [
         [30, 36],
@@ -161,7 +161,7 @@ describe('alignLinesWithVoice', () => {
 
     const aligned = alignLinesWithVoice(lines, envelope)?.lines as LyricLine[];
 
-    expect(aligned.every((line) => line.words === undefined)).toBe(true);
+    expect(aligned.every((line) => line.words?.[0]?.start === line.start)).toBe(true);
   });
 
   it('falls back to the first voice when there are too few lines', () => {

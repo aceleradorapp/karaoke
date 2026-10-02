@@ -52,14 +52,14 @@ describe('moveLine', () => {
     expect(starts(moveLine(lines(), 0, -50, true))).toEqual([0, 10, 20, 30]);
   });
 
-  it('forgets the words of the lines it moved, and keeps the others', () => {
+  it('moves the words of the lines it moved, and leaves the others alone', () => {
     const withWords = lines().map((line) => ({
       ...line,
       words: [{ start: line.start, end: line.end, text: line.text }],
     }));
     const moved = moveLine(withWords, 1, 1, false);
-    expect(moved[1]?.words).toBeUndefined();
-    expect(moved[0]?.words).toBeDefined();
+    expect(moved[1]?.words).toEqual([{ start: 21, end: 27, text: 'B' }]);
+    expect(moved[0]?.words).toEqual(withWords[0]?.words);
   });
 
   it('ignores a line that does not exist', () => {
@@ -81,6 +81,41 @@ describe('setLineStart', () => {
 
   it('rounds to hundredths of a second', () => {
     expect(setLineStart(lines(), 1, 21.23456)[1]?.start).toBe(21.23);
+  });
+});
+
+describe('keeping the times of the words', () => {
+  const withWords = (): LyricLine[] =>
+    lines().map((line) => ({
+      ...line,
+      words: [
+        { start: line.start, end: line.start + 1, text: 'a' },
+        { start: line.start + 2, end: line.end, text: 'b' },
+      ],
+    }));
+
+  it('stretches the words when the end of the line moves', () => {
+    const changed = setLineEnd(withWords(), 0, 18);
+    expect(changed[0]?.words?.map((word) => [word.start, word.end])).toEqual([
+      [10, 12],
+      [14, 18],
+    ]);
+  });
+
+  it('moves the words along when the start of the line changes', () => {
+    const changed = setLineStart(withWords(), 1, 22);
+    expect(changed[1]?.words?.[0]?.start).toBe(22);
+  });
+
+  it('moves every word when the whole lyrics move', () => {
+    const moved = shiftAll(withWords(), 1);
+    expect(moved.map((line) => line.words?.[0]?.start)).toEqual([11, 21, 31, 41]);
+  });
+
+  it('moves the words of the marked line and of the lines it pushed', () => {
+    const marked = markLineStart(withWords(), 1, 33);
+    expect(marked[1]?.words?.[0]?.start).toBe(33);
+    expect(marked[2]?.words?.[0]?.start).toBeCloseTo(33.3, 5);
   });
 });
 
