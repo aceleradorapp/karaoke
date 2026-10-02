@@ -142,3 +142,5 @@ Música de teste, voz separada:
 **Estado da música de teste:** `letra.json` com palavras (fonte MANUAL no banco), `letra.original.json` = LRCLIB original, `fillPercent` 100, efeito "Preencher aos poucos".
 
 **Próximos passos possíveis:** transcrever músicas sem letra (Whisper, ainda precisaria do job só de letra); arrastar palavras individualmente na linha do tempo; um modelo de efeito novo, se o Michael pedir.
+
+**Teste com músicas novas (2026-10-02, depois de reiniciar o sistema):** "Ela É Demais" (Rick & Renner) saiu com 39/39 linhas com palavras; "Flores" (Titãs) com 27/37 (foi editada na página de sincronizar; editar o texto de uma linha descarta as palavras dela). O Michael aprovou de ouvido ("ficou muito bom"). "Anna Júlia" foi baixada antes do reinício e ficou sem palavras (pode ser corrigida com o comando `realign`). **Atenção:** o worker não recarrega o código sozinho; depois de mudar o worker é preciso reiniciar o `npm run dev`.
