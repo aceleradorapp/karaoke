@@ -114,7 +114,7 @@
 |---|---|---|---|---|
 | F5-01 | ✅ 2026-10-02 | API `system/access` (IPs da rede, regenerar, check) + autenticação do socket por código | T-04 §4.6 Sistema, §4.7 | 🟡 |
 | F5-02 | ✅ 2026-10-02 | Modal do QR code no palco | T-08 §8.1 | 🟢 |
-| F5-03 | ⬜ | `MobileLayout` + `/m` (validação do código) + client com `X-Access-Code` | T-08 §8.1 §8.2, T-06 §6.2 | 🟡 |
+| F5-03 | ✅ 2026-10-02 | `MobileLayout` + `/m` (validação do código) + client com `X-Access-Code` | T-08 §8.1 §8.2, T-06 §6.2 | 🟡 |
 | F5-04 | ⬜ | `/m/buscar`, `/m/enviar`, `/m/fila` (reutilizando os componentes) | T-08 §8.2 | 🟡 |
 | F5-05 | ⬜ | ✔ Verificação com um celular real na rede (inclui o firewall do Windows) | T-02 §2.5 | 🟢 |
 

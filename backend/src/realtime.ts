@@ -1,6 +1,7 @@
 import type { Server as HttpServer } from 'node:http';
 import { Server, type Socket } from 'socket.io';
 import {
+  SOCKET_ACCESS_DENIED_MESSAGE,
   SOCKET_ROOMS,
   type ClientToServerEvents,
   type ServerToClientEvents,
@@ -14,8 +15,6 @@ type CaraokeServer = Server<ClientToServerEvents, ServerToClientEvents>;
 type CaraokeSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
 
 export type AccessCodeReader = () => Promise<string | null>;
-
-export const SOCKET_ACCESS_DENIED = 'ACCESS_DENIED';
 
 let io: CaraokeServer | null = null;
 
@@ -40,7 +39,7 @@ export function attachRealtime(httpServer: HttpServer, readAccessCode: AccessCod
     const auth = socket.handshake.auth as Partial<SocketHandshakeAuth>;
     const accessCode = await readAccessCode().catch(() => null);
     const isValid = accessCode !== null && typeof auth.code === 'string' && safeEqual(auth.code, accessCode);
-    return isValid ? next() : next(new Error(SOCKET_ACCESS_DENIED));
+    return isValid ? next() : next(new Error(SOCKET_ACCESS_DENIED_MESSAGE));
   });
 
   io.on('connection', (socket) => {

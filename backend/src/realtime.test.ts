@@ -2,13 +2,8 @@ import { createServer, type Server as HttpServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { io as connect, type Socket } from 'socket.io-client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import {
-  SOCKET_ACCESS_DENIED,
-  attachRealtime,
-  closeRealtime,
-  disconnectRoom,
-  emitToRoom,
-} from './realtime.js';
+import { SOCKET_ACCESS_DENIED_MESSAGE } from '@caraoke/shared';
+import { attachRealtime, closeRealtime, disconnectRoom, emitToRoom } from './realtime.js';
 
 const CODE = 'ABC234';
 const PHONE_THROUGH_PROXY = { 'x-forwarded-for': '192.168.0.50' };
@@ -77,25 +72,25 @@ describe('realtime access', () => {
   });
 
   it('refuses a phone without the code', async () => {
-    expect(await refused(open({ client: 'mobile' }, PHONE_THROUGH_PROXY))).toBe(SOCKET_ACCESS_DENIED);
+    expect(await refused(open({ client: 'mobile' }, PHONE_THROUGH_PROXY))).toBe(SOCKET_ACCESS_DENIED_MESSAGE);
   });
 
   it('refuses a phone with a wrong code', async () => {
     expect(await refused(open({ client: 'mobile', code: 'ZZZ999' }, PHONE_THROUGH_PROXY))).toBe(
-      SOCKET_ACCESS_DENIED,
+      SOCKET_ACCESS_DENIED_MESSAGE,
     );
   });
 
   it('refuses everybody outside the PC when there is no code yet', async () => {
     accessCode = null;
     expect(await refused(open({ client: 'mobile', code: CODE }, PHONE_THROUGH_PROXY))).toBe(
-      SOCKET_ACCESS_DENIED,
+      SOCKET_ACCESS_DENIED_MESSAGE,
     );
   });
 
   it('cannot be fooled by a phone pretending to be the PC', async () => {
     const forged = open({ client: 'stage' }, { 'x-forwarded-for': '127.0.0.1, 192.168.0.50' });
-    expect(await refused(forged)).toBe(SOCKET_ACCESS_DENIED);
+    expect(await refused(forged)).toBe(SOCKET_ACCESS_DENIED_MESSAGE);
   });
 
   it('puts a phone with the code in the phones room, even if it says it is the stage', async () => {

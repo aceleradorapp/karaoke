@@ -13,6 +13,8 @@ export const SOCKET_EVENTS = {
   workerStatus: 'worker:status',
 } as const;
 
+export const SOCKET_ACCESS_DENIED_MESSAGE = 'ACCESS_DENIED';
+
 export const SOCKET_ROOMS = {
   stage: 'stage',
   mobile: 'mobile',
