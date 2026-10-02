@@ -137,7 +137,7 @@ type SongDTO = {
 |---|---|---|
 | GET | `/api/health` | `{ ok: true, version }` |
 | GET | `/api/system/info` | `{ worker: { online, lastSeen, device, cudaAvailable, gpuName, vramMb, ytdlpVersion }, storage: { usedBytes, songs } }` |
-| GET | `/api/system/access` | `{ code, urls: ["http://192.168.98.10:5173/m?c=ABC123", ...] }`: um item por IPv4 privado (ignore `172.*` de WSL/Hyper-V quando houver um `192.168.*`). Porta = a do front (em dev, `WEB_DEV_PORT`; em produção, `API_PORT`) |
+| GET | `/api/system/access` | `{ code, urls: ["http://192.168.98.10.nip.io:5173/m?c=ABC123", ..., "http://192.168.98.10:5173/m?c=ABC123"] }`: primeiro um endereço com nome (`<ip>.nip.io`, exigido pela prévia do YouTube) por IPv4 privado, depois os mesmos só por IP (ignore `172.*` de WSL/Hyper-V quando houver um `192.168.*`). Porta = a do front (em dev, `WEB_DEV_PORT`; em produção, `API_PORT`) |
 | POST | `/api/system/access/regenerate` | Gera um novo código; emite `access:changed` para os celulares e **desconecta** os sockets deles (precisam do código novo) |
 | GET | `/api/system/access/check` | Celular valida o código: `{ ok: true }` |
 | POST | `/api/system/ytdlp/update` | Executa `pip install -U yt-dlp` no venv; retorna a versão |

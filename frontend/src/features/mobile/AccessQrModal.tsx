@@ -61,7 +61,7 @@ function AccessContent() {
           <p className="break-all text-sm text-muted">{url}</p>
           {urls.length > 1 && (
             <label className="flex w-full flex-col gap-1 text-left text-sm text-muted">
-              Outra rede
+              Outro endereço (se o celular não abrir)
               <select
                 value={url}
                 onChange={(event) => setChosenUrl(event.target.value)}
@@ -69,7 +69,7 @@ function AccessContent() {
               >
                 {urls.map((item) => (
                   <option key={item} value={item}>
-                    {new URL(item).hostname}
+                    {new URL(item).host}
                   </option>
                 ))}
               </select>
