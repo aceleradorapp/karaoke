@@ -1,11 +1,13 @@
 import clsx from 'clsx';
 import { ListOrdered, Search, Upload } from 'lucide-react';
-import { useEffect } from 'react';
-import { Navigate, NavLink, Outlet } from 'react-router';
+import { useEffect, useState } from 'react';
+import { Navigate, NavLink, Outlet, useLocation } from 'react-router';
 import { SOCKET_ACCESS_DENIED_MESSAGE } from '@caraoke/shared';
 import { getSocket, type RealtimeSocket } from '../../realtime/socket';
 import { useMobileAccessStore } from '../../stores/useMobileAccessStore';
 import { ScanAgain } from './MobileEntry';
+
+const SEARCH_TAB = '/m/buscar';
 
 const TABS = [
   { to: '/m/buscar', label: 'Buscar', Icon: Search },
@@ -33,7 +35,13 @@ export function useMobileAccessEvents(socket: RealtimeSocket = getSocket()): voi
 export function MobileLayout() {
   const code = useMobileAccessStore((state) => state.code);
   const status = useMobileAccessStore((state) => state.status);
+  const location = useLocation();
+  const [lastSearch, setLastSearch] = useState('');
   useMobileAccessEvents();
+
+  useEffect(() => {
+    if (location.pathname === SEARCH_TAB) setLastSearch(location.search);
+  }, [location.pathname, location.search]);
 
   if (!code) return <Navigate to="/m" replace />;
   if (status === 'denied') {
@@ -63,7 +71,7 @@ export function MobileLayout() {
         {TABS.map(({ to, label, Icon }) => (
           <NavLink
             key={to}
-            to={to}
+            to={to === SEARCH_TAB ? `${SEARCH_TAB}${lastSearch}` : to}
             className={({ isActive }) =>
               clsx(
                 'flex min-h-14 flex-col items-center justify-center gap-0.5 text-sm',

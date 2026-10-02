@@ -2,6 +2,15 @@
 
 > Entradas mais recentes no topo. Use `/fim-sessao` para registrar.
 
+## 2026-10-02 (4) — Fase 5: celular e QR code (falta o teste com celular real)
+**Feito:** F5-01 API do código de acesso (`GET /system/access` com os endereços da rede, `POST /system/access/regenerate` que avisa e desconecta os celulares, `GET /system/access/check`) e autenticação do Socket.IO pelo código; F5-02 modal do QR code na TV (fundo branco, endereço, código, outra rede, código novo com confirmação); F5-03 página `/m` que valida o código, layout com abas e código em todas as requisições (API, upload e socket); F5-04 abas Buscar (YouTube), Enviar e Fila (somente leitura, ao vivo). A aba Buscar lembra a última pesquisa.
+**Segurança:** pelo proxy do Vite o endereço confiável é o **último** do `X-Forwarded-For` (o celular não consegue se passar pelo PC). Capas liberadas ao celular só com o código no endereço (`?c=`), porque `<img>` não manda cabeçalho; áudio e letra continuam bloqueados.
+**Desvios do documento:** detecção do modo celular por `/m` exato ou `/m/...` (o `startsWith('/m')` do documento pegaria `/musica`); o código novo também desconecta os sockets dos celulares; `NODE_ENV` entrou no `.env` (define a porta do endereço do QR); `socket.io-client` virou dependência de desenvolvimento do backend (testes do socket).
+**Verificado:** backend 302, frontend 704, shared 24, worker 196; typecheck e build. No sistema real pelo IP da rede: celular sem código 401, com código 200, forjando 127.0.0.1 401; socket idem. Ponta a ponta com a TV e um iPhone 13 emulado entrando pelo IP: 26 de 26 (QR, entrada, busca, importar sem perfil, fila ao vivo, capas, bloqueios, 360/390/430 px, código novo pedindo para escanear de novo, endereço antigo inválido, QR novo funcionando). Firewall do Windows: Node.js liberado no perfil "Pública" (o da rede atual).
+**Bug achado só no navegador (corrigido):** voltar para a aba Buscar perdia a pesquisa.
+**Atenção:** um commit da F5-04 saiu com um teste antigo de mídia falhando (a regra das capas mudou); corrigido no commit seguinte.
+**Pendências:** F5-05 com um celular de verdade (o Michael); votação pelo celular é da Fase 7 (o Michael perguntou; pode ser antecipada).
+
 ## 2026-10-02 (3) — Fase 6 encerrada; pronto para a Fase 5
 **Feito:** sistema reiniciado (havia 5 cópias antigas do `npm run dev` rodando ao mesmo tempo; agora roda uma só, numa janela do PowerShell chamada "Karaoke - sistema"). O Michael baixou músicas novas e aprovou a sincronia: "Ela É Demais" 39/39 linhas com palavras, "Flores" 27/37 (editada à mão). F6-06 marcada como verificada; Fase 6 dada como concluída (só a F6-02, transcrever músicas sem letra com o Whisper, ficou pausada).
 **Atenções:** o worker não recarrega o código sozinho (reiniciar o `npm run dev` depois de mexer no worker); "Anna Júlia" ficou sem palavras por ter sido baixada antes do reinício; as músicas atuais são de teste e o Michael vai apagar tudo e recriar ao final.

@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useMobileAccessStore } from '../../stores/useMobileAccessStore';
@@ -129,6 +129,17 @@ describe('MobileLayout', () => {
     expect(screen.getByRole('link', { name: 'Fila' })).toHaveAttribute('aria-current', 'page');
     expect(screen.getByRole('link', { name: 'Buscar' })).toHaveAttribute('href', '/m/buscar');
     expect(screen.getByRole('link', { name: 'Enviar' })).toHaveAttribute('href', '/m/enviar');
+  });
+
+  it('keeps the last search in the search tab, so going to the queue and back does not lose it', async () => {
+    useMobileAccessStore.setState({ code: 'K7P2QX', status: 'ok' });
+    renderAt('/m/buscar?q=evidencias');
+
+    expect(screen.getByRole('link', { name: 'Buscar' })).toHaveAttribute('href', '/m/buscar?q=evidencias');
+    fireEvent.click(screen.getByRole('link', { name: 'Fila' }));
+
+    expect(await screen.findByText('Tela da fila')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Buscar' })).toHaveAttribute('href', '/m/buscar?q=evidencias');
   });
 
   it('sends a phone without a code to the scan screen', async () => {
