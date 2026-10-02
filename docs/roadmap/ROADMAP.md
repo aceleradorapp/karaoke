@@ -14,9 +14,9 @@
 | 2 | Importação e processamento | ✅ |
 | 3 | Biblioteca e player | ✅ |
 | 4 | Playlists, favoritas e histórico | ✅ |
-| 5 | Celular e QR code | 🟨 (falta só o teste com um celular de verdade) |
+| 5 | Celular e QR code | ✅ |
 | 6 | Letras inteligentes | ✅ (feita antes da 5; só F6-02, transcrever músicas sem letra, ficou pausada) |
-| 7 | Pontuação e ranking | ⬜ |
+| 7 | Pontuação e ranking | ⬜ (próxima) |
 | 8 | Publicação (futuro) | ⬜ |
 
 ---
@@ -116,7 +116,7 @@
 | F5-02 | ✅ 2026-10-02 | Modal do QR code no palco | T-08 §8.1 | 🟢 |
 | F5-03 | ✅ 2026-10-02 | `MobileLayout` + `/m` (validação do código) + client com `X-Access-Code` | T-08 §8.1 §8.2, T-06 §6.2 | 🟡 |
 | F5-04 | ✅ 2026-10-02 | `/m/buscar`, `/m/enviar`, `/m/fila` (reutilizando os componentes) | T-08 §8.2 | 🟡 |
-| F5-05 | 🟨 26/26 checagens com celular emulado (iPhone 13 pelo IP da rede); falta o teste do Michael com um celular de verdade | ✔ Verificação com um celular real na rede (inclui o firewall do Windows) | T-02 §2.5 | 🟢 |
+| F5-05 | ✅ 2026-10-02 (celular real do Michael: entrar pelo QR, buscar, prévia e importar; 26/26 com celular emulado) | ✔ Verificação com um celular real na rede (inclui o firewall do Windows) | T-02 §2.5 | 🟢 |
 
 ## Fase 6 — Letras inteligentes (sincronia)  ⭐ *prioridade do Michael*
 | ID | Status | Tarefa | Docs | Modelo |
