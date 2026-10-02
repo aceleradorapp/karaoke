@@ -9,15 +9,18 @@ import { useSongQuery, useUpdateSongMutation } from '../../api/songs';
 import { Avatar } from '../../components/Avatar';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { Spinner } from '../../components/Spinner';
+import type { LyricsEffectSettings } from '../../lib/lyrics/effects';
 import { coverGradient } from '../../lib/gradient';
 import { buildPlayQueue, locateInQueue, parseShuffleSeed, playerRoute } from '../../lib/playQueue';
 import { useAutoSave } from '../../lib/useAutoSave';
 import { useProfileStore } from '../../stores/useProfileStore';
 import { FinishedScreen } from './FinishedScreen';
+import { LyricsEffectControls } from './LyricsEffectControls';
 import { LyricsView } from './LyricsView';
 import { PlayerControls } from './PlayerControls';
 import { SingerPicker } from './SingerPicker';
 import { useIdle } from './useIdle';
+import { useLyricsEffectChoice, useSongFillPercent } from './useLyricsEffect';
 import { usePlayerSession } from './usePlayerSession';
 import { usePlayerShortcuts } from './usePlayerShortcuts';
 
@@ -71,6 +74,8 @@ function PlayerSession({ song }: { song: SongDTO }) {
   const lyrics = useLyricsQuery(song.lyricsUrl);
   const updateSong = useUpdateSongMutation(song.id);
   const session = usePlayerSession(song);
+  const effectChoice = useLyricsEffectChoice();
+  const fill = useSongFillPercent(song);
   const { isFullscreen, toggle: toggleFullscreen } = useFullscreen();
 
   const [searchParams] = useSearchParams();
@@ -112,6 +117,7 @@ function PlayerSession({ song }: { song: SongDTO }) {
     {
       togglePlay: session.togglePlay,
       toggleVoiceGuide: session.toggleVoiceGuide,
+      toggleLyricsEffect: () => effectChoice.setEnabled(!effectChoice.enabled),
       seekBy: session.seekBy,
       changeVolumeBy: session.changeVolumeBy,
       adjustLyricsOffset: session.adjustLyricsOffset,
@@ -135,6 +141,11 @@ function PlayerSession({ song }: { song: SongDTO }) {
 
   const isLyricsLoading = song.lyricsUrl !== null && lyrics.isLoading;
   const effectiveOffsetMs = baseOffsetMs.current + session.liveOffsetMs;
+  const effect: LyricsEffectSettings = {
+    enabled: effectChoice.enabled,
+    id: effectChoice.id,
+    fillPercent: fill.value,
+  };
 
   return (
     <div className={clsx('relative min-h-dvh overflow-hidden bg-black text-white', isIdle && 'cursor-none')}>
@@ -227,6 +238,7 @@ function PlayerSession({ song }: { song: SongDTO }) {
                     getTime={session.getTime}
                     offsetMs={effectiveOffsetMs}
                     durationSec={session.duration}
+                    effect={effect}
                   />
                 )}
               </div>
@@ -251,6 +263,17 @@ function PlayerSession({ song }: { song: SongDTO }) {
                 onAdjustLyricsOffset={session.adjustLyricsOffset}
                 onToggleFullscreen={toggleFullscreen}
                 onExit={requestExit}
+                lyricsEffect={
+                  <LyricsEffectControls
+                    variant="player"
+                    enabled={effectChoice.enabled}
+                    effectId={effectChoice.id}
+                    fillPercent={fill.value}
+                    onEnabledChange={effectChoice.setEnabled}
+                    onEffectChange={effectChoice.setId}
+                    onFillPercentChange={fill.set}
+                  />
+                }
               />
             </div>
           </>

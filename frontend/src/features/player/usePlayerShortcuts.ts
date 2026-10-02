@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react';
 export interface PlayerShortcutHandlers {
   togglePlay: () => void;
   toggleVoiceGuide: () => void;
+  toggleLyricsEffect: () => void;
   seekBy: (seconds: number) => void;
   changeVolumeBy: (delta: number) => void;
   adjustLyricsOffset: (deltaMs: number) => void;
@@ -33,6 +34,7 @@ export function usePlayerShortcuts(handlers: PlayerShortcutHandlers, isEnabled: 
       const byKey: Record<string, () => void> = {
         ' ': actions.togglePlay,
         v: actions.toggleVoiceGuide,
+        e: actions.toggleLyricsEffect,
         ArrowLeft: () => actions.seekBy(-SEEK_STEP_SECONDS),
         ArrowRight: () => actions.seekBy(SEEK_STEP_SECONDS),
         ArrowUp: () => actions.changeVolumeBy(VOLUME_STEP),

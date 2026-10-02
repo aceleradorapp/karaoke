@@ -1,3 +1,5 @@
+import type { LyricsEffectId } from './lyricsEffects.js';
+
 export type SongSource = 'YOUTUBE' | 'UPLOAD';
 
 export type SongStatus = 'QUEUED' | 'PROCESSING' | 'READY' | 'ERROR';
@@ -55,6 +57,7 @@ export interface SongDTO {
   lyricsSource: LyricsSource;
   lyricsNeedsReview: boolean;
   lyricsOffsetMs: number;
+  fillPercent: number;
   playCount: number;
   createdAt: string;
   job?: JobDTO | null;
@@ -77,6 +80,8 @@ export interface AppSettings {
   'scoring.micLatencyMs': number;
   'scoring.micDeviceId': string | null;
   'ui.defaultTheme': string;
+  'player.lyricsEffectEnabled': boolean;
+  'player.lyricsEffect': LyricsEffectId;
 }
 
 export interface SingerSummary {

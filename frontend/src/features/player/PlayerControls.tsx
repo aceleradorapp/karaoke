@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import { Maximize, Mic, Minimize, Minus, Pause, Play, Plus, Volume2, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { formatDuration } from '../../lib/format';
 
 const TIME_REFRESH_MS = 250;
@@ -23,6 +23,7 @@ interface PlayerControlsProps {
   onAdjustLyricsOffset: (deltaMs: number) => void;
   onToggleFullscreen: () => void;
   onExit: () => void;
+  lyricsEffect?: ReactNode;
 }
 
 function useCurrentTime(getTime: () => number): number {
@@ -60,6 +61,8 @@ export function PlayerControls(props: PlayerControlsProps) {
         />
         <span className="w-12 text-sm tabular-nums">{formatDuration(props.duration)}</span>
       </div>
+
+      {props.lyricsEffect}
 
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
         <div className="flex items-center gap-1">

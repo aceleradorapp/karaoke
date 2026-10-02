@@ -21,6 +21,7 @@ function buildSong(overrides: Partial<Song> = {}): Song {
     lyricsSource: 'NONE',
     lyricsNeedsReview: false,
     lyricsOffsetMs: 0,
+    fillPercent: 100,
     playCount: 0,
     addedById: null,
     createdAt: new Date('2026-10-01T10:00:00.000Z'),
