@@ -216,6 +216,7 @@ Toda mudança (criar, remover, reordenar, apresentação começou, perfil ou mú
 | DELETE | `/api/jobs/:id` | Remove um job finalizado da lista (só DONE/FAILED/CANCELED) |
 
 ### Interno (worker) — header `X-Worker-Token`
+- `POST /api/internal/songs/:id/melody` → marca `hasMelody=true` e emite `song:updated` (usado por `npm run worker:melody`, Fase 7).
 | Método | Rota | Body | Resposta |
 |---|---|---|---|
 | POST | `/api/internal/worker/heartbeat` | `{ instanceId, device, cudaAvailable, gpuName, vramMb, ytdlpVersion }` | `{ ok }`. Guarda em memória; `online` = último heartbeat há menos de 30 s. Se o `instanceId` mudar (worker reiniciou com o back-end no ar), os jobs RUNNING órfãos voltam para a fila antes de responder |

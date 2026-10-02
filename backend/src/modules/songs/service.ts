@@ -93,6 +93,14 @@ export async function getSong(id: string, profileId?: string): Promise<SongDTO> 
   return toListedSongDTO(song, await favoriteIdsOf(profileId, [id]));
 }
 
+export async function markSongMelody(id: string): Promise<SongDTO> {
+  await findSongOrThrow(id);
+  const updated = await prisma.song.update({ where: { id }, data: { hasMelody: true }, include: LATEST_JOB });
+  const dto = toListedSongDTO(updated, null);
+  emitToAll('song:updated', dto);
+  return dto;
+}
+
 export async function updateSong(id: string, changes: UpdateSongInput): Promise<SongDTO> {
   await findSongOrThrow(id);
   const updated = await prisma.song.update({ where: { id }, data: changes, include: LATEST_JOB });

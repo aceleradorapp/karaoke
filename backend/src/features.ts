@@ -1,1 +1,1 @@
-export const FEATURE_MELODY = false;
+export const FEATURE_MELODY = true;

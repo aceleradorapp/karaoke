@@ -105,7 +105,7 @@ def test_acknowledges_a_cancellation_instead_of_reporting_a_failure(storage_dir,
 def test_skips_steps_that_are_not_implemented_yet(storage_dir, fake_steps, calls):
     api = FakeApi()
 
-    run(storage_dir, api, steps=["SEPARATE", "MELODY", "FINALIZE"])
+    run(storage_dir, api, steps=["SEPARATE", "FUTURE", "FINALIZE"])
 
     assert calls == ["SEPARATE", "FINALIZE"]
     assert len(api.completed) == 1

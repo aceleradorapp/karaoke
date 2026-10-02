@@ -17,7 +17,7 @@
 | 5 | Celular e QR code | ✅ |
 | 6 | Letras inteligentes | ✅ (feita antes da 5; só F6-02, transcrever músicas sem letra, ficou pausada) |
 | 5B | Convidados no celular e fila de cantores (ADR-008) | ✅ |
-| 7 | Pontuação e ranking | ⬜ (próxima) |
+| 7 | Pontuação e ranking | 🟨 |
 | 8 | Publicação (futuro) | ⬜ |
 
 ---
@@ -146,7 +146,7 @@ Branch: `feature/f5b-fila-de-cantores`.
 ## Fase 7 — Pontuação e ranking
 | ID | Status | Tarefa | Docs | Modelo |
 |---|---|---|---|---|
-| F7-01 | ⬜ | Worker: etapa MELODY (parselmouth) + `FEATURE_MELODY` + reprocessar as músicas existentes | T-05 §5.10 | 🟡 |
+| F7-01 | ✅ 2026-10-02 | Worker: etapa MELODY (parselmouth) + `FEATURE_MELODY` + reprocessar as músicas existentes | T-05 §5.10 | 🟡 |
 | F7-02 | ⬜ | `PitchScorer` + detecção com pitchy + testes | T-07 §7.5 | 🔴 |
 | F7-03 | ⬜ | Configurações de pontuação: modo, peso, microfone, medidor, calibração da latência | T-07 §7.5, T-06 §6.6 Config | 🔴 |
 | F7-04 | ⬜ | Backend: votação (abrir/encerrar, timer, votos, `computeFinalScore`, não votar em si mesmo) + testes | T-04 §4.6 Apresentações | 🔴 |
