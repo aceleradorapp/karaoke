@@ -1,5 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { CreatePerformanceInput, FinishPerformanceInput } from '@caraoke/shared';
+import type {
+  CreatePerformanceInput,
+  FinalScore,
+  FinishPerformanceInput,
+  FinishPerformanceResult,
+} from '@caraoke/shared';
 import { apiSend } from './client';
 
 interface FinishVariables extends FinishPerformanceInput {
@@ -16,7 +21,14 @@ export function useFinishPerformanceMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, ...body }: FinishVariables) =>
-      apiSend<{ finalScore: number | null }>('POST', `/performances/${id}/finish`, body),
+      apiSend<FinishPerformanceResult>('POST', `/performances/${id}/finish`, body),
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['home'] }),
+  });
+}
+
+export function useCloseVotingMutation() {
+  return useMutation({
+    mutationFn: (performanceId: string) =>
+      apiSend<FinalScore>('POST', `/performances/${performanceId}/voting/close`),
   });
 }

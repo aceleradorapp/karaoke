@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '../../components/Button';
 import { calibrateLatency } from '../../lib/pitch/calibration';
 import { listMicrophones, MicrophonePitch, type MicrophoneDevice } from '../../lib/pitch/microphone';
+import { noteName } from '../../lib/pitch/notes';
 import { toast } from '../../stores/useToastStore';
 import { SelectField, SettingsSection } from './fields';
 
@@ -20,12 +21,6 @@ const DEFAULT_MICROPHONE = '';
 const METER_INTERVAL_MS = 50;
 const METER_FULL_LEVEL = 0.3;
 const MAX_LATENCY_MS = 400;
-const NOTE_NAMES = ['Dó', 'Dó#', 'Ré', 'Ré#', 'Mi', 'Fá', 'Fá#', 'Sol', 'Sol#', 'Lá', 'Lá#', 'Si'];
-
-export function noteName(midi: number): string {
-  return NOTE_NAMES[((Math.round(midi) % 12) + 12) % 12] ?? '';
-}
-
 export const usesPitch = (mode: ScoringMode) => mode === 'pitch' || mode === 'pitch+audience';
 export const usesAudience = (mode: ScoringMode) => mode === 'audience' || mode === 'pitch+audience';
 

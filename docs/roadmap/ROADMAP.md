@@ -150,7 +150,7 @@ Branch: `feature/f5b-fila-de-cantores`.
 | F7-02 | ✅ 2026-10-02 | `PitchScorer` + detecção com pitchy + testes | T-07 §7.5 | 🔴 |
 | F7-03 | ✅ 2026-10-02 (sem teste com microfone real) | Configurações de pontuação: modo, peso, microfone, medidor, calibração da latência | T-07 §7.5, T-06 §6.6 Config | 🔴 |
 | F7-04 | ✅ 2026-10-02 | Backend: votação (abrir/encerrar, timer, votos, `computeFinalScore`, não votar em si mesmo) + testes | T-04 §4.6 Apresentações | 🔴 |
-| F7-05 | ⬜ | Palco: medidor ao vivo, tela de votação e tela de nota animada | T-07 §7.6 | 🟡 |
+| F7-05 | ✅ 2026-10-02 | Palco: medidor ao vivo, tela de votação e tela de nota animada | T-07 §7.6 | 🟡 |
 | F7-06 | ⬜ | Celular: `/m/votar` | T-07 §7.6, T-08 §8.2 | 🟡 |
 | F7-07 | ⬜ | API + tela `/ranking` (família e convidados juntos, filtro "Só a família") | T-04 §4.6 Ranking, T-06 §6.6 | 🟡 |
 | F7-08 | ⬜ | ✔ Verificação: festa-teste com 2 celulares votando | — | 🟡 |

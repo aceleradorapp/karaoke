@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
 import { useLyricsQuery } from '../../api/lyrics';
+import { useCloseVotingMutation } from '../../api/performances';
 import { usePlaylistQuery } from '../../api/playlists';
 import { useProfilesQuery } from '../../api/profiles';
 import { firstReadyRequest, singRequestRoute, useSingQueueQuery } from '../../api/singQueue';
@@ -15,14 +16,19 @@ import { coverGradient } from '../../lib/gradient';
 import { buildPlayQueue, locateInQueue, parseShuffleSeed, playerRoute } from '../../lib/playQueue';
 import { useAutoSave } from '../../lib/useAutoSave';
 import { useProfileStore } from '../../stores/useProfileStore';
+import { getSocket } from '../../realtime/socket';
+import { toast } from '../../stores/useToastStore';
 import { FinishedScreen } from './FinishedScreen';
+import { PitchMeter } from './PitchMeter';
 import { LyricsEffectControls } from './LyricsEffectControls';
 import { LyricsView } from './LyricsView';
 import { PlayerControls } from './PlayerControls';
 import { SingerPicker } from './SingerPicker';
 import { useIdle } from './useIdle';
 import { useLyricsEffectChoice, useSongFillPercent } from './useLyricsEffect';
-import { usePlayerSession } from './usePlayerSession';
+import { usePitchScoring } from './usePitchScoring';
+import { usePlayerSession, type PlayerSession } from './usePlayerSession';
+import { VotingScreen } from './VotingScreen';
 import { usePlayerShortcuts } from './usePlayerShortcuts';
 
 const CONTROLS_IDLE_MS = 3000;
@@ -67,6 +73,24 @@ function useFullscreen() {
   return { isFullscreen, toggle };
 }
 
+function useVotingEvents(session: PlayerSession) {
+  const { voting, updateVotes, showResult } = session;
+  const performanceId = voting?.performanceId;
+
+  useEffect(() => {
+    if (!performanceId) return;
+    const socket = getSocket();
+    const onProgress = ({ performanceId: id, count }: { performanceId: string; count: number }) =>
+      updateVotes(id, count);
+    socket.on('vote:progress', onProgress);
+    socket.on('score:final', showResult);
+    return () => {
+      socket.off('vote:progress', onProgress);
+      socket.off('score:final', showResult);
+    };
+  }, [performanceId, updateVotes, showResult]);
+}
+
 function PlayerSession({ song }: { song: SongDTO }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -74,7 +98,10 @@ function PlayerSession({ song }: { song: SongDTO }) {
   const profiles = useProfilesQuery();
   const lyrics = useLyricsQuery(song.lyricsUrl);
   const updateSong = useUpdateSongMutation(song.id);
-  const session = usePlayerSession(song);
+  const pitch = usePitchScoring(song);
+  const session = usePlayerSession(song, pitch);
+  const closeVoting = useCloseVotingMutation();
+  useVotingEvents(session);
   const effectChoice = useLyricsEffectChoice();
   const fill = useSongFillPercent(song);
   const { isFullscreen, toggle: toggleFullscreen } = useFullscreen();
@@ -194,6 +221,37 @@ function PlayerSession({ song }: { song: SongDTO }) {
           </div>
         )}
 
+        {session.phase === 'finishing' && (
+          <div role="status" className="flex flex-1 flex-col items-center justify-center gap-4">
+            <Spinner className="size-12" />
+            <p className="text-xl">Calculando a nota…</p>
+          </div>
+        )}
+
+        {session.phase === 'voting' && session.voting && (
+          <div className="flex flex-1 items-center justify-center py-10">
+            <VotingScreen
+              singerName={singer?.name ?? ''}
+              songTitle={song.title}
+              endsAt={session.voting.endsAt}
+              votes={session.voting.votes}
+              isClosing={closeVoting.isPending}
+              onCloseNow={() => {
+                const id = session.voting?.performanceId;
+                if (!id) return;
+                closeVoting.mutate(id, {
+                  onSuccess: session.showResult,
+                  onError: () => {
+                    toast.error('Não foi possível encerrar a votação');
+                    session.giveUpWaitingForResult();
+                  },
+                });
+              }}
+              onTimeUp={session.giveUpWaitingForResult}
+            />
+          </div>
+        )}
+
         {session.phase === 'error' && (
           <div className="flex flex-1 flex-col items-center justify-center gap-4 px-4 text-center">
             <h1 className="font-display text-4xl">Não foi possível cantar</h1>
@@ -214,6 +272,7 @@ function PlayerSession({ song }: { song: SongDTO }) {
           <div className="flex flex-1 items-center justify-center">
             <FinishedScreen
               songTitle={song.title}
+              score={session.result}
               onSingAgain={() => void session.restart()}
               onBack={leave}
               sequence={
@@ -259,7 +318,8 @@ function PlayerSession({ song }: { song: SongDTO }) {
               </div>
             </header>
 
-            <main className="flex flex-1 items-center justify-center px-4 sm:px-10">
+            <main className="flex flex-1 flex-col items-center justify-center gap-6 px-4 sm:px-10">
+              {pitch.isActive && <PitchMeter reading={pitch.reading} />}
               <div className="w-full max-w-5xl">
                 {!isLyricsLoading && (
                   <LyricsView
