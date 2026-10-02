@@ -16,7 +16,8 @@
 | 4 | Playlists, favoritas e histórico | ✅ |
 | 5 | Celular e QR code | ✅ |
 | 6 | Letras inteligentes | ✅ (feita antes da 5; só F6-02, transcrever músicas sem letra, ficou pausada) |
-| 7 | Pontuação e ranking | ⬜ (próxima) |
+| 5B | Convidados no celular e fila de cantores (ADR-008) | 🟨 |
+| 7 | Pontuação e ranking | ⬜ (depois da 5B) |
 | 8 | Publicação (futuro) | ⬜ |
 
 ---
@@ -129,16 +130,29 @@
 | F6-05 | ✅ 2026-10-02 | Tempos reais por palavra: alinhamento forçado (MMS do torchaudio) do texto de cada linha com a voz isolada, dentro da janela da linha; fim da palavra cortado onde a voz para; página de sincronizar preserva as palavras; comando `caraoke_worker.realign` (10 de 10 checagens no Chromium, erro ≤ 0,05 s) | `docs/memory/sincronizacao-da-letra.md` §14 | 🔴 |
 | F6-06 | ✅ 2026-10-02 | ✔ Verificação com músicas brasileiras reais: "À Sua Maneira" (16/16 linhas com palavras, erro ≤ 0,05 s no player), "Ela É Demais" (39/39) e "Flores" (aprovadas de ouvido pelo Michael: "ficou muito bom"). Caso sem letra sincronizada no LRCLIB ficou com a F6-02 | — | 🟡 |
 
+## Fase 5B — Convidados no celular e fila de cantores (ADR-008)
+**Objetivo:** cada convidado entra pelo celular com seu nome, vê a biblioteca, pede as músicas que vai cantar e a TV chama um por vez, na ordem. Vem antes da Fase 7 porque a votação usa essa identidade.
+Branch: `feature/f5b-fila-de-cantores`.
+
+| ID | Status | Tarefa | Docs | Modelo |
+|---|---|---|---|---|
+| F5B-01 | ✅ 2026-10-02 | ADR-008 + documento técnico atualizado (banco, API, telas, celular, player) | ADR-008 | 🟡 |
+| F5B-02 | ⬜ | Backend: celular lista perfis e cria convidado; importação/envio pelo celular grava quem pediu + testes | T-04 §4.5 §4.6 Perfis, T-08 §8.2 | 🟡 |
+| F5B-03 | ⬜ | Backend: tabela `sing_requests`, rotas `/api/sing-queue`, `singQueue:changed`, `requestId` em `POST /performances` + testes | T-03, T-04 §4.6 Fila de cantores, §4.7 | 🔴 |
+| F5B-04 | ⬜ | Celular: "Quem é você?", aba Músicas com "Quero cantar", "Quero cantar esta" na importação, aba Fila com Próximos + Preparando | T-08 §8.2 §8.4 | 🟡 |
+| F5B-05 | ⬜ | Palco: página Próximos (reordenar, remover, chamar), contador na barra, faixa no início, player "Vez de Ana" e "Chamar o próximo" | T-06 §6.6 Próximos, T-07 §7.1 | 🔴 |
+| F5B-06 | ⬜ | ✔ Verificação: palco + 2 celulares (identidade, pedidos, limites, ordem, chamar o próximo) | — | 🟡 |
+
 ## Fase 7 — Pontuação e ranking
 | ID | Status | Tarefa | Docs | Modelo |
 |---|---|---|---|---|
 | F7-01 | ⬜ | Worker: etapa MELODY (parselmouth) + `FEATURE_MELODY` + reprocessar as músicas existentes | T-05 §5.10 | 🟡 |
 | F7-02 | ⬜ | `PitchScorer` + detecção com pitchy + testes | T-07 §7.5 | 🔴 |
 | F7-03 | ⬜ | Configurações de pontuação: modo, peso, microfone, medidor, calibração da latência | T-07 §7.5, T-06 §6.6 Config | 🔴 |
-| F7-04 | ⬜ | Backend: votação (abrir/encerrar, timer, votos, `computeFinalScore`) + testes | T-04 §4.6 Apresentações | 🔴 |
+| F7-04 | ⬜ | Backend: votação (abrir/encerrar, timer, votos, `computeFinalScore`, não votar em si mesmo) + testes | T-04 §4.6 Apresentações | 🔴 |
 | F7-05 | ⬜ | Palco: medidor ao vivo, tela de votação e tela de nota animada | T-07 §7.6 | 🟡 |
 | F7-06 | ⬜ | Celular: `/m/votar` | T-07 §7.6, T-08 §8.2 | 🟡 |
-| F7-07 | ⬜ | API + tela `/ranking` | T-04 §4.6 Ranking, T-06 §6.6 | 🟡 |
+| F7-07 | ⬜ | API + tela `/ranking` (família e convidados juntos, filtro "Só a família") | T-04 §4.6 Ranking, T-06 §6.6 | 🟡 |
 | F7-08 | ⬜ | ✔ Verificação: festa-teste com 2 celulares votando | — | 🟡 |
 
 ## Fase 8 — Publicação (futuro)
@@ -149,7 +163,7 @@
 | F8-03 | ⬜ | Storage externo (S3 ou similar) e deploy | 🔴 |
 
 ## Backlog (ideias ainda sem fase)
-- Celular colocar músicas na **fila de quem vai cantar** e criar perfil de convidado pelo celular (falado em 01/10, a confirmar)
+- Palco pôr música na fila de cantores para outra pessoa (hoje: só o celular pede; a TV toca direto)
 - Tocar a versão original enquanto o instrumental não fica pronto (hoje: play bloqueado)
 - Foto própria como avatar
 - Conquistas ("cantou 10 músicas", "nota 100")

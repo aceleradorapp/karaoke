@@ -35,7 +35,7 @@ Começa como MVP de uso local (em casa) e evolui até o produto final, publicado
 - **Fila de processamento**: o usuário monta uma lista de músicas para processar.
 - **Duas origens de música**: download do YouTube e **pasta de upload** (colocar arquivos). Pastas organizadas; ao terminar o processamento, o arquivo de origem é apagado.
 - **Qualquer pessoa pode importar** músicas, pelo celular ou pelo app.
-- **Página do celular é limitada**: buscar músicas, baixar e processar (não é o sistema todo).
+- **Página do celular é limitada**: identificar-se, ver a biblioteca e pedir músicas, buscar, baixar e processar, ver as filas e votar (não é o sistema todo; ADR-008).
 - **QR code sob demanda**: um botão na tela principal abre uma janela com o QR code de acesso.
 - **Vários temas** visuais.
 - **Visual estilo Netflix**, com miniatura (capa) para cada música.
@@ -60,11 +60,13 @@ i5-4460 (4 núcleos) · 8 GB de RAM · GeForce GT 1030 com 2 GB → o Demucs rod
 
 ## Decisões menores adotadas como padrão (podem mudar)
 - Música ainda processando: **play bloqueado** (tocar a versão original está no backlog).
-- Convidado: criado na tela de perfis do palco; o celular não cria perfil no MVP.
-- Celular: só buscar, importar, enviar, ver a fila e votar.
+- Convidado: criado na tela de perfis do palco **ou pelo celular** ("Quem é você?", ADR-008).
+- Celular: identificar-se, pedir músicas da biblioteca (fila de cantores), buscar, importar, enviar, ver as filas e votar. Sem player, playlists ou configurações.
+- Fila de cantores: até 3 pedidos esperando por pessoa; o pedido sai da fila quando a apresentação começa.
+- Votação: ninguém vota na própria apresentação. Ranking: família e convidados juntos, com filtro "Só a família".
 
 ## Perguntas em aberto
-- O celular deve poder colocar músicas na fila de quem vai cantar? (backlog)
+- (nenhuma no momento)
 
 ## Sincronização da letra
 É a prioridade do Michael (a sincronia decide o sucesso do app). O estado, as decisões, os números medidos e o que falta estão em [`sincronizacao-da-letra.md`](sincronizacao-da-letra.md).

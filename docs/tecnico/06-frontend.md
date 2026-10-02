@@ -46,19 +46,22 @@ Detecção: `isMobilePath(pathname)` em `lib/mobileApp.ts` = `/m` exato ou come�
 /youtube                   Buscar no YouTube + prévia + importar
 /enviar                    Upload de arquivos
 /fila                      Fila de processamento
+/proximos                  Fila de cantores: quem canta a seguir (ADR-008)
 /playlists                 Minhas playlists
 /playlists/:id             Playlist (tocar em sequência, reordenar)
 /favoritas                 Favoritas do perfil
 /historico                 Histórico do perfil
 /ranking                   Ranking da família
 /configuracoes             Configurações
-/player/:songId            Player em tela cheia (?playlist=<id>&i=<índice>)
+/player/:songId            Player em tela cheia (?playlist=<id>&shuffle=<seed> ou ?pedido=<requestId>)
 /musica/:id/letra          Editor de letra (Fase 6)
 
-/m                         Celular: valida ?c=CODE, salva e redireciona para /m/buscar
+/m                         Celular: valida ?c=CODE, salva; sem identidade → /m/quem-sou; senão → /m/musicas
+/m/quem-sou                "Quem é você?": escolher perfil ou criar convidado (ADR-008)
+/m/musicas                 Biblioteca + "Quero cantar"
 /m/buscar                  Buscar no YouTube + prévia + importar
 /m/enviar                  Upload
-/m/fila                    Fila de processamento (somente leitura)
+/m/fila                    Próximos a cantar (fila de cantores) + Preparando (processamento)
 /m/votar                   Votação (abre sozinha no vote:open)
 ```
 
@@ -151,7 +154,7 @@ export const AVATARS = [
 
 ### Barra superior (StageLayout, em todas as telas exceto perfis e player)
 ```
-[LOGO]  Início  Biblioteca  YouTube  Playlists  Ranking   [🔍 buscar...] [⚙ 2 processando] [📱] [🎤 Michael ▾]
+[LOGO]  Início  Biblioteca  Próximos(3)  YouTube  Playlists  Ranking   [🔍 buscar...] [⚙ 2 processando] [📱] [🎤 Michael ▾]
 ```
 - O indicador "⚙ N processando" leva a `/fila` e mostra o progresso do job atual (anel).
 - 📱 abre o **modal do QR code** (08).
@@ -174,6 +177,7 @@ export const AVATARS = [
 ```
 - Fileiras vindas de `GET /api/songs/home`; fileiras vazias não aparecem. Hero = a música mais recente pronta (ou aleatória entre as 10 mais cantadas).
 - Rolagem horizontal com setas aparecendo no hover; `scroll-snap`.
+- **Fila de cantores com pedidos:** faixa acima das fileiras: avatar + "Vez de Ana — Evidências" + [▶ Chamar] + "e mais 2 na fila" (link para `/proximos`). Mostra o primeiro pedido **pronto**.
 - **Biblioteca vazia:** estado de boas-vindas com os botões "Buscar no YouTube" e "Enviar arquivos".
 
 ### `SongCard` (componente central)
@@ -236,6 +240,18 @@ Concluídas recentemente
 - Atualização em tempo real (`job:updated`). Reordenar com drag-and-drop nativo HTML5 (sem biblioteca), ou botões ↑/↓ como alternativa.
 - Rodapé: "Worker: online • CPU" / "Worker offline: verifique o terminal".
 
+### `/proximos` — Fila de cantores (ADR-008)
+```
+Próximos a cantar                                   [▶ Chamar o próximo]
+ 1. [🦁] Ana        Evidências — Chitãozinho & X.     [↑][↓][✕]
+ 2. [🐸] Carla      Azul da Cor do Mar — Tim Maia     [↑][↓][✕]
+ 3. [🤖] Tio Beto   Pais e Filhos — Legião  ⚙ preparando  [↑][↓][✕]
+```
+- Atualiza ao vivo (`singQueue:changed`); reordenar com ↑/↓ (otimista, `PUT /sing-queue/order`); ✕ remove sem confirmação (é só um pedido).
+- **Chamar o próximo** = primeiro pedido com música `READY` → `/player/<songId>?pedido=<id>`. Também dá para chamar um pedido específico pelo botão ▶ da linha (se a música estiver pronta).
+- Vazia: "Ninguém na fila. Peça pelo celular: escaneie o QR code" + botão do QR code.
+- O contador da barra superior mostra o número de pedidos (some quando é zero).
+
 ### `/playlists` e `/playlists/:id`
 Grade de playlists (capa 2×2 com as 4 primeiras músicas). Página da playlist: [▶ Cantar tudo] [🔀 Aleatório], lista reordenável, remover item, renomear e excluir.
 
@@ -243,7 +259,7 @@ Grade de playlists (capa 2×2 com as 4 primeiras músicas). Página da playlist:
 Listas simples com SongCard/linha; o histórico mostra data e nota.
 
 ### `/ranking`
-Pódio (1º, 2º e 3º com avatares grandes) da melhor média no período; abas Semana/Mês/Sempre; listas "Quem mais cantou" e "Músicas mais cantadas"; destaque "Rei/Rainha do karaokê do mês".
+Pódio (1º, 2º e 3º com avatares grandes) da melhor média no período; abas Semana/Mês/Sempre; família e convidados juntos, com o filtro "Só a família" (ADR-008); listas "Quem mais cantou" e "Músicas mais cantadas"; destaque "Rei/Rainha do karaokê do mês".
 
 ### `/configuracoes`
 Seções:

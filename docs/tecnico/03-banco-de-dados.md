@@ -12,6 +12,7 @@ Profile 1───* Playlist 1───* PlaylistItem *───1 Song
 Profile 1───* Favorite *───1 Song
 Profile 1───* Performance *───1 Song
 Performance 1───* Vote
+Profile 1───* SingRequest *───1 Song   (fila de cantores, ADR-008)
 Song 1───* Job
 Profile 1───* Song (addedBy, opcional)
 Setting (chave/valor)
@@ -44,6 +45,7 @@ model Profile {
   favorites    Favorite[]
   performances Performance[]
   songsAdded   Song[]       @relation("SongAddedBy")
+  singRequests SingRequest[]
 
   @@map("profiles")
 }
@@ -102,6 +104,7 @@ model Song {
   playlistItems  PlaylistItem[]
   favorites      Favorite[]
   performances   Performance[]
+  singRequests   SingRequest[]
 
   @@index([status])
   @@index([artist])
@@ -221,6 +224,22 @@ model Vote {
   @@map("votes")
 }
 
+// ─────────────────────────── FILA DE CANTORES ─────────────────────────
+
+model SingRequest {                          // pedido "quero cantar" (ADR-008)
+  id        String   @id @default(cuid())
+  profileId String
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  songId    String
+  song      Song     @relation(fields: [songId], references: [id], onDelete: Cascade)
+  position  Int
+  createdAt DateTime @default(now())
+
+  @@unique([profileId, songId])              // a mesma pessoa não pede a mesma música duas vezes
+  @@index([position])
+  @@map("sing_requests")
+}
+
 // ─────────────────────────────── CONFIG ───────────────────────────────
 
 model Setting {
@@ -262,7 +281,8 @@ Guardadas na tabela `settings`. O backend expõe um objeto tipado (`shared/types
 - **Excluir música:** apaga a pasta `biblioteca/<id>/` (cascata no banco). Se houver job RUNNING, cancela primeiro.
 - **playCount:** incrementado em `POST /performances`.
 - **Duplicidade YouTube:** `youtubeId` único. Ao importar de novo, retorna a música existente (HTTP 200 com `alreadyExists: true`).
-- **Convidados:** `isGuest = true`. Aparecem na seção "Convidados" da tela de perfis, ordenados por `lastUsedAt desc`. Não são apagados automaticamente.
+- **Fila de cantores (ADR-008):** novo pedido recebe `position = max(position) + 1` (ou 1). Até `MAX_SING_REQUESTS_PER_PROFILE = 3` pedidos por perfil. Reordenar regrava `position = índice + 1` numa transação. O pedido é **apagado** quando a apresentação começa (`POST /performances` com `requestId`, na mesma transação) ou quando é removido; não há histórico de pedidos (o histórico é a `Performance`).
+- **Convidados:** `isGuest = true`. Criados no palco ou pelo celular (pelo celular, sempre `isGuest = true`). Aparecem na seção "Convidados" da tela de perfis, ordenados por `lastUsedAt desc`. Não são apagados automaticamente.
 
 ## 3.5 Seed (`backend/prisma/seed.ts`)
 - Cria os settings padrão que não existirem (incluindo `access.code` aleatório).
