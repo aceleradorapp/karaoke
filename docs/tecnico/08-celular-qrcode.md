@@ -34,6 +34,7 @@ Layout: cabeçalho com o logo e o nome do app; conteúdo; **abas inferiores** fi
 | ⭐ Votar | `/m/votar` | Aparece só com a votação aberta; abre sozinha no `vote:open` |
 
 - **Sem** biblioteca, player, playlists, perfis ou configurações no celular (decisão do Michael).
+- **Capas no celular:** uma `<img>` não envia cabeçalhos, então o celular pede `/media/<id>/capa.jpg?c=<código>` (`lib/deviceMedia.ts`). O backend aceita o código no endereço **só** para capas; áudio e letra continuam bloqueados para o celular (`plugins/access.ts`).
 - Importação pelo celular: `profileId` vazio (`addedBy = null`).
 - Tamanho mínimo de toque de 44 px; inputs com `font-size: 16px` (evita o zoom do iOS).
 

@@ -21,7 +21,9 @@ import { ProfilesPage } from './features/profiles/ProfilesPage';
 import { RequireProfile } from './features/profiles/RequireProfile';
 import { MobileEntry } from './features/mobile/MobileEntry';
 import { MobileLayout } from './features/mobile/MobileLayout';
-import { MobilePlaceholder } from './features/mobile/MobilePlaceholder';
+import { MobileQueuePage } from './features/mobile/MobileQueuePage';
+import { MobileSearchPage } from './features/mobile/MobileSearchPage';
+import { MobileUploadPage } from './features/mobile/MobileUploadPage';
 
 export function App() {
   return (
@@ -30,9 +32,9 @@ export function App() {
       <Routes>
         <Route path="/m" element={<MobileEntry />} />
         <Route element={<MobileLayout />}>
-          <Route path="/m/buscar" element={<MobilePlaceholder title="Buscar" />} />
-          <Route path="/m/enviar" element={<MobilePlaceholder title="Enviar" />} />
-          <Route path="/m/fila" element={<MobilePlaceholder title="Fila" />} />
+          <Route path="/m/buscar" element={<MobileSearchPage />} />
+          <Route path="/m/enviar" element={<MobileUploadPage />} />
+          <Route path="/m/fila" element={<MobileQueuePage />} />
           <Route path="/m/*" element={<Navigate to="/m/buscar" replace />} />
         </Route>
         <Route path="/perfis" element={<ProfilesPage />} />

@@ -3,6 +3,7 @@ import { Music } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { formatTimeAgo } from '../../lib/format';
 import { STEP_LABELS, friendlyJobError } from './jobText';
+import { coverUrlForDevice } from '../../lib/deviceMedia';
 
 const PERCENT = 100;
 
@@ -37,7 +38,11 @@ export function JobRow({ job, leading, actions }: JobRowProps) {
         {leading}
         <div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-2 sm:size-16">
           {job.song.coverUrl ? (
-            <img src={job.song.coverUrl} alt="" className="size-full object-cover" />
+            <img
+              src={coverUrlForDevice(job.song.coverUrl) ?? undefined}
+              alt=""
+              className="size-full object-cover"
+            />
           ) : (
             <Music aria-hidden="true" className="size-6 text-muted" />
           )}
