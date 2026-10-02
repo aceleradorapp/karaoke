@@ -134,6 +134,8 @@ export function findLineIndex(lines: LyricLine[], t: number): number {
 (Testes unitários obrigatórios.)
 
 ### Efeito de pintar a letra (modelos)
+
+- **Onde se escolhe (2026-10-02, pedido do Michael):** no player fica **só** o botão "Efeito: ligado/desligado" (ao lado da voz guia; tecla E). O modelo (padrão "Preencher aos poucos") se escolhe em **Configurações → Letra**; o tempo de preenchimento é por música e se ajusta na página de sincronizar (o player usa o valor salvo).
 O efeito é uma função registrada em `frontend/src/lib/lyrics/effects.ts` (`LYRICS_EFFECTS`), que recebe a linha, o tempo e o `fillPercent` e devolve o progresso (0..1) de cada palavra; o `LyricsView` só aplica o resultado em `--p`. Para criar um modelo novo: acrescentar o id em `shared/src/lyricsEffects.ts` e implementar `progress` no registro (o TypeScript obriga a implementar todos).
 - **Liga/desliga** e **modelo** são globais (`player.lyricsEffectEnabled`, `player.lyricsEffect` em `/api/settings`). Desligado = todas as palavras com `--p:1` assim que a linha começa.
 - **`fillPercent`** é por música (`songs.fillPercent`, padrão 100): o começo da linha não muda; o instante em que termina de pintar é `start + (end − start) × fillPercent/100` (menor = termina antes). Aparece no player e na página de sincronizar.

@@ -35,6 +35,30 @@ const SURFACES: Record<Variant, { button: string; field: string; muted: string }
   },
 };
 
+interface LyricsEffectToggleProps {
+  enabled: boolean;
+  onEnabledChange: (enabled: boolean) => void;
+  variant?: Variant;
+}
+
+export function LyricsEffectToggle({ enabled, onEnabledChange, variant = 'panel' }: LyricsEffectToggleProps) {
+  return (
+    <button
+      type="button"
+      onClick={() => onEnabledChange(!enabled)}
+      aria-pressed={enabled}
+      title="Liga ou desliga o efeito que pinta a letra enquanto se canta (tecla E). Desligado, a linha inteira fica colorida assim que começa."
+      className={clsx(
+        'inline-flex min-h-12 items-center gap-2 rounded-full px-4 text-base font-semibold transition',
+        enabled ? 'bg-primary text-primary-contrast' : SURFACES[variant].button,
+      )}
+    >
+      <Highlighter aria-hidden="true" className="size-5" />
+      Efeito: {enabled ? 'ligado' : 'desligado'}
+    </button>
+  );
+}
+
 export function LyricsEffectControls({
   enabled,
   effectId,
@@ -53,19 +77,7 @@ export function LyricsEffectControls({
 
   return (
     <div className={clsx('flex flex-wrap items-center gap-x-4 gap-y-2', className)}>
-      <button
-        type="button"
-        onClick={() => onEnabledChange(!enabled)}
-        aria-pressed={enabled}
-        title="Liga ou desliga o efeito que pinta a letra enquanto se canta (tecla E). Desligado, a linha inteira fica colorida assim que começa."
-        className={clsx(
-          'inline-flex min-h-12 items-center gap-2 rounded-full px-4 text-base font-semibold transition',
-          enabled ? 'bg-primary text-primary-contrast' : surface.button,
-        )}
-      >
-        <Highlighter aria-hidden="true" className="size-5" />
-        Efeito: {enabled ? 'ligado' : 'desligado'}
-      </button>
+      <LyricsEffectToggle enabled={enabled} onEnabledChange={onEnabledChange} variant={variant} />
 
       <label className="flex items-center gap-2 text-sm">
         <span className={surface.muted}>Modelo</span>

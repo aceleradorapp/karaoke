@@ -10,6 +10,7 @@ import { deviceHint } from './deviceHint';
 import { SelectField, SettingsSection, ToggleField } from './fields';
 import { MyThemeField } from './MyThemeField';
 import { ScoringSection } from './ScoringSection';
+import { LYRICS_EFFECT_LIST, LYRICS_EFFECTS } from '../../lib/lyrics/effects';
 import { YtdlpUpdater } from './YtdlpUpdater';
 
 const DEVICE_OPTIONS = [
@@ -69,6 +70,22 @@ function SettingsForm({ initialSettings }: SettingsFormProps) {
             onChange={(theme) => change('ui.defaultTheme', theme)}
           />
         </div>
+      </SettingsSection>
+
+      <SettingsSection title="Letra">
+        <ToggleField
+          label="Pintar a letra enquanto se canta"
+          checked={draft['player.lyricsEffectEnabled']}
+          onChange={(checked) => change('player.lyricsEffectEnabled', checked)}
+        />
+        <SelectField
+          id="lyrics-effect"
+          label="Como pintar a letra"
+          value={draft['player.lyricsEffect']}
+          options={LYRICS_EFFECT_LIST.map((effect) => ({ value: effect.id, label: effect.label }))}
+          onChange={(value) => change('player.lyricsEffect', value)}
+          hint={`${LYRICS_EFFECTS[draft['player.lyricsEffect']].description} No player fica só o botão de ligar e desligar (tecla E); o tempo de cada música se ajusta na página de sincronizar.`}
+        />
       </SettingsSection>
 
       <SettingsSection title="Processamento">
