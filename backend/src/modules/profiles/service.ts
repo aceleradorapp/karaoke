@@ -6,7 +6,9 @@ import {
   type UpdateProfileInput,
 } from '@caraoke/shared';
 import { prisma } from '../../db.js';
+import { emitToAll } from '../../realtime.js';
 import { notFound } from '../../utils/errors.js';
+import { publishSingQueue } from '../singQueue/service.js';
 
 export function toProfileDTO(profile: Profile): ProfileDTO {
   return {
@@ -47,12 +49,14 @@ export async function createProfile(input: CreateProfileInput): Promise<ProfileD
       isGuest: input.isGuest ?? false,
     },
   });
+  emitToAll('profiles:changed');
   return toProfileDTO(profile);
 }
 
 export async function updateProfile(id: string, changes: UpdateProfileInput): Promise<ProfileDTO> {
   await findProfileOrThrow(id);
   const profile = await prisma.profile.update({ where: { id }, data: changes });
+  emitToAll('profiles:changed');
   return toProfileDTO(profile);
 }
 
@@ -65,4 +69,6 @@ export async function touchProfile(id: string): Promise<ProfileDTO> {
 export async function deleteProfile(id: string): Promise<void> {
   await findProfileOrThrow(id);
   await prisma.profile.delete({ where: { id } });
+  emitToAll('profiles:changed');
+  await publishSingQueue();
 }

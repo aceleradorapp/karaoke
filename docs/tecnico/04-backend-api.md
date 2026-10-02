@@ -74,7 +74,12 @@ GET    /api/youtube/search
 POST   /api/youtube/import
 POST   /api/uploads
 GET    /api/jobs
-GET    /api/songs              (buscar se já existe)
+GET    /api/songs              (biblioteca do celular e "já existe?")
+GET    /api/profiles           ("Quem é você?")
+POST   /api/profiles           (sempre cria convidado: isGuest=true, tema padrão)
+GET    /api/sing-queue
+POST   /api/sing-queue
+DELETE /api/sing-queue/:id     (só os próprios pedidos: ?profileId= tem que ser o dono)
 GET    /api/performances/voting/current
 POST   /api/performances/:id/votes
 ```
@@ -92,6 +97,11 @@ const MOBILE_ALLOWED: Array<[string, RegExp]> = [
   ['POST', /^\/api\/uploads$/],
   ['GET', /^\/api\/jobs$/],
   ['GET', /^\/api\/songs$/],
+  ['GET', /^\/api\/profiles$/],
+  ['POST', /^\/api\/profiles$/],
+  ['GET', /^\/api\/sing-queue$/],
+  ['POST', /^\/api\/sing-queue$/],
+  ['DELETE', /^\/api\/sing-queue\/[^/]+$/],
   ['GET', /^\/api\/performances\/voting\/current$/],
   ['POST', /^\/api\/performances\/[^/]+\/votes$/],
 ];
@@ -146,7 +156,7 @@ type SongDTO = {
 | Método | Rota | Body / Query | Resposta |
 |---|---|---|---|
 | GET | `/api/profiles` | — | `{ items: Profile[] }` (família primeiro, por `createdAt`; depois convidados, por `lastUsedAt desc`) |
-| POST | `/api/profiles` | `{ name, avatar, theme?, isGuest? }` | `Profile` (nome 1..40, avatar válido em `AVATARS`) |
+| POST | `/api/profiles` | `{ name, avatar, theme?, isGuest? }` | `Profile` (nome 1..40, avatar válido em `AVATARS`). Vindo do celular: `isGuest` forçado a `true` e `theme` ignorado (ADR-008) |
 | PATCH | `/api/profiles/:id` | `{ name?, avatar?, theme? }` | `Profile` |
 | POST | `/api/profiles/:id/touch` | — | atualiza `lastUsedAt` (ao selecionar o perfil) |
 | DELETE | `/api/profiles/:id` | — | 204 (cascata em playlists/favoritos/histórico; pedir confirmação na UI) |
@@ -178,6 +188,23 @@ Regras: rejeitar vídeos com mais de **12 min** (`VIDEO_TOO_LONG`). Título e ar
 | POST | `/api/uploads` | multipart, campo `files` (1..10). Extensões: `.mp3 .m4a .wav .flac .ogg .webm .opus .aac`. Salva em `entrada/upload/` com nome seguro (`<timestamp>-<nome-sanitizado>`). **Quem cria a Song/Job é o watcher** (único caminho). Resposta `201 { received: [{ filename }], rejected: [{ filename, reason }] }` (`reason`: `UNSUPPORTED_TYPE` ou `FILE_TOO_LARGE`); `400 UNSUPPORTED_FILE` se nenhum for aceito, `400 TOO_MANY_FILES` acima de 10. O arquivo é gravado como `.part` e só vira definitivo depois do sidecar. Campo opcional `profileId` |
 
 > Para associar o `profileId` ao arquivo enviado pela página, grave um arquivo lateral `<nome>.meta.json` com `{ profileId, title?, artist? }`; o watcher lê e apaga. Arquivos copiados à mão não têm meta.
+
+### Fila de cantores (ADR-008) — `modules/singQueue/`
+| Método | Rota | Descrição |
+|---|---|---|
+| GET | `/api/sing-queue` | `{ items: SingRequestDTO[] }` em ordem de `position` |
+| POST | `/api/sing-queue` | `{ profileId, songId }` → `201 SingRequestDTO`. 404 `PROFILE_NOT_FOUND`/`SONG_NOT_FOUND`; 409 `SONG_UNAVAILABLE` (música com erro); 409 `ALREADY_REQUESTED` (mesma pessoa e música); 409 `TOO_MANY_REQUESTS` ("Você já tem 3 músicas na fila") |
+| PUT | `/api/sing-queue/order` | (palco) `{ ids }` → regrava as posições; ids desconhecidos são ignorados e os que faltarem vão para o fim, na ordem atual |
+| DELETE | `/api/sing-queue/:id?profileId=` | 204. Do celular, `profileId` é obrigatório e precisa ser o dono (403 `NOT_YOUR_REQUEST`); o palco remove qualquer um |
+
+```ts
+type SingRequestDTO = {
+  id: string; position: number; createdAt: string;
+  profile: { id: string; name: string; avatar: string; isGuest: boolean };
+  song: SongDTO;                     // status diz se está pronta (READY) ou "preparando"
+}
+```
+Toda mudança (criar, remover, reordenar, apresentação começou, perfil ou música apagados) emite `singQueue:changed` com a fila inteira.
 
 ### Fila de processamento (jobs)
 | Método | Rota | Descrição |
@@ -222,10 +249,10 @@ Regras: rejeitar vídeos com mais de **12 min** (`VIDEO_TOO_LONG`). Título e ar
 ### Apresentações (histórico, pontuação, votos)
 | Método | Rota | Descrição |
 |---|---|---|
-| POST | `/api/performances` | `{ profileId, songId }` → cria, incrementa `playCount`, retorna `{ id }` |
+| POST | `/api/performances` | `{ profileId, songId, requestId? }` → cria, incrementa `playCount`, retorna `{ id }`. Com `requestId` (veio da fila de cantores), apaga o pedido na mesma transação e emite `singQueue:changed` |
 | POST | `/api/performances/:id/finish` | `{ completed, voiceGuideUsed, pitchScore: number \| null }`. Se o modo usa plateia e `completed`: abre a votação (4.7) e responde `{ voting: { endsAt } }`; senão calcula `finalScore` na hora e responde `{ finalScore }` |
 | GET | `/api/performances/voting/current` | Votação aberta: `{ performanceId, singer: {name, avatar}, song: {title, artist}, endsAt } \| null` |
-| POST | `/api/performances/:id/votes` | `{ voterToken, stars: 1..5 }`. 409 `VOTING_CLOSED` se encerrada; 409 `ALREADY_VOTED` em caso de duplicidade |
+| POST | `/api/performances/:id/votes` | `{ voterToken, voterProfileId?, stars: 1..5 }`. 409 `VOTING_CLOSED` se encerrada; 409 `ALREADY_VOTED` em caso de duplicidade; 409 `CANNOT_VOTE_FOR_SELF` se `voterProfileId` é quem cantou (ADR-008) |
 | GET | `/api/profiles/:profileId/history?limit=&cursor=` | `{ items: [{ id, song: SongDTO, startedAt, finalScore, pitchScore, audienceScore, completed }] }` |
 
 **Cálculo da nota final** (`performances/service.ts → computeFinalScore`), conforme o ADR-006:
@@ -248,7 +275,7 @@ Ao encerrar a votação (timer de `voteSeconds` no servidor, `setTimeout` por pe
 ### Ranking
 | Método | Rota | Descrição |
 |---|---|---|
-| GET | `/api/ranking?period=week\|month\|all` | `{ bestAverage: [{ profile, avg, count }], mostSung: [{ profile, count }], topSongs: [{ song, count }], champion: { profile, avg } \| null }`. Média só com `finalScore != null`; mínimo de 3 apresentações para entrar em `bestAverage` |
+| GET | `/api/ranking?period=week\|month\|all&scope=all\|family` | `{ bestAverage: [{ profile, avg, count }], mostSung: [{ profile, count }], topSongs: [{ song, count }], champion: { profile, avg } \| null }`. Média só com `finalScore != null`; mínimo de 3 apresentações para entrar em `bestAverage` |
 
 ### Configurações
 | Método | Rota | Descrição |
@@ -273,6 +300,8 @@ Ao encerrar a votação (timer de `voteSeconds` no servidor, `setTimeout` por pe
 | `vote:progress` | `{ performanceId, count }` | stage | A cada voto |
 | `score:final` | `{ performanceId, pitchScore, audienceScore, finalScore, votes }` | ambas | Fim da votação |
 | `settings:updated` | `AppSettings` | stage | Configurações mudaram |
+| `singQueue:changed` | `{ items: SingRequestDTO[] }` | ambas | Qualquer mudança na fila de cantores (ADR-008) |
+| `profiles:changed` | — | ambas | Perfil criado, editado ou apagado (o convidado criado no celular aparece na TV na hora) |
 | `access:changed` | `{}` | mobile | Código regenerado (o celular mostra "escaneie de novo") |
 | `worker:status` | `{ online, device, gpuName }` | stage | Worker ficou online/offline |
 

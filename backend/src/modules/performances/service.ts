@@ -1,6 +1,7 @@
 import type { CreatePerformanceInput, FinishPerformanceInput, HistoryResponse } from '@caraoke/shared';
 import { prisma } from '../../db.js';
 import { conflict, notFound } from '../../utils/errors.js';
+import { publishSingQueue } from '../singQueue/service.js';
 import { LATEST_JOB, favoriteIdsOf, toListedSongDTO } from '../songs/service.js';
 
 export interface FinishPerformanceResult {
@@ -17,10 +18,12 @@ export async function startPerformance(input: CreatePerformanceInput): Promise<{
   if (song.status !== 'READY')
     throw conflict('SONG_NOT_READY', 'Esta música ainda não está pronta para cantar');
 
-  const [performance] = await prisma.$transaction([
+  const [performance, , removedRequests] = await prisma.$transaction([
     prisma.performance.create({ data: { profileId: input.profileId, songId: input.songId } }),
     prisma.song.update({ where: { id: input.songId }, data: { playCount: { increment: 1 } } }),
+    prisma.singRequest.deleteMany({ where: { id: input.requestId ?? '' } }),
   ]);
+  if (removedRequests.count > 0) await publishSingQueue();
   return { id: performance.id };
 }
 

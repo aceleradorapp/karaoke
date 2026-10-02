@@ -7,7 +7,7 @@ import { buildPlayQueue } from '../../lib/playQueue';
 import { useProfileStore } from '../../stores/useProfileStore';
 import { useToastStore } from '../../stores/useToastStore';
 import { mockApi, requestsTo, type MockRoutes } from '../../test/mockApi';
-import { buildProcessingSong, buildSong } from '../../test/songBuilder';
+import { buildProcessingSong, buildSingRequest, buildSong } from '../../test/songBuilder';
 import { PlayerPage } from './PlayerPage';
 
 const engineMock = vi.hoisted(() => {
@@ -929,6 +929,155 @@ describe('PlayerPage', () => {
 
       expect(await screen.findByText('Fim da música')).toBeInTheDocument();
       expect(screen.queryByRole('button', { name: 'Próxima música' })).not.toBeInTheDocument();
+    });
+  });
+
+  describe('the singers queue', () => {
+    const CARLA: ProfileDTO = { ...ANA, id: 'g1', name: 'Carla', avatar: 'frog', isGuest: true };
+    const asRequester = (profile: ProfileDTO) => ({
+      id: profile.id,
+      name: profile.name,
+      avatar: profile.avatar,
+      isGuest: profile.isGuest,
+    });
+    const second = () =>
+      buildSong({
+        id: 's2',
+        title: 'Segunda',
+        instrumentalUrl: '/media/s2/instrumental.mp3',
+        vocalsUrl: '/media/s2/voz.mp3',
+      });
+
+    function queueRoutes(
+      requests: ReturnType<typeof buildSingRequest>[],
+      extra: MockRoutes = {},
+    ): MockRoutes {
+      return {
+        ...baseRoutes(readySong(), {
+          'GET /api/profiles': { body: { items: [ANA, BIA, CARLA] } },
+          'GET /api/songs/s2': { body: second() },
+          ...extra,
+        }),
+        'GET /api/sing-queue': { body: { items: requests } },
+      };
+    }
+
+    const carlaRequest = () => buildSingRequest({ id: 'r1', profile: asRequester(CARLA), song: readySong() });
+
+    it('calls the person who asked for the song, already selected', async () => {
+      renderPlayer(queueRoutes([carlaRequest()]), ['/player/s1?pedido=r1'], 0);
+
+      expect(await screen.findByText('Vez de Carla! 🎤')).toBeInTheDocument();
+      await waitFor(() => expect(screen.getByRole('radio', { name: 'Carla' })).toBeChecked());
+    });
+
+    it('takes the request out of the queue when the performance starts', async () => {
+      const { fetchMock } = renderPlayer(queueRoutes([carlaRequest()]), ['/player/s1?pedido=r1'], 0);
+      await screen.findByText('Vez de Carla! 🎤');
+      await waitFor(() => expect(screen.getByRole('radio', { name: 'Carla' })).toBeChecked());
+
+      await startSinging();
+
+      expect(bodyOf(fetchMock, 'POST', '/api/performances')).toEqual({
+        profileId: 'g1',
+        songId: 's1',
+        requestId: 'r1',
+      });
+    });
+
+    it('lets someone else sing the request', async () => {
+      const { fetchMock } = renderPlayer(queueRoutes([carlaRequest()]), ['/player/s1?pedido=r1'], 0);
+      await waitFor(() => expect(screen.getByRole('radio', { name: 'Carla' })).toBeChecked());
+
+      await startSinging('Bia');
+
+      expect(bodyOf(fetchMock, 'POST', '/api/performances')).toMatchObject({
+        profileId: 'p2',
+        requestId: 'r1',
+      });
+    });
+
+    it('works like a single song when the request is gone', async () => {
+      renderPlayer(queueRoutes([]), ['/player/s1?pedido=r1'], 0);
+
+      expect(await screen.findByText('Quem vai cantar esta?')).toBeInTheDocument();
+      expect(await screen.findByRole('radio', { name: 'Ana' })).toBeChecked();
+    });
+
+    it('does not send the request again when singing the same song again', async () => {
+      const { fetchMock } = renderPlayer(queueRoutes([carlaRequest()]), ['/player/s1?pedido=r1'], 0);
+      await waitFor(() => expect(screen.getByRole('radio', { name: 'Carla' })).toBeChecked());
+      await startSinging();
+      act(() => latestEngine().finishSong());
+
+      fireEvent.click(await screen.findByRole('button', { name: 'Cantar de novo' }));
+
+      await waitFor(() => expect(requestsTo(fetchMock, 'POST', '/api/performances')).toHaveLength(2));
+      expect(bodyOf(fetchMock, 'POST', '/api/performances', 1)).toEqual({ profileId: 'g1', songId: 's1' });
+    });
+
+    it('offers to call the next singer with a ready song when the song ends', async () => {
+      const preparing = buildSingRequest({
+        id: 'r2',
+        profile: asRequester(ANA),
+        song: buildProcessingSong({ title: 'Ainda não' }),
+      });
+      const bia = buildSingRequest({ id: 'r3', profile: asRequester(BIA), song: second() });
+      renderPlayer(queueRoutes([carlaRequest(), preparing, bia]), ['/player/s1?pedido=r1'], 0);
+      await waitFor(() => expect(screen.getByRole('radio', { name: 'Carla' })).toBeChecked());
+      await startSinging();
+
+      act(() => latestEngine().finishSong());
+
+      expect(await screen.findByText('A seguir: Bia — Segunda')).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Chamar o próximo' }));
+
+      expect(await screen.findByRole('heading', { name: 'Segunda' })).toBeInTheDocument();
+      expect(await screen.findByText('Vez de Bia! 🎤')).toBeInTheDocument();
+      await waitFor(() => expect(screen.getByRole('radio', { name: 'Bia' })).toBeChecked());
+    });
+
+    it('calls the next singer even when they asked for the same song', async () => {
+      const biaSameSong = buildSingRequest({ id: 'r3', profile: asRequester(BIA), song: readySong() });
+      renderPlayer(queueRoutes([carlaRequest(), biaSameSong]), ['/player/s1?pedido=r1'], 0);
+      await waitFor(() => expect(screen.getByRole('radio', { name: 'Carla' })).toBeChecked());
+      await startSinging();
+      act(() => latestEngine().finishSong());
+
+      fireEvent.click(await screen.findByRole('button', { name: 'Chamar o próximo' }));
+
+      expect(await screen.findByText('Vez de Bia! 🎤')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Começar' })).toBeInTheDocument();
+    });
+
+    it('also offers the next singer after a song played on its own', async () => {
+      const bia = buildSingRequest({ id: 'r3', profile: asRequester(BIA), song: second() });
+      renderPlayer(queueRoutes([bia]), ['/player/s1'], 0);
+      await startSinging();
+
+      act(() => latestEngine().finishSong());
+
+      expect(await screen.findByRole('button', { name: 'Chamar o próximo' })).toBeInTheDocument();
+    });
+
+    it('keeps following the playlist when the player was opened by one', async () => {
+      const bia = buildSingRequest({ id: 'r3', profile: asRequester(BIA), song: second() });
+      renderPlayer(
+        {
+          ...queueRoutes([bia]),
+          'GET /api/playlists/pl1': {
+            body: { id: 'pl1', name: 'Festa', profileId: 'p1', items: [readySong(), second()] },
+          },
+        },
+        ['/player/s1?playlist=pl1'],
+        0,
+      );
+      await startSinging();
+
+      act(() => latestEngine().finishSong());
+
+      expect(await screen.findByRole('button', { name: 'Próxima música' })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Chamar o próximo' })).not.toBeInTheDocument();
     });
   });
 });

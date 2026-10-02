@@ -1,16 +1,19 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
+import type { SingQueueResponse } from '@caraoke/shared';
+import { PROFILES_QUERY_KEY } from '../api/profiles';
 import { SETTINGS_QUERY_KEY } from '../api/settings';
 import {
   applyJobUpdate,
   applyJobsReordered,
+  applySingQueue,
   applySongDeleted,
   applySongUpdate,
   applyWorkerStatus,
 } from './cacheUpdates';
 import { getSocket, type RealtimeSocket } from './socket';
 
-const RESYNC_QUERY_KEYS = [['jobs'], ['songs'], ['home'], ['system']] as const;
+const RESYNC_QUERY_KEYS = [['jobs'], ['songs'], ['home'], ['system'], ['singQueue'], ['profiles']] as const;
 
 export function useRealtimeSync(socket: RealtimeSocket = getSocket()): void {
   const queryClient = useQueryClient();
@@ -23,6 +26,8 @@ export function useRealtimeSync(socket: RealtimeSocket = getSocket()): void {
     const onJobsReordered = ({ ids }: { ids: string[] }) => applyJobsReordered(queryClient, ids);
     const onSongUpdated = (song: Parameters<typeof applySongUpdate>[1]) => applySongUpdate(queryClient, song);
     const onSongDeleted = ({ id }: { id: string }) => applySongDeleted(queryClient, id);
+    const onSingQueue = ({ items }: SingQueueResponse) => applySingQueue(queryClient, items);
+    const onProfilesChanged = () => void queryClient.invalidateQueries({ queryKey: PROFILES_QUERY_KEY });
     const onWorkerStatus = (status: Parameters<typeof applyWorkerStatus>[1]) =>
       applyWorkerStatus(queryClient, status);
     const onSettingsUpdated = (settings: unknown) => queryClient.setQueryData(SETTINGS_QUERY_KEY, settings);
@@ -32,6 +37,8 @@ export function useRealtimeSync(socket: RealtimeSocket = getSocket()): void {
     socket.on('jobs:reordered', onJobsReordered);
     socket.on('song:updated', onSongUpdated);
     socket.on('song:deleted', onSongDeleted);
+    socket.on('singQueue:changed', onSingQueue);
+    socket.on('profiles:changed', onProfilesChanged);
     socket.on('worker:status', onWorkerStatus);
     socket.on('settings:updated', onSettingsUpdated);
 
@@ -41,6 +48,8 @@ export function useRealtimeSync(socket: RealtimeSocket = getSocket()): void {
       socket.off('jobs:reordered', onJobsReordered);
       socket.off('song:updated', onSongUpdated);
       socket.off('song:deleted', onSongDeleted);
+      socket.off('singQueue:changed', onSingQueue);
+      socket.off('profiles:changed', onProfilesChanged);
       socket.off('worker:status', onWorkerStatus);
       socket.off('settings:updated', onSettingsUpdated);
     };

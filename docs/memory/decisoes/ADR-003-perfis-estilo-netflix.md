@@ -8,7 +8,7 @@ O app roda na rede de casa e é usado pela família. Login com senha seria atrit
 
 ## Decisão
 - Perfis internos **sem senha**, escolhidos numa tela "Quem vai cantar?", com nome e avatar (galeria de imagens/ícones).
-- Perfis **fixos** (família) e **temporários** (convidados, criados pelo celular). O histórico dos temporários é mantido.
+- Perfis **fixos** (família) e **temporários** (convidados, criados pelo celular). O histórico dos temporários é mantido. (Detalhado no ADR-008: o celular cria o convidado e pede músicas na fila de cantores.)
 - Cada perfil tem várias playlists, favoritos e histórico.
 
 ## Consequências

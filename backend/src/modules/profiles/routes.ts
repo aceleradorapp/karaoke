@@ -15,7 +15,10 @@ export async function profileRoutes(app: FastifyInstance): Promise<void> {
   typedApp.get('/profiles', async () => ({ items: await listProfiles() }));
 
   typedApp.post('/profiles', { schema: { body: createProfileSchema } }, async (request, reply) => {
-    const profile = await createProfile(request.body);
+    const input = request.isMobile
+      ? { name: request.body.name, avatar: request.body.avatar, isGuest: true }
+      : request.body;
+    const profile = await createProfile(input);
     return reply.status(CREATED).send(profile);
   });
 

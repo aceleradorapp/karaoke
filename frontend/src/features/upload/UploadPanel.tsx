@@ -3,8 +3,7 @@ import clsx from 'clsx';
 import { AlertCircle, Check, FileAudio, UploadCloud } from 'lucide-react';
 import { useRef, useState, type ChangeEvent, type DragEvent } from 'react';
 import { Button } from '../../components/Button';
-import { isMobileApp } from '../../lib/mobileApp';
-import { useProfileStore } from '../../stores/useProfileStore';
+import { useActingProfileId } from '../../lib/actingProfile';
 import { useUploadQueue, type UploadItem } from './useUploadQueue';
 
 const ACCEPTED_EXTENSIONS = SUPPORTED_AUDIO_EXTENSIONS.join(',');
@@ -66,8 +65,7 @@ interface UploadPanelProps {
 }
 
 export function UploadPanel({ isCompact = false }: UploadPanelProps) {
-  const stageProfileId = useProfileStore((state) => state.currentProfile?.id);
-  const profileId = isMobileApp() ? undefined : stageProfileId;
+  const profileId = useActingProfileId();
   const { items, addFiles, retry, clearFinished } = useUploadQueue(profileId);
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);

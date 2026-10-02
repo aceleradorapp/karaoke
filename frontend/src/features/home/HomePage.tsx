@@ -1,6 +1,7 @@
 import { useHomeQuery } from '../../api/songs';
 import { Spinner } from '../../components/Spinner';
 import { useProfileStore } from '../../stores/useProfileStore';
+import { NextSingerBanner } from '../singQueue/NextSingerBanner';
 import { SongRow } from '../songs/SongRow';
 import { EmptyLibrary } from './EmptyLibrary';
 import { HomeHero } from './HomeHero';
@@ -24,6 +25,7 @@ export function HomePage() {
 
   return (
     <div className="flex flex-col gap-8">
+      <NextSingerBanner />
       {hero && <HomeHero song={hero} />}
       {rows.map((row) => (
         <SongRow key={row.id} title={row.title} songs={row.items} />

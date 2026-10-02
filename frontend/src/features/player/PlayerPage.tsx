@@ -5,6 +5,7 @@ import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'reac
 import { useLyricsQuery } from '../../api/lyrics';
 import { usePlaylistQuery } from '../../api/playlists';
 import { useProfilesQuery } from '../../api/profiles';
+import { firstReadyRequest, singRequestRoute, useSingQueueQuery } from '../../api/singQueue';
 import { useSongQuery, useUpdateSongMutation } from '../../api/songs';
 import { Avatar } from '../../components/Avatar';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
@@ -83,6 +84,11 @@ function PlayerSession({ song }: { song: SongDTO }) {
   const shuffleSeed = parseShuffleSeed(searchParams.get('shuffle'));
   const playlist = usePlaylistQuery(playlistId ?? undefined);
   const carriedSingerId = (location.state as { singerId?: string } | null)?.singerId;
+  const requestId = searchParams.get('pedido');
+  const singQueue = useSingQueueQuery();
+  const request = singQueue.data?.find((item) => item.id === requestId) ?? null;
+  const nextRequest = firstReadyRequest(singQueue.data?.filter((item) => item.id !== requestId));
+  const hasChosenSinger = useRef(false);
 
   const [singerId, setSingerId] = useState<string | null>(carriedSingerId ?? currentProfile?.id ?? null);
   const [isConfirmingExit, setIsConfirmingExit] = useState(false);
@@ -91,6 +97,10 @@ function PlayerSession({ song }: { song: SongDTO }) {
   const isPerforming = session.phase === 'playing';
   const isIdle = useIdle(CONTROLS_IDLE_MS, isPerforming && session.isPlaying);
   const singer = profiles.data?.find((profile) => profile.id === singerId) ?? currentProfile;
+
+  useEffect(() => {
+    if (request && !hasChosenSinger.current) setSingerId(request.profile.id);
+  }, [request]);
 
   useAutoSave(
     session.liveOffsetMs,
@@ -139,6 +149,12 @@ function PlayerSession({ song }: { song: SongDTO }) {
     navigate(playerRoute(next.id, playlistId, shuffleSeed), { replace: true, state: { singerId } });
   }, [queueStep, playlistId, shuffleSeed, session, navigate, singerId]);
 
+  const callNextSinger = useCallback(() => {
+    if (!nextRequest) return;
+    session.stop();
+    navigate(singRequestRoute(nextRequest), { replace: true });
+  }, [nextRequest, session, navigate]);
+
   const isLyricsLoading = song.lyricsUrl !== null && lyrics.isLoading;
   const effectiveOffsetMs = baseOffsetMs.current + session.liveOffsetMs;
   const effect: LyricsEffectSettings = {
@@ -160,8 +176,12 @@ function PlayerSession({ song }: { song: SongDTO }) {
               selectedId={singerId}
               songTitle={song.title}
               songArtist={song.artist}
-              onSelect={setSingerId}
-              onStart={() => singerId && void session.start(singerId)}
+              title={request ? `Vez de ${request.profile.name}! 🎤` : undefined}
+              onSelect={(profileId) => {
+                hasChosenSinger.current = true;
+                setSingerId(profileId);
+              }}
+              onStart={() => singerId && void session.start(singerId, requestId)}
               onBack={leave}
             />
           </div>
@@ -203,6 +223,15 @@ function PlayerSession({ song }: { song: SongDTO }) {
                       total: queueStep.total,
                       nextTitle: queueStep.next?.title ?? null,
                       onNext: goToNextSong,
+                    }
+                  : null
+              }
+              nextSinger={
+                !queueStep && nextRequest
+                  ? {
+                      singerName: nextRequest.profile.name,
+                      songTitle: nextRequest.song.title,
+                      onCall: callNextSinger,
                     }
                   : null
               }
@@ -298,6 +327,7 @@ function PlayerSession({ song }: { song: SongDTO }) {
 
 export function PlayerPage() {
   const { songId } = useParams();
+  const [searchParams] = useSearchParams();
   const song = useSongQuery(songId);
 
   if (song.isLoading) {
@@ -332,5 +362,5 @@ export function PlayerPage() {
     );
   }
 
-  return <PlayerSession key={song.data.id} song={song.data} />;
+  return <PlayerSession key={`${song.data.id}:${searchParams.get('pedido') ?? ''}`} song={song.data} />;
 }

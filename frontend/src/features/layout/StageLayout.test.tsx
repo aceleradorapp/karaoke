@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ProfileDTO } from '@caraoke/shared';
 import { useProfileStore } from '../../stores/useProfileStore';
 import { mockApi } from '../../test/mockApi';
+import { buildSingRequest } from '../../test/songBuilder';
 import { StageLayout } from './StageLayout';
 
 const ANA: ProfileDTO = {
@@ -57,6 +58,29 @@ describe('StageLayout', () => {
       expect(nav).toHaveTextContent(label);
     }
     expect(screen.getByTestId('location')).toBeInTheDocument();
+  });
+
+  it('shows how many people are waiting to sing next to "Próximos"', async () => {
+    mockApi({
+      'GET /api/jobs?scope=active': { body: { items: [] } },
+      'GET /api/sing-queue': { body: { items: [buildSingRequest(), buildSingRequest()] } },
+    });
+    renderLayout();
+
+    expect(await screen.findByRole('link', { name: 'Próximos, 2 na fila' })).toHaveAttribute(
+      'href',
+      '/proximos',
+    );
+  });
+
+  it('shows no counter when nobody is waiting to sing', async () => {
+    mockApi({
+      'GET /api/jobs?scope=active': { body: { items: [] } },
+      'GET /api/sing-queue': { body: { items: [] } },
+    });
+    renderLayout();
+
+    expect(await screen.findByRole('link', { name: 'Próximos' })).toBeInTheDocument();
   });
 
   it('highlights the active section', () => {

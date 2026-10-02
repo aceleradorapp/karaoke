@@ -20,6 +20,7 @@ model Profile {
   favorites    Favorite[]
   performances Performance[]
   songsAdded   Song[]        @relation("SongAddedBy")
+  singRequests SingRequest[]
 
   @@map("profiles")
 }
@@ -72,6 +73,7 @@ model Song {
   playlistItems PlaylistItem[]
   favorites     Favorite[]
   performances  Performance[]
+  singRequests  SingRequest[]
 
   @@index([status])
   @@index([artist])
@@ -183,6 +185,20 @@ model Vote {
 
   @@unique([performanceId, voterToken])
   @@map("votes")
+}
+
+model SingRequest {
+  id        String   @id @default(cuid())
+  profileId String
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  songId    String
+  song      Song     @relation(fields: [songId], references: [id], onDelete: Cascade)
+  position  Int
+  createdAt DateTime @default(now())
+
+  @@unique([profileId, songId])
+  @@index([position])
+  @@map("sing_requests")
 }
 
 model Setting {

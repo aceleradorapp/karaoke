@@ -178,3 +178,22 @@ export interface HistoryResponse {
 export interface FavoritesResponse {
   items: SongDTO[];
 }
+
+export interface SingRequestProfile {
+  id: string;
+  name: string;
+  avatar: string;
+  isGuest: boolean;
+}
+
+export interface SingRequestDTO {
+  id: string;
+  position: number;
+  createdAt: string;
+  profile: SingRequestProfile;
+  song: SongDTO;
+}
+
+export interface SingQueueResponse {
+  items: SingRequestDTO[];
+}

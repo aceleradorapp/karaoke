@@ -8,6 +8,7 @@ import { ManageProfilesPage } from './features/profiles/ManageProfilesPage';
 import { StageLayout } from './features/layout/StageLayout';
 import { SettingsPage } from './features/settings/SettingsPage';
 import { QueuePage } from './features/processing/QueuePage';
+import { SingQueuePage } from './features/singQueue/SingQueuePage';
 import { SongDetailPage } from './features/songs/SongDetailPage';
 import { UploadPage } from './features/upload/UploadPage';
 import { YoutubePage } from './features/youtube/YoutubePage';
@@ -24,6 +25,8 @@ import { MobileLayout } from './features/mobile/MobileLayout';
 import { MobileQueuePage } from './features/mobile/MobileQueuePage';
 import { MobileSearchPage } from './features/mobile/MobileSearchPage';
 import { MobileUploadPage } from './features/mobile/MobileUploadPage';
+import { MobileSongsPage } from './features/mobile/MobileSongsPage';
+import { MobileWhoAmIPage } from './features/mobile/MobileWhoAmIPage';
 
 export function App() {
   return (
@@ -32,10 +35,12 @@ export function App() {
       <Routes>
         <Route path="/m" element={<MobileEntry />} />
         <Route element={<MobileLayout />}>
+          <Route path="/m/quem-sou" element={<MobileWhoAmIPage />} />
+          <Route path="/m/musicas" element={<MobileSongsPage />} />
           <Route path="/m/buscar" element={<MobileSearchPage />} />
           <Route path="/m/enviar" element={<MobileUploadPage />} />
           <Route path="/m/fila" element={<MobileQueuePage />} />
-          <Route path="/m/*" element={<Navigate to="/m/buscar" replace />} />
+          <Route path="/m/*" element={<Navigate to="/m/musicas" replace />} />
         </Route>
         <Route path="/perfis" element={<ProfilesPage />} />
         <Route path="/perfis/gerenciar" element={<ManageProfilesPage />} />
@@ -46,6 +51,7 @@ export function App() {
             <Route path="/youtube" element={<YoutubePage />} />
             <Route path="/enviar" element={<UploadPage />} />
             <Route path="/fila" element={<QueuePage />} />
+            <Route path="/proximos" element={<SingQueuePage />} />
             <Route path="/" element={<HomePage />} />
             <Route path="/biblioteca" element={<LibraryPage />} />
             <Route path="/favoritas" element={<FavoritesPage />} />

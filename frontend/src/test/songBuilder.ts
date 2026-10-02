@@ -1,4 +1,4 @@
-import type { SongDTO } from '@caraoke/shared';
+import type { SingRequestDTO, SongDTO } from '@caraoke/shared';
 import { buildJob } from './builders';
 
 let songCounter = 0;
@@ -36,4 +36,18 @@ export function buildProcessingSong(overrides: Partial<SongDTO> = {}): SongDTO {
     job: buildJob({ status: 'RUNNING', step: 'SEPARATE', progress: 40 }),
     ...overrides,
   });
+}
+
+let requestCounter = 0;
+
+export function buildSingRequest(overrides: Partial<SingRequestDTO> = {}): SingRequestDTO {
+  requestCounter += 1;
+  return {
+    id: `request${requestCounter}`,
+    position: requestCounter,
+    createdAt: '2026-10-02T10:00:00.000Z',
+    profile: { id: 'g1', name: 'Carla', avatar: 'frog', isGuest: true },
+    song: buildSong(),
+    ...overrides,
+  };
 }
