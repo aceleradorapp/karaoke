@@ -20,6 +20,8 @@ const MOBILE_ALLOWED_ROUTES: AllowedRoute[] = [
   ['POST', /^\/api\/uploads$/],
   ['GET', /^\/api\/jobs$/],
   ['GET', /^\/api\/songs$/],
+  ['GET', /^\/api\/profiles$/],
+  ['POST', /^\/api\/profiles$/],
   ['GET', /^\/api\/performances\/voting\/current$/],
   ['POST', /^\/api\/performances\/[^/]+\/votes$/],
 ];

@@ -137,7 +137,7 @@ Branch: `feature/f5b-fila-de-cantores`.
 | ID | Status | Tarefa | Docs | Modelo |
 |---|---|---|---|---|
 | F5B-01 | ✅ 2026-10-02 | ADR-008 + documento técnico atualizado (banco, API, telas, celular, player) | ADR-008 | 🟡 |
-| F5B-02 | ⬜ | Backend: celular lista perfis e cria convidado; importação/envio pelo celular grava quem pediu + testes | T-04 §4.5 §4.6 Perfis, T-08 §8.2 | 🟡 |
+| F5B-02 | ✅ 2026-10-02 | Backend: celular lista perfis e cria convidado; importação/envio pelo celular grava quem pediu + testes | T-04 §4.5 §4.6 Perfis, T-08 §8.2 | 🟡 |
 | F5B-03 | ⬜ | Backend: tabela `sing_requests`, rotas `/api/sing-queue`, `singQueue:changed`, `requestId` em `POST /performances` + testes | T-03, T-04 §4.6 Fila de cantores, §4.7 | 🔴 |
 | F5B-04 | ⬜ | Celular: "Quem é você?", aba Músicas com "Quero cantar", "Quero cantar esta" na importação, aba Fila com Próximos + Preparando | T-08 §8.2 §8.4 | 🟡 |
 | F5B-05 | ⬜ | Palco: página Próximos (reordenar, remover, chamar), contador na barra, faixa no início, player "Vez de Ana" e "Chamar o próximo" | T-06 §6.6 Próximos, T-07 §7.1 | 🔴 |
