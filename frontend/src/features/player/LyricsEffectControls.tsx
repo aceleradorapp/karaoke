@@ -85,7 +85,7 @@ export function LyricsEffectControls({
         </select>
       </label>
 
-      <div role="group" aria-label="Tempo de preenchimento" className="flex items-center gap-2">
+      <div role="group" aria-label="Tempo de preenchimento" className="flex flex-wrap items-center gap-2">
         <span className={clsx('text-sm', surface.muted)}>Tempo</span>
         <button
           type="button"

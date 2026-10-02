@@ -126,7 +126,7 @@ type SongDTO = {
   vocalsUrl: string | null,
   lyricsUrl: string | null,       // "/media/<id>/letra.json"
   melodyUrl: string | null,
-  lyricsSource, lyricsNeedsReview, lyricsOffsetMs, playCount, createdAt,
+  lyricsSource, lyricsNeedsReview, lyricsOffsetMs, fillPercent, playCount, createdAt,
   job?: JobDTO | null             // job ativo, se QUEUED/PROCESSING/ERROR
   isFavorite?: boolean            // quando a request traz ?profileId=
 }
@@ -157,7 +157,7 @@ type SongDTO = {
 | GET | `/api/songs?q=&status=&artist=&sort=recent\|title\|artist\|popular&limit=&cursor=&profileId=` | Lista/busca. `q` busca em título e artista (sem diferenciar maiúsculas/acentos) |
 | GET | `/api/songs/home?profileId=` | Fileiras do Início (ver 06 §6.6): `{ hero: SongDTO \| null, rows: [{ id, title, items: SongDTO[] }] }` |
 | GET | `/api/songs/:id?profileId=` | `SongDTO` |
-| PATCH | `/api/songs/:id` | `{ title?, artist?, lyricsOffsetMs? }` |
+| PATCH | `/api/songs/:id` | `{ title?, artist?, lyricsOffsetMs?, fillPercent? }` (`fillPercent` inteiro 20..150) |
 | DELETE | `/api/songs/:id` | Apaga a música + arquivos |
 | PUT | `/api/songs/:id/lyrics` | Body `LyricsDoc` → grava `letra.json`, `lyricsSource=MANUAL`, `lyricsNeedsReview=false` |
 | POST | `/api/songs/:id/lyrics/search` | (Fase 6) Pede ao worker para buscar/alinhar de novo: cria um job só com LYRICS |
