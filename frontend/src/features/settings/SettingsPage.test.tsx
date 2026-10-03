@@ -21,6 +21,10 @@ const SETTINGS: AppSettings = {
   'ui.defaultTheme': 'cinema',
   'player.lyricsEffectEnabled': true,
   'player.lyricsEffect': 'smooth',
+  'queue.maxRequestsPerPerson': 3,
+  'queue.stageBypassesLimit': true,
+  'queue.shuffle': false,
+  'queue.autoAdvanceSeconds': 15,
 };
 
 const WORKER = {
@@ -127,6 +131,31 @@ describe('SettingsPage', () => {
     await waitFor(() =>
       expect(patchBodies(fetchMock).at(-1)).toMatchObject({ 'player.lyricsEffectEnabled': false }),
     );
+  });
+
+  it('sets the queue rules: limit, TV beyond the limit, calling the next one and shuffle', async () => {
+    const fetchMock = renderPage({ 'PATCH /api/settings': { body: SETTINGS } });
+    const section = await screen.findByRole('region', { name: 'Fila de cantores' });
+
+    fireEvent.change(within(section).getByLabelText('Músicas esperando por pessoa'), {
+      target: { value: '0' },
+    });
+    await waitFor(() =>
+      expect(patchBodies(fetchMock).at(-1)).toMatchObject({ 'queue.maxRequestsPerPerson': 0 }),
+    );
+
+    fireEvent.change(within(section).getByLabelText('Chamar o próximo cantor'), { target: { value: '30' } });
+    await waitFor(() =>
+      expect(patchBodies(fetchMock).at(-1)).toMatchObject({ 'queue.autoAdvanceSeconds': 30 }),
+    );
+
+    fireEvent.click(within(section).getByRole('switch', { name: 'A TV pode passar do limite' }));
+    await waitFor(() =>
+      expect(patchBodies(fetchMock).at(-1)).toMatchObject({ 'queue.stageBypassesLimit': false }),
+    );
+
+    fireEvent.click(within(section).getByRole('switch', { name: /Aleatório/ }));
+    await waitFor(() => expect(patchBodies(fetchMock).at(-1)).toMatchObject({ 'queue.shuffle': true }));
   });
 
   describe('scoring', () => {

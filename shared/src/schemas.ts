@@ -1,3 +1,4 @@
+import { AUTO_ADVANCE_MAX_SECONDS, MAX_REQUESTS_PER_PERSON_LIMIT } from './constants.js';
 import { z } from 'zod';
 import { FILL_PERCENT_MAX, FILL_PERCENT_MIN, LYRICS_EFFECT_IDS } from './lyricsEffects.js';
 import { isAvatarId } from './avatars.js';
@@ -46,6 +47,10 @@ export const appSettingsSchema = z.object({
   'ui.defaultTheme': themeSchema,
   'player.lyricsEffectEnabled': z.boolean(),
   'player.lyricsEffect': z.enum(LYRICS_EFFECT_IDS),
+  'queue.maxRequestsPerPerson': z.number().int().min(0).max(MAX_REQUESTS_PER_PERSON_LIMIT),
+  'queue.stageBypassesLimit': z.boolean(),
+  'queue.shuffle': z.boolean(),
+  'queue.autoAdvanceSeconds': z.number().int().min(0).max(AUTO_ADVANCE_MAX_SECONDS),
 });
 
 export const updateSettingsSchema = appSettingsSchema
@@ -111,6 +116,24 @@ export const castVoteSchema = z.object({
 });
 
 export type CastVoteInput = z.infer<typeof castVoteSchema>;
+
+export const playerStateInputSchema = z.union([
+  z.object({ stopped: z.literal(true) }),
+  z.object({
+    songId: z.string().min(1),
+    singer: z.object({ name: z.string().min(1).max(40), avatar: z.string().min(1).max(40) }).nullable(),
+    position: z.number().min(0),
+    playing: z.boolean(),
+    offsetMs: z.number().int(),
+    effect: z.object({
+      enabled: z.boolean(),
+      id: z.enum(LYRICS_EFFECT_IDS),
+      fillPercent: z.number().int().min(FILL_PERCENT_MIN).max(FILL_PERCENT_MAX),
+    }),
+  }),
+]);
+
+export type PlayerStateInput = z.infer<typeof playerStateInputSchema>;
 
 export const rankingQuerySchema = z.object({
   period: z.enum(['week', 'month', 'all']).default('month'),

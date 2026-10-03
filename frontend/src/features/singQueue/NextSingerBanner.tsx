@@ -1,12 +1,12 @@
 import { Play } from 'lucide-react';
 import { Link } from 'react-router';
-import { firstReadyRequest, singRequestRoute, useSingQueueQuery } from '../../api/singQueue';
+import { nextRequestOf, singRequestRoute, useSingQueueQuery } from '../../api/singQueue';
 import { Avatar } from '../../components/Avatar';
 
 export function NextSingerBanner() {
   const queue = useSingQueueQuery();
-  const requests = queue.data ?? [];
-  const next = firstReadyRequest(requests);
+  const requests = queue.data?.items ?? [];
+  const next = nextRequestOf(queue.data);
   if (!next) return null;
 
   const othersCount = requests.length - 1;

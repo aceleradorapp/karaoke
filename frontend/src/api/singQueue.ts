@@ -7,8 +7,15 @@ export const SING_QUEUE_QUERY_KEY = ['singQueue'] as const;
 export function useSingQueueQuery() {
   return useQuery({
     queryKey: SING_QUEUE_QUERY_KEY,
-    queryFn: async () => (await apiGet<SingQueueResponse>('/sing-queue')).items,
+    queryFn: () => apiGet<SingQueueResponse>('/sing-queue'),
   });
+}
+
+function withItems(
+  queue: SingQueueResponse | undefined,
+  change: (items: SingRequestDTO[]) => SingRequestDTO[],
+): SingQueueResponse | undefined {
+  return queue ? { ...queue, items: change(queue.items) } : queue;
 }
 
 export function useAddSingRequestMutation() {
@@ -33,8 +40,8 @@ export function useRemoveSingRequestMutation() {
     },
     onMutate: async ({ id }) => {
       await queryClient.cancelQueries({ queryKey: SING_QUEUE_QUERY_KEY });
-      queryClient.setQueryData<SingRequestDTO[]>(SING_QUEUE_QUERY_KEY, (current) =>
-        current?.filter((request) => request.id !== id),
+      queryClient.setQueryData<SingQueueResponse>(SING_QUEUE_QUERY_KEY, (current) =>
+        withItems(current, (items) => items.filter((request) => request.id !== id)),
       );
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: SING_QUEUE_QUERY_KEY }),
@@ -44,26 +51,31 @@ export function useRemoveSingRequestMutation() {
 export function useReorderSingQueueMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (ids: string[]) =>
-      (await apiSend<SingQueueResponse>('PUT', '/sing-queue/order', { ids })).items,
+    mutationFn: (ids: string[]) => apiSend<SingQueueResponse>('PUT', '/sing-queue/order', { ids }),
     onMutate: async (ids) => {
       await queryClient.cancelQueries({ queryKey: SING_QUEUE_QUERY_KEY });
-      queryClient.setQueryData<SingRequestDTO[]>(SING_QUEUE_QUERY_KEY, (current) =>
-        current
-          ? ids
-              .map((id) => current.find((request) => request.id === id))
-              .filter((request): request is SingRequestDTO => request !== undefined)
-              .map((request, index) => ({ ...request, position: index + 1 }))
-          : current,
+      queryClient.setQueryData<SingQueueResponse>(SING_QUEUE_QUERY_KEY, (current) =>
+        withItems(current, (items) =>
+          ids
+            .map((id) => items.find((request) => request.id === id))
+            .filter((request): request is SingRequestDTO => request !== undefined)
+            .map((request, index) => ({ ...request, position: index + 1 })),
+        ),
       );
     },
-    onSuccess: (items) => queryClient.setQueryData(SING_QUEUE_QUERY_KEY, items),
+    onSuccess: (queue) => queryClient.setQueryData(SING_QUEUE_QUERY_KEY, queue),
     onError: () => queryClient.invalidateQueries({ queryKey: SING_QUEUE_QUERY_KEY }),
   });
 }
 
-export function firstReadyRequest(queue: SingRequestDTO[] | undefined): SingRequestDTO | null {
-  return queue?.find((request) => request.song.status === 'READY') ?? null;
+export function nextRequestOf(
+  queue: SingQueueResponse | undefined,
+  excludedId: string | null = null,
+): SingRequestDTO | null {
+  if (!queue) return null;
+  const chosen = queue.items.find((request) => request.id === queue.nextId && request.id !== excludedId);
+  if (chosen) return chosen;
+  return queue.items.find((request) => request.song.status === 'READY' && request.id !== excludedId) ?? null;
 }
 
 export function singRequestRoute(request: SingRequestDTO): string {

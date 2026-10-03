@@ -1,7 +1,10 @@
 import type { AppSettings, UpdateSettingsInput } from '@caraoke/shared';
 import { prisma } from '../../db.js';
 import { emitToRoom } from '../../realtime.js';
+import { publishSingQueue } from '../singQueue/service.js';
 import { ACCESS_CODE_SETTING_KEY, DEFAULT_APP_SETTINGS } from './defaults.js';
+
+const QUEUE_SETTINGS_PREFIX = 'queue.';
 
 export async function getAppSettings(): Promise<AppSettings> {
   const rows = await prisma.setting.findMany();
@@ -28,5 +31,6 @@ export async function updateAppSettings(changes: UpdateSettingsInput): Promise<A
   );
   const settings = await getAppSettings();
   emitToRoom('stage', 'settings:updated', settings);
+  if (Object.keys(changes).some((key) => key.startsWith(QUEUE_SETTINGS_PREFIX))) await publishSingQueue();
   return settings;
 }

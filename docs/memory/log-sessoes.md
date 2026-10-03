@@ -2,6 +2,19 @@
 
 > Entradas mais recentes no topo. Use `/fim-sessao` para registrar.
 
+## 2026-10-03 (9) — Fase 7B concluída: fila v2 e letra no celular
+**Antes da fase:** o player passou a ter só o botão "Efeito: ligado/desligado"; o modelo de pintar a letra foi para Configurações → Letra (o tempo continua por música, na página de sincronizar).
+**Decisões (conversa com o Michael):** ADR-009 (fila v2 + letra no celular) e ADR-010 (disputas, Fase 7C). Limite de pedidos configurável; HTTPS do futuro servidor Linux via domínio próprio + Caddy/Let's Encrypt anotado na Fase 8.
+**Feito:**
+- F7B-02: "+ Convidado" no "Quem vai cantar esta?" e "Gerenciar perfis" no menu.
+- F7B-03: settings `queue.*` (limite, TV passa do limite, aleatório, tempo para chamar) e fila `{ items, nextId }` com sorteio no servidor que evita repetir quem acabou de cantar.
+- F7B-04: Adicionar pela TV (com + Convidado), "Pôr na fila" na página da música, arrastar com dnd-kit, botão Aleatório, seção Fila nas configurações.
+- F7B-05: contagem "Chamando em N s" depois da nota, com Ir agora e Esperar; abre "Vez de…" sem tocar sozinho.
+- F7B-06: relógio da TV (`/api/player/state`, `player:state`, `/api/system/time`), letra liberada para o celular, aba Letra sincronizada, tela acesa (Wake Lock ou vídeo mudo).
+**Verificado (F7B-07):** 369 testes backend, 818 frontend, 24 shared, 205 worker; roteiro com TV + 2 celulares, 18/18 (adicionar com convidado novo, TV passando do limite, celular respeitando o limite 1, arrastar para o topo, sorteio igual em todas as telas, letra no celular igual à da TV, pausa refletida, ir votar no fim, contagem abrindo o próximo, + Convidado no player, sem rolagem de 360 a 1920 px).
+**Observações:** o sistema foi reiniciado (dependência nova e pasta `public` criada); os testes tocaram músicas da biblioteca e apagaram os perfis de teste no fim.
+**Próximos passos:** Fase 7C (disputas).
+
 ## 2026-10-02 (8) — Fase 7 concluída: pontuação, votação e ranking
 **Pedido do Michael:** fazer a Fase 7, sem testar a pontuação com microfone de verdade.
 **Feito:**

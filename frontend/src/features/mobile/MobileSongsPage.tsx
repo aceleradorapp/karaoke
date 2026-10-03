@@ -6,7 +6,7 @@ import { useSingQueueQuery } from '../../api/singQueue';
 import { useSongsInfiniteQuery } from '../../api/songs';
 import { Button } from '../../components/Button';
 import { Spinner } from '../../components/Spinner';
-import { coverUrlForDevice } from '../../lib/deviceMedia';
+import { mediaUrlForDevice } from '../../lib/deviceMedia';
 import { coverGradient } from '../../lib/gradient';
 import { useDebouncedValue } from '../../lib/useDebouncedValue';
 import { useMobileProfileStore } from '../../stores/useMobileProfileStore';
@@ -15,7 +15,7 @@ import { SingRequestButton } from './SingRequestButton';
 const SEARCH_DEBOUNCE_MS = 300;
 
 function SongCover({ song }: { song: SongDTO }) {
-  const coverUrl = coverUrlForDevice(song.coverUrl);
+  const coverUrl = mediaUrlForDevice(song.coverUrl);
   if (coverUrl) return <img src={coverUrl} alt="" className="size-14 shrink-0 rounded-lg object-cover" />;
   return (
     <div
@@ -40,7 +40,7 @@ export function MobileSongsPage() {
   const myRequests = useMemo(
     () =>
       new Map(
-        (queue.data ?? [])
+        (queue.data?.items ?? [])
           .filter((request) => request.profile.id === profileId)
           .map((request) => [request.song.id, request]),
       ),

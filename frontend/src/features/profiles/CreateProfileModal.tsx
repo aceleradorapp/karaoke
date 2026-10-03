@@ -1,4 +1,4 @@
-import { AVATARS, DEFAULT_THEME_ID, createProfileSchema } from '@caraoke/shared';
+import { AVATARS, DEFAULT_THEME_ID, createProfileSchema, type ProfileDTO } from '@caraoke/shared';
 import { useState, type FormEvent } from 'react';
 import { useCreateProfileMutation } from '../../api/profiles';
 import { Button } from '../../components/Button';
@@ -12,12 +12,13 @@ interface CreateProfileModalProps {
   isOpen: boolean;
   isGuest: boolean;
   onClose: () => void;
+  onCreated?: (profile: ProfileDTO) => void;
 }
 
 const FORM_ID = 'create-profile-form';
 const FIRST_AVATAR_ID = AVATARS[0].id;
 
-export function CreateProfileModal({ isOpen, isGuest, onClose }: CreateProfileModalProps) {
+export function CreateProfileModal({ isOpen, isGuest, onClose, onCreated }: CreateProfileModalProps) {
   const createProfile = useCreateProfileMutation();
   const [name, setName] = useState('');
   const [avatar, setAvatar] = useState<string>(FIRST_AVATAR_ID);
@@ -43,9 +44,10 @@ export function CreateProfileModal({ isOpen, isGuest, onClose }: CreateProfileMo
     }
 
     try {
-      await createProfile.mutateAsync(parsed.data);
+      const created = await createProfile.mutateAsync(parsed.data);
       toast.success(isGuest ? 'Convidado adicionado' : 'Perfil criado');
       resetAndClose();
+      onCreated?.(created);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Não foi possível criar o perfil');
     }

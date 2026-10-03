@@ -151,6 +151,10 @@ const APP_SETTINGS = {
   'ui.defaultTheme': 'cinema',
   'player.lyricsEffectEnabled': true,
   'player.lyricsEffect': 'smooth',
+  'queue.maxRequestsPerPerson': 3,
+  'queue.stageBypassesLimit': true,
+  'queue.shuffle': false,
+  'queue.autoAdvanceSeconds': 15,
 };
 
 const LYRICS_URL = '/media/s1/letra.json?v=1';
@@ -244,6 +248,44 @@ describe('PlayerPage', () => {
       expect(screen.getByText('Quem vai cantar esta?')).toBeInTheDocument();
       expect(await screen.findByRole('radio', { name: 'Ana' })).toBeChecked();
       expect(screen.getByRole('radio', { name: 'Bia' })).not.toBeChecked();
+    });
+
+    it('creates a guest right there and selects them to sing', async () => {
+      const created = { ...ANA, id: 'g9', name: 'Duda', avatar: 'cat', isGuest: true };
+      let profiles = [ANA, BIA];
+      const { fetchMock } = renderPlayer(
+        baseRoutes(readySong(), {
+          'GET /api/profiles': () => ({ body: { items: profiles } }),
+          'POST /api/profiles': () => {
+            profiles = [ANA, BIA, created];
+            return { status: 201, body: created };
+          },
+        }),
+      );
+
+      fireEvent.click(await screen.findByRole('button', { name: '+ Convidado' }));
+      const dialog = await screen.findByRole('dialog', { name: 'Novo convidado' });
+      fireEvent.change(within(dialog).getByLabelText('Nome'), { target: { value: 'Duda' } });
+      fireEvent.click(within(dialog).getByRole('button', { name: /Adicionar|Criar|Salvar/ }));
+
+      await waitFor(() => expect(screen.getByRole('radio', { name: 'Duda' })).toBeChecked());
+      expect(JSON.parse(String(requestsTo(fetchMock, 'POST', '/api/profiles')[0]?.[1]?.body))).toMatchObject({
+        name: 'Duda',
+        isGuest: true,
+      });
+      await startSinging();
+      expect(bodyOf(fetchMock, 'POST', '/api/performances')).toMatchObject({ profileId: 'g9' });
+    });
+
+    it('does not leave the song when Escape closes the new guest window', async () => {
+      renderPlayer();
+      fireEvent.click(await screen.findByRole('button', { name: '+ Convidado' }));
+      await screen.findByRole('dialog', { name: 'Novo convidado' });
+
+      fireEvent.keyDown(document.body, { key: 'Escape' });
+
+      expect(screen.getByRole('button', { name: 'Começar' })).toBeInTheDocument();
+      expect(screen.queryByText('Detalhe da música')).not.toBeInTheDocument();
     });
 
     it('does not touch the audio until the user presses start (browsers need a gesture first)', async () => {
@@ -941,6 +983,7 @@ describe('PlayerPage', () => {
         ...baseRoutes(readySong(), {
           'GET /api/profiles': { body: { items: [ANA, BIA, CARLA] } },
           'GET /api/songs/s2': { body: second() },
+          'GET /api/settings': { body: { ...APP_SETTINGS, 'queue.autoAdvanceSeconds': 0 } },
           ...extra,
         }),
         'GET /api/sing-queue': { body: { items: requests } },
@@ -1043,6 +1086,62 @@ describe('PlayerPage', () => {
       act(() => latestEngine().finishSong());
 
       expect(await screen.findByRole('button', { name: 'Chamar o próximo' })).toBeInTheDocument();
+    });
+
+    describe('calling the next singer by itself', () => {
+      const withCountdown = (seconds: number) => ({
+        'GET /api/settings': { body: { ...APP_SETTINGS, 'queue.autoAdvanceSeconds': seconds } },
+      });
+      const bia = () => buildSingRequest({ id: 'r3', profile: asRequester(BIA), song: second() });
+
+      async function finishWithCountdown(seconds: number) {
+        renderPlayer(queueRoutes([bia()], withCountdown(seconds)), ['/player/s1'], 0);
+        await startSinging();
+        act(() => latestEngine().finishSong());
+        return screen.findByRole('timer', { name: 'Chamando o próximo' });
+      }
+
+      it('counts down with the time from the settings', async () => {
+        const timer = await finishWithCountdown(15);
+
+        expect(timer).toHaveTextContent('Chamando em 15 s');
+        expect(screen.getByText('A seguir: Bia — Segunda')).toBeInTheDocument();
+      });
+
+      it('opens the next singer screen when the time is up, without playing by itself', async () => {
+        renderPlayer(queueRoutes([bia()], withCountdown(5)), ['/player/s1'], 0);
+        await startSinging();
+        vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+        act(() => latestEngine().finishSong());
+
+        for (let step = 0; step < 24; step += 1) {
+          await act(async () => {
+            await vi.advanceTimersByTimeAsync(500);
+          });
+        }
+        vi.useRealTimers();
+
+        expect(await screen.findByText('Vez de Bia! 🎤')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Começar' })).toBeInTheDocument();
+        expect(latestEngine().playCalls).toEqual([0]);
+      });
+
+      it('goes right away with "Ir agora"', async () => {
+        await finishWithCountdown(15);
+
+        fireEvent.click(screen.getByRole('button', { name: 'Ir agora' }));
+
+        expect(await screen.findByText('Vez de Bia! 🎤')).toBeInTheDocument();
+      });
+
+      it('stops counting with "Esperar" and leaves the call to the user', async () => {
+        await finishWithCountdown(15);
+
+        fireEvent.click(screen.getByRole('button', { name: 'Esperar' }));
+
+        expect(screen.queryByRole('timer', { name: 'Chamando o próximo' })).not.toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Chamar o próximo' })).toBeInTheDocument();
+      });
     });
 
     it('keeps following the playlist when the player was opened by one', async () => {

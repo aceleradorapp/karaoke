@@ -94,24 +94,30 @@ describe('useRealtimeSync', () => {
     const { socket, queryClient } = setup();
     const request = { id: 'r1', position: 1, song: { id: 'song1', status: 'READY' } };
 
-    socket.emit('singQueue:changed', { items: [request] });
+    socket.emit('singQueue:changed', { items: [request], nextId: 'r1' });
 
-    expect(queryClient.getQueryData(SING_QUEUE_QUERY_KEY)).toEqual([request]);
+    expect(queryClient.getQueryData(SING_QUEUE_QUERY_KEY)).toEqual({ items: [request], nextId: 'r1' });
   });
 
   it('updates the song inside the singers queue when it becomes ready', () => {
     const { socket, queryClient } = setup();
-    queryClient.setQueryData(SING_QUEUE_QUERY_KEY, [
-      { id: 'r1', song: { id: 'song1', status: 'PROCESSING' } },
-      { id: 'r2', song: { id: 'song2', status: 'READY' } },
-    ]);
+    queryClient.setQueryData(SING_QUEUE_QUERY_KEY, {
+      nextId: 'r2',
+      items: [
+        { id: 'r1', song: { id: 'song1', status: 'PROCESSING' } },
+        { id: 'r2', song: { id: 'song2', status: 'READY' } },
+      ],
+    });
 
     socket.emit('song:updated', { id: 'song1', status: 'READY' });
 
-    expect(queryClient.getQueryData(SING_QUEUE_QUERY_KEY)).toEqual([
-      { id: 'r1', song: { id: 'song1', status: 'READY' } },
-      { id: 'r2', song: { id: 'song2', status: 'READY' } },
-    ]);
+    expect(queryClient.getQueryData(SING_QUEUE_QUERY_KEY)).toEqual({
+      nextId: 'r2',
+      items: [
+        { id: 'r1', song: { id: 'song1', status: 'READY' } },
+        { id: 'r2', song: { id: 'song2', status: 'READY' } },
+      ],
+    });
   });
 
   it('reloads the profiles when someone creates a guest on a phone', () => {

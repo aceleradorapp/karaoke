@@ -9,6 +9,7 @@ import { ThemePicker } from '../profiles/ThemePicker';
 import { deviceHint } from './deviceHint';
 import { SelectField, SettingsSection, ToggleField } from './fields';
 import { MyThemeField } from './MyThemeField';
+import { QueueSection } from './QueueSection';
 import { ScoringSection } from './ScoringSection';
 import { LYRICS_EFFECT_LIST, LYRICS_EFFECTS } from '../../lib/lyrics/effects';
 import { YtdlpUpdater } from './YtdlpUpdater';
@@ -118,6 +119,8 @@ function SettingsForm({ initialSettings }: SettingsFormProps) {
         />
         <YtdlpUpdater />
       </SettingsSection>
+
+      <QueueSection settings={draft} onChange={change} />
 
       <ScoringSection settings={draft} onChange={change} />
     </div>
