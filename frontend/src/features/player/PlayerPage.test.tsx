@@ -246,6 +246,44 @@ describe('PlayerPage', () => {
       expect(screen.getByRole('radio', { name: 'Bia' })).not.toBeChecked();
     });
 
+    it('creates a guest right there and selects them to sing', async () => {
+      const created = { ...ANA, id: 'g9', name: 'Duda', avatar: 'cat', isGuest: true };
+      let profiles = [ANA, BIA];
+      const { fetchMock } = renderPlayer(
+        baseRoutes(readySong(), {
+          'GET /api/profiles': () => ({ body: { items: profiles } }),
+          'POST /api/profiles': () => {
+            profiles = [ANA, BIA, created];
+            return { status: 201, body: created };
+          },
+        }),
+      );
+
+      fireEvent.click(await screen.findByRole('button', { name: '+ Convidado' }));
+      const dialog = await screen.findByRole('dialog', { name: 'Novo convidado' });
+      fireEvent.change(within(dialog).getByLabelText('Nome'), { target: { value: 'Duda' } });
+      fireEvent.click(within(dialog).getByRole('button', { name: /Adicionar|Criar|Salvar/ }));
+
+      await waitFor(() => expect(screen.getByRole('radio', { name: 'Duda' })).toBeChecked());
+      expect(JSON.parse(String(requestsTo(fetchMock, 'POST', '/api/profiles')[0]?.[1]?.body))).toMatchObject({
+        name: 'Duda',
+        isGuest: true,
+      });
+      await startSinging();
+      expect(bodyOf(fetchMock, 'POST', '/api/performances')).toMatchObject({ profileId: 'g9' });
+    });
+
+    it('does not leave the song when Escape closes the new guest window', async () => {
+      renderPlayer();
+      fireEvent.click(await screen.findByRole('button', { name: '+ Convidado' }));
+      await screen.findByRole('dialog', { name: 'Novo convidado' });
+
+      fireEvent.keyDown(document.body, { key: 'Escape' });
+
+      expect(screen.getByRole('button', { name: 'Começar' })).toBeInTheDocument();
+      expect(screen.queryByText('Detalhe da música')).not.toBeInTheDocument();
+    });
+
     it('does not touch the audio until the user presses start (browsers need a gesture first)', async () => {
       renderPlayer();
       await screen.findByRole('button', { name: 'Começar' });

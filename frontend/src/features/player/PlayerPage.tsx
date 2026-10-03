@@ -10,6 +10,7 @@ import { firstReadyRequest, singRequestRoute, useSingQueueQuery } from '../../ap
 import { useSongQuery, useUpdateSongMutation } from '../../api/songs';
 import { Avatar } from '../../components/Avatar';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
+import { CreateProfileModal } from '../profiles/CreateProfileModal';
 import { Spinner } from '../../components/Spinner';
 import type { LyricsEffectSettings } from '../../lib/lyrics/effects';
 import { coverGradient } from '../../lib/gradient';
@@ -118,6 +119,7 @@ function PlayerSession({ song }: { song: SongDTO }) {
 
   const [singerId, setSingerId] = useState<string | null>(carriedSingerId ?? currentProfile?.id ?? null);
   const [isConfirmingExit, setIsConfirmingExit] = useState(false);
+  const [isAddingGuest, setIsAddingGuest] = useState(false);
   const baseOffsetMs = useRef(song.lyricsOffsetMs);
 
   const isPerforming = session.phase === 'playing';
@@ -160,7 +162,7 @@ function PlayerSession({ song }: { song: SongDTO }) {
       toggleFullscreen,
       requestExit,
     },
-    isPerforming || session.phase === 'choosing',
+    (isPerforming || session.phase === 'choosing') && !isAddingGuest,
   );
 
   const queueStep = useMemo(
@@ -207,6 +209,7 @@ function PlayerSession({ song }: { song: SongDTO }) {
                 hasChosenSinger.current = true;
                 setSingerId(profileId);
               }}
+              onAddGuest={() => setIsAddingGuest(true)}
               onStart={() => singerId && void session.start(singerId, requestId)}
               onBack={leave}
             />
@@ -363,6 +366,16 @@ function PlayerSession({ song }: { song: SongDTO }) {
           </>
         )}
       </div>
+
+      <CreateProfileModal
+        isOpen={isAddingGuest}
+        isGuest
+        onClose={() => setIsAddingGuest(false)}
+        onCreated={(profile) => {
+          hasChosenSinger.current = true;
+          setSingerId(profile.id);
+        }}
+      />
 
       <ConfirmDialog
         isOpen={isConfirmingExit}
