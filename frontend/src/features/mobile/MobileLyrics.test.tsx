@@ -1,11 +1,12 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, render, renderHook, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, renderHook, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PlayerStateDTO } from '@caraoke/shared';
 import { measureClockOffset, positionAt } from '../../lib/serverClock';
 import { useKeepAwake } from '../../lib/useKeepAwake';
 import { useMobileAccessStore } from '../../stores/useMobileAccessStore';
+import { useMobileLyricsStore } from '../../stores/useMobileLyricsStore';
 import { useMobileProfileStore } from '../../stores/useMobileProfileStore';
 import { mockApi, requestsTo, type MockRoutes } from '../../test/mockApi';
 import { usePlayerBroadcast, type BroadcastSnapshot } from '../player/usePlayerBroadcast';
@@ -89,6 +90,7 @@ describe('lyrics on the phone', () => {
     socketMock.handlers.clear();
     useMobileAccessStore.setState({ code: 'K7P2QX', status: 'ok' });
     useMobileProfileStore.setState({ profile: { id: 'g1', name: 'Duda', avatar: 'cat' } });
+    useMobileLyricsStore.setState({ isEffectEnabled: true, adjustMs: 0 });
   });
 
   afterEach(() => {
@@ -108,6 +110,42 @@ describe('lyrics on the phone', () => {
     expect(await screen.findByText('Primeira')).toBeInTheDocument();
     expect(screen.getByText('pausado')).toBeInTheDocument();
     expect(requestsTo(fetchMock, 'GET', `${LYRICS_URL}&c=K7P2QX`)).toHaveLength(1);
+  });
+
+  const wordProgress = (word: string) =>
+    Number((screen.getByText(word).closest('.lyric-fill') as HTMLElement).style.getPropertyValue('--p'));
+  const lyricsRoutes = (state: PlayerStateDTO): MockRoutes => ({
+    'GET /api/player/state': { body: state },
+    'GET /api/system/time': () => ({ body: { now: Date.now() } }),
+    [`GET ${LYRICS_URL}&c=K7P2QX`]: { body: LYRICS },
+  });
+
+  it('turns the painting effect off just on this phone, coloring the whole line at once', async () => {
+    renderPhone('/m/letra', lyricsRoutes(stateOf({ position: 20.5 })));
+    await screen.findByText('Primeira');
+    await waitFor(() => expect(wordProgress('linha')).toBeLessThan(1));
+
+    fireEvent.click(screen.getByRole('button', { name: /Efeito: ligado/ }));
+
+    await waitFor(() => expect(wordProgress('linha')).toBe(1));
+    expect(useMobileLyricsStore.getState().isEffectEnabled).toBe(false);
+  });
+
+  it('moves the lyrics earlier or later on this phone and remembers it', async () => {
+    renderPhone('/m/letra', lyricsRoutes(stateOf({ position: 20.5 })));
+    await screen.findByText('Primeira');
+    const before = wordProgress('Primeira');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Adiantar a letra' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Adiantar a letra' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Adiantar a letra' }));
+
+    expect(screen.getByText('Letra +0,3 s')).toBeInTheDocument();
+    expect(useMobileLyricsStore.getState().adjustMs).toBe(300);
+    await waitFor(() => expect(wordProgress('Primeira')).toBeGreaterThan(before));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Atrasar a letra' }));
+    expect(useMobileLyricsStore.getState().adjustMs).toBe(200);
   });
 
   it('says nothing is playing when the TV is stopped', async () => {
@@ -138,7 +176,7 @@ describe('server clock', () => {
     const clock = () => times.shift() ?? 0;
     const answers = [{ now: 6005 }, { now: 7050 }, { now: 8002 }];
 
-    const offset = await measureClockOffset(() => Promise.resolve(answers.shift() ?? { now: 0 }), clock);
+    const offset = await measureClockOffset(() => Promise.resolve(answers.shift() ?? { now: 0 }), clock, 3);
 
     expect(offset).toBe(5000);
   });
