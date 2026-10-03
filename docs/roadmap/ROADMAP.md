@@ -18,7 +18,7 @@
 | 6 | Letras inteligentes | ✅ (feita antes da 5; só F6-02, transcrever músicas sem letra, ficou pausada) |
 | 5B | Convidados no celular e fila de cantores (ADR-008) | ✅ |
 | 7 | Pontuação e ranking | ✅ (sem teste com microfone real) |
-| 7B | Fila v2 e letra no celular (ADR-009) | 🟨 |
+| 7B | Fila v2 e letra no celular (ADR-009) | ✅ |
 | 7C | Disputas (ADR-010) | ⬜ |
 | 8 | Publicação (futuro) | ⬜ |
 
@@ -169,7 +169,7 @@ Branch: `feature/f7b-fila-e-letra`.
 | F7B-04 | ✅ 2026-10-03 | Palco: "+ Adicionar" e "Pôr na fila", arrastar (dnd-kit), botão Aleatório, "Próximo" vindo do servidor; seção Fila nas configurações | ADR-009, T-06 Próximos | 🟡 |
 | F7B-05 | ✅ 2026-10-03 | Chamar o próximo sozinho com contagem configurável depois da nota | ADR-009, T-07 §7.6 | 🟡 |
 | F7B-06 | ✅ 2026-10-03 | Letra no celular: relógio da TV (`/api/player/state`, `player:state`, `/api/system/time`), letra liberada, aba Letra, tela acesa | ADR-009, T-08 | 🔴 |
-| F7B-07 | ⬜ | ✔ Verificação: TV + celulares (adicionar, arrastar, aleatório, contagem, letra sincronizada) | — | 🟡 |
+| F7B-07 | ✅ 2026-10-03 (18/18: TV + 2 celulares) | ✔ Verificação: TV + celulares (adicionar, arrastar, aleatório, contagem, letra sincronizada) | — | 🟡 |
 
 ## Fase 7C — Disputas (ADR-010)
 | ID | Status | Tarefa | Modelo |
