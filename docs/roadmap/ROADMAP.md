@@ -168,7 +168,7 @@ Branch: `feature/f7b-fila-e-letra`.
 | F7B-03 | ✅ 2026-10-03 | Backend da fila: limite configurável, TV passa do limite, aleatório com `nextId` no servidor + testes | ADR-009, T-04 Fila de cantores | 🔴 |
 | F7B-04 | ✅ 2026-10-03 | Palco: "+ Adicionar" e "Pôr na fila", arrastar (dnd-kit), botão Aleatório, "Próximo" vindo do servidor; seção Fila nas configurações | ADR-009, T-06 Próximos | 🟡 |
 | F7B-05 | ✅ 2026-10-03 | Chamar o próximo sozinho com contagem configurável depois da nota | ADR-009, T-07 §7.6 | 🟡 |
-| F7B-06 | ⬜ | Letra no celular: relógio da TV (`/api/player/state`, `player:state`, `/api/system/time`), letra liberada, aba Letra, tela acesa | ADR-009, T-08 | 🔴 |
+| F7B-06 | ✅ 2026-10-03 | Letra no celular: relógio da TV (`/api/player/state`, `player:state`, `/api/system/time`), letra liberada, aba Letra, tela acesa | ADR-009, T-08 | 🔴 |
 | F7B-07 | ⬜ | ✔ Verificação: TV + celulares (adicionar, arrastar, aleatório, contagem, letra sincronizada) | — | 🟡 |
 
 ## Fase 7C — Disputas (ADR-010)

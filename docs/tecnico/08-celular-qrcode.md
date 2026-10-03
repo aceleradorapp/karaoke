@@ -34,6 +34,7 @@ Layout: cabeçalho com o logo, o nome do app e **"🎤 Ana · trocar"** (identid
 | 🔍 Buscar | `/m/buscar` | `YoutubeSearch compact`: campo, resultados em lista (thumb 120 px, título, canal, duração), **Prévia** abre um modal com o embed, **Importar** abre a confirmação de artista/título |
 | ⬆ Enviar | `/m/enviar` | Upload (o `<input type="file" accept="audio/*" multiple>` abre os arquivos do celular) |
 | 📋 Fila | `/m/fila` | **Próximos a cantar** (fila de cantores, em tempo real; os meus pedidos destacados e com "Tirar") e, abaixo, **Preparando** (fila de processamento, somente leitura) |
+| 🎙 Letra | `/m/letra` | Aparece só enquanto a TV toca uma música (`player:state`): quem canta, a música e a letra sincronizada com a TV (mesmo efeito de pintar), sem som. Mantém a tela acesa (Wake Lock em HTTPS; senão um vídeo mudo de 2 KB em repetição, `public/keep-awake.mp4`; se nada funcionar, mostra a dica) — ADR-009 |
 | ⭐ Votar | `/m/votar` | Aparece só com a votação aberta; abre sozinha no `vote:open` (lembra a aba anterior e volta para ela 5 s depois da nota final). Quem cantou vê "É a sua vez!" em vez das estrelas; `voterToken` em `localStorage` (`caraoke.voterToken`, com reserva para `crypto.randomUUID`, que não existe em página HTTP sem TLS) |
 
 - **Sem** player, playlists, edição de perfis ou configurações no celular. A biblioteca e a identidade entraram com o ADR-008.

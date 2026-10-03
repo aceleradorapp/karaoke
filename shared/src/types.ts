@@ -222,3 +222,19 @@ export interface RankingResponse {
   topSongs: Array<{ song: SongDTO; count: number }>;
   champion: { profile: RankingProfile; avg: number } | null;
 }
+
+export interface PlayerEffectState {
+  enabled: boolean;
+  id: LyricsEffectId;
+  fillPercent: number;
+}
+
+export interface PlayerStateDTO {
+  song: { id: string; title: string; artist: string; lyricsUrl: string | null; durationSec: number | null };
+  singer: { name: string; avatar: string } | null;
+  position: number;
+  playing: boolean;
+  offsetMs: number;
+  effect: PlayerEffectState;
+  at: number;
+}

@@ -29,6 +29,7 @@ import { SingerPicker } from './SingerPicker';
 import { useIdle } from './useIdle';
 import { useLyricsEffectChoice } from './useLyricsEffect';
 import { usePitchScoring } from './usePitchScoring';
+import { usePlayerBroadcast } from './usePlayerBroadcast';
 import { usePlayerSession, type PlayerSession } from './usePlayerSession';
 import { VotingScreen } from './VotingScreen';
 import { usePlayerShortcuts } from './usePlayerShortcuts';
@@ -184,6 +185,16 @@ function PlayerSession({ song }: { song: SongDTO }) {
     session.stop();
     navigate(singRequestRoute(nextRequest), { replace: true });
   }, [nextRequest, session, navigate]);
+
+  usePlayerBroadcast({
+    songId: song.id,
+    singer: singer ? { name: singer.name, avatar: singer.avatar } : null,
+    isActive: isPerforming,
+    isPlaying: session.isPlaying,
+    offsetMs: baseOffsetMs.current + session.liveOffsetMs,
+    effect: { enabled: effectChoice.enabled, id: effectChoice.id, fillPercent: song.fillPercent },
+    getTime: session.getTime,
+  });
 
   const isLyricsLoading = song.lyricsUrl !== null && lyrics.isLoading;
   const effectiveOffsetMs = baseOffsetMs.current + session.liveOffsetMs;

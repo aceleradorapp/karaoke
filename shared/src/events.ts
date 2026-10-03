@@ -2,6 +2,7 @@ import type {
   AppSettings,
   FinalScore,
   JobDTO,
+  PlayerStateDTO,
   SingQueueResponse,
   SongDTO,
   VotingSummary,
@@ -15,6 +16,7 @@ export const SOCKET_EVENTS = {
   songDeleted: 'song:deleted',
   singQueueChanged: 'singQueue:changed',
   profilesChanged: 'profiles:changed',
+  playerState: 'player:state',
   voteOpen: 'vote:open',
   voteProgress: 'vote:progress',
   scoreFinal: 'score:final',
@@ -39,6 +41,7 @@ export interface ServerToClientEvents {
   'song:deleted': (payload: { id: string }) => void;
   'singQueue:changed': (queue: SingQueueResponse) => void;
   'profiles:changed': () => void;
+  'player:state': (state: PlayerStateDTO | null) => void;
   'vote:open': (voting: VotingSummary) => void;
   'vote:progress': (payload: { performanceId: string; count: number }) => void;
   'score:final': (score: FinalScore) => void;
