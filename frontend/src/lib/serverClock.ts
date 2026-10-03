@@ -1,15 +1,16 @@
 import type { PlayerStateDTO } from '@caraoke/shared';
 import { apiGet } from '../api/client';
 
-const SAMPLES = 3;
+const SAMPLES = 8;
 const MS_PER_SECOND = 1000;
 
 export async function measureClockOffset(
   fetchTime: () => Promise<{ now: number }> = () => apiGet<{ now: number }>('/system/time'),
   clock: () => number = Date.now,
+  samples: number = SAMPLES,
 ): Promise<number> {
   const offsets: Array<{ offset: number; roundTrip: number }> = [];
-  for (let sample = 0; sample < SAMPLES; sample += 1) {
+  for (let sample = 0; sample < samples; sample += 1) {
     const sentAt = clock();
     const { now } = await fetchTime();
     const receivedAt = clock();
