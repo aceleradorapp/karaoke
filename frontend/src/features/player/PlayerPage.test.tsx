@@ -983,6 +983,7 @@ describe('PlayerPage', () => {
         ...baseRoutes(readySong(), {
           'GET /api/profiles': { body: { items: [ANA, BIA, CARLA] } },
           'GET /api/songs/s2': { body: second() },
+          'GET /api/settings': { body: { ...APP_SETTINGS, 'queue.autoAdvanceSeconds': 0 } },
           ...extra,
         }),
         'GET /api/sing-queue': { body: { items: requests } },
@@ -1085,6 +1086,62 @@ describe('PlayerPage', () => {
       act(() => latestEngine().finishSong());
 
       expect(await screen.findByRole('button', { name: 'Chamar o próximo' })).toBeInTheDocument();
+    });
+
+    describe('calling the next singer by itself', () => {
+      const withCountdown = (seconds: number) => ({
+        'GET /api/settings': { body: { ...APP_SETTINGS, 'queue.autoAdvanceSeconds': seconds } },
+      });
+      const bia = () => buildSingRequest({ id: 'r3', profile: asRequester(BIA), song: second() });
+
+      async function finishWithCountdown(seconds: number) {
+        renderPlayer(queueRoutes([bia()], withCountdown(seconds)), ['/player/s1'], 0);
+        await startSinging();
+        act(() => latestEngine().finishSong());
+        return screen.findByRole('timer', { name: 'Chamando o próximo' });
+      }
+
+      it('counts down with the time from the settings', async () => {
+        const timer = await finishWithCountdown(15);
+
+        expect(timer).toHaveTextContent('Chamando em 15 s');
+        expect(screen.getByText('A seguir: Bia — Segunda')).toBeInTheDocument();
+      });
+
+      it('opens the next singer screen when the time is up, without playing by itself', async () => {
+        renderPlayer(queueRoutes([bia()], withCountdown(5)), ['/player/s1'], 0);
+        await startSinging();
+        vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+        act(() => latestEngine().finishSong());
+
+        for (let step = 0; step < 24; step += 1) {
+          await act(async () => {
+            await vi.advanceTimersByTimeAsync(500);
+          });
+        }
+        vi.useRealTimers();
+
+        expect(await screen.findByText('Vez de Bia! 🎤')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Começar' })).toBeInTheDocument();
+        expect(latestEngine().playCalls).toEqual([0]);
+      });
+
+      it('goes right away with "Ir agora"', async () => {
+        await finishWithCountdown(15);
+
+        fireEvent.click(screen.getByRole('button', { name: 'Ir agora' }));
+
+        expect(await screen.findByText('Vez de Bia! 🎤')).toBeInTheDocument();
+      });
+
+      it('stops counting with "Esperar" and leaves the call to the user', async () => {
+        await finishWithCountdown(15);
+
+        fireEvent.click(screen.getByRole('button', { name: 'Esperar' }));
+
+        expect(screen.queryByRole('timer', { name: 'Chamando o próximo' })).not.toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Chamar o próximo' })).toBeInTheDocument();
+      });
     });
 
     it('keeps following the playlist when the player was opened by one', async () => {

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
 import { useLyricsQuery } from '../../api/lyrics';
 import { useCloseVotingMutation } from '../../api/performances';
+import { useSettingsQuery } from '../../api/settings';
 import { usePlaylistQuery } from '../../api/playlists';
 import { useProfilesQuery } from '../../api/profiles';
 import { nextRequestOf, singRequestRoute, useSingQueueQuery } from '../../api/singQueue';
@@ -99,6 +100,7 @@ function PlayerSession({ song }: { song: SongDTO }) {
   const profiles = useProfilesQuery();
   const lyrics = useLyricsQuery(song.lyricsUrl);
   const updateSong = useUpdateSongMutation(song.id);
+  const settings = useSettingsQuery();
   const pitch = usePitchScoring(song);
   const session = usePlayerSession(song, pitch);
   const closeVoting = useCloseVotingMutation();
@@ -275,6 +277,7 @@ function PlayerSession({ song }: { song: SongDTO }) {
             <FinishedScreen
               songTitle={song.title}
               score={session.result}
+              autoAdvanceSeconds={settings.data?.['queue.autoAdvanceSeconds'] ?? 0}
               onSingAgain={() => void session.restart()}
               onBack={leave}
               sequence={

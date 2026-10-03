@@ -1,5 +1,6 @@
 import type { FinalScore } from '@caraoke/shared';
 import { Button } from '../../components/Button';
+import { NextSingerCountdown } from './NextSingerCountdown';
 import { ScoreReveal } from './ScoreReveal';
 
 export interface PlaylistSequence {
@@ -22,6 +23,7 @@ interface FinishedScreenProps {
   sequence?: PlaylistSequence | null;
   nextSinger?: NextSinger | null;
   score?: FinalScore | null;
+  autoAdvanceSeconds?: number;
 }
 
 export function FinishedScreen({
@@ -31,6 +33,7 @@ export function FinishedScreen({
   sequence,
   nextSinger,
   score,
+  autoAdvanceSeconds = 0,
 }: FinishedScreenProps) {
   const hasNext = sequence?.nextTitle != null;
   const hasPrimaryAction = hasNext || Boolean(nextSinger);
@@ -61,11 +64,14 @@ export function FinishedScreen({
             Próxima música
           </Button>
         )}
-        {nextSinger && (
-          <Button size="lg" onClick={nextSinger.onCall} autoFocus>
-            Chamar o próximo
-          </Button>
-        )}
+        {nextSinger &&
+          (autoAdvanceSeconds > 0 ? (
+            <NextSingerCountdown seconds={autoAdvanceSeconds} onGo={nextSinger.onCall} />
+          ) : (
+            <Button size="lg" onClick={nextSinger.onCall} autoFocus>
+              Chamar o próximo
+            </Button>
+          ))}
         <Button
           size="lg"
           variant={hasPrimaryAction ? 'secondary' : 'primary'}
