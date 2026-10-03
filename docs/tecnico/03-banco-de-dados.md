@@ -273,6 +273,8 @@ Guardadas na tabela `settings`. O backend expõe um objeto tipado (`shared/types
 | `player.lyricsEffect` | `"smooth" \| "words"` | `"smooth"` | Modelo do efeito (`smooth` = preenche aos poucos; `words` = palavra por palavra). Novos modelos entram em `shared/src/lyricsEffects.ts` e `frontend/src/lib/lyrics/effects.ts` |
 | `access.code` | string | gerado (6 chars A-Z0-9, sem 0/O/1/I) | Código do QR code |
 
+Settings da fila (ADR-009): `queue.maxRequestsPerPerson` (0–10, 0 = sem limite, padrão 3), `queue.stageBypassesLimit` (padrão `true`), `queue.shuffle` (padrão `false`), `queue.autoAdvanceSeconds` (0–60, 0 = desligado, padrão 15).
+
 ## 3.4 Regras de negócio no banco
 - **Posição na fila:** novo job recebe `position = max(position) + 1` entre os jobs PENDING/RUNNING (ou 1).
 - **Reordenar:** recebe a lista ordenada de ids PENDING e regrava `position = índice + 1` numa transação.
@@ -281,7 +283,7 @@ Guardadas na tabela `settings`. O backend expõe um objeto tipado (`shared/types
 - **Excluir música:** apaga a pasta `biblioteca/<id>/` (cascata no banco). Se houver job RUNNING, cancela primeiro.
 - **playCount:** incrementado em `POST /performances`.
 - **Duplicidade YouTube:** `youtubeId` único. Ao importar de novo, retorna a música existente (HTTP 200 com `alreadyExists: true`).
-- **Fila de cantores (ADR-008):** novo pedido recebe `position = max(position) + 1` (ou 1). Até `MAX_SING_REQUESTS_PER_PROFILE = 3` pedidos por perfil. Reordenar regrava `position = índice + 1` numa transação. O pedido é **apagado** quando a apresentação começa (`POST /performances` com `requestId`, na mesma transação) ou quando é removido; não há histórico de pedidos (o histórico é a `Performance`).
+- **Fila de cantores (ADR-008):** novo pedido recebe `position = max(position) + 1` (ou 1). Até `queue.maxRequestsPerPerson` pedidos por perfil (ADR-009). Reordenar regrava `position = índice + 1` numa transação. O pedido é **apagado** quando a apresentação começa (`POST /performances` com `requestId`, na mesma transação) ou quando é removido; não há histórico de pedidos (o histórico é a `Performance`).
 - **Convidados:** `isGuest = true`. Criados no palco ou pelo celular (pelo celular, sempre `isGuest = true`). Aparecem na seção "Convidados" da tela de perfis, ordenados por `lastUsedAt desc`. Não são apagados automaticamente.
 
 ## 3.5 Seed (`backend/prisma/seed.ts`)

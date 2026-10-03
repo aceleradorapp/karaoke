@@ -3,6 +3,7 @@ import { prisma } from '../../db.js';
 import { deleteOriginFile, deleteSongDir, moveToError } from '../../services/storage.js';
 import { notFound } from '../../utils/errors.js';
 import { publishJob } from './publish.js';
+import { publishSingQueue } from '../singQueue/service.js';
 
 const PROGRESS_PUBLISH_INTERVAL_MS = 500;
 const MAX_PROGRESS = 100;
@@ -120,6 +121,7 @@ export async function completeJob(id: string, input: CompleteInput): Promise<voi
   lastPublished.delete(id);
   await deleteOriginFile(job.sourcePath);
   await publishJob(id, { includeSong: true });
+  await publishSingQueue();
 }
 
 export async function failJob(id: string, input: FailInput): Promise<void> {

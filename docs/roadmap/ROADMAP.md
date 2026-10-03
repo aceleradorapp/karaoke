@@ -165,7 +165,7 @@ Branch: `feature/f7b-fila-e-letra`.
 |---|---|---|---|---|
 | F7B-01 | ✅ 2026-10-03 | ADR-009/010 + roadmap + documento técnico | ADR-009, ADR-010 | 🟡 |
 | F7B-02 | ✅ 2026-10-03 | "+ Convidado" no "Quem vai cantar esta?" e "Gerenciar perfis" no menu | ADR-009 | 🟢 |
-| F7B-03 | ⬜ | Backend da fila: limite configurável, TV passa do limite, aleatório com `nextId` no servidor + testes | ADR-009, T-04 Fila de cantores | 🔴 |
+| F7B-03 | ✅ 2026-10-03 | Backend da fila: limite configurável, TV passa do limite, aleatório com `nextId` no servidor + testes | ADR-009, T-04 Fila de cantores | 🔴 |
 | F7B-04 | ⬜ | Palco: "+ Adicionar" e "Pôr na fila", arrastar (dnd-kit), botão Aleatório, "Próximo" vindo do servidor; seção Fila nas configurações | ADR-009, T-06 Próximos | 🟡 |
 | F7B-05 | ⬜ | Chamar o próximo sozinho com contagem configurável depois da nota | ADR-009, T-07 §7.6 | 🟡 |
 | F7B-06 | ⬜ | Letra no celular: relógio da TV (`/api/player/state`, `player:state`, `/api/system/time`), letra liberada, aba Letra, tela acesa | ADR-009, T-08 | 🔴 |

@@ -82,6 +82,10 @@ export interface AppSettings {
   'ui.defaultTheme': string;
   'player.lyricsEffectEnabled': boolean;
   'player.lyricsEffect': LyricsEffectId;
+  'queue.maxRequestsPerPerson': number;
+  'queue.stageBypassesLimit': boolean;
+  'queue.shuffle': boolean;
+  'queue.autoAdvanceSeconds': number;
 }
 
 export interface SingerSummary {
@@ -199,6 +203,7 @@ export interface SingRequestDTO {
 
 export interface SingQueueResponse {
   items: SingRequestDTO[];
+  nextId: string | null;
 }
 
 export type RankingPeriod = 'week' | 'month' | 'all';

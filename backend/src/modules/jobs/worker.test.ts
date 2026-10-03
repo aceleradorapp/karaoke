@@ -142,6 +142,7 @@ describe('worker job routes', () => {
       expect(vi.mocked(emitToAll).mock.calls.map(([event]) => event)).toEqual([
         'job:updated',
         'song:updated',
+        'singQueue:changed',
       ]);
     });
 

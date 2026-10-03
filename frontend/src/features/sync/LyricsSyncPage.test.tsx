@@ -155,6 +155,10 @@ const APP_SETTINGS = {
   'ui.defaultTheme': 'cinema',
   'player.lyricsEffectEnabled': true,
   'player.lyricsEffect': 'smooth',
+  'queue.maxRequestsPerPerson': 3,
+  'queue.stageBypassesLimit': true,
+  'queue.shuffle': false,
+  'queue.autoAdvanceSeconds': 15,
 };
 
 const LYRICS_URL = '/media/s1/letra.json?v=1';

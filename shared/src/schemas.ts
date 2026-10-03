@@ -1,3 +1,4 @@
+import { AUTO_ADVANCE_MAX_SECONDS, MAX_REQUESTS_PER_PERSON_LIMIT } from './constants.js';
 import { z } from 'zod';
 import { FILL_PERCENT_MAX, FILL_PERCENT_MIN, LYRICS_EFFECT_IDS } from './lyricsEffects.js';
 import { isAvatarId } from './avatars.js';
@@ -46,6 +47,10 @@ export const appSettingsSchema = z.object({
   'ui.defaultTheme': themeSchema,
   'player.lyricsEffectEnabled': z.boolean(),
   'player.lyricsEffect': z.enum(LYRICS_EFFECT_IDS),
+  'queue.maxRequestsPerPerson': z.number().int().min(0).max(MAX_REQUESTS_PER_PERSON_LIMIT),
+  'queue.stageBypassesLimit': z.boolean(),
+  'queue.shuffle': z.boolean(),
+  'queue.autoAdvanceSeconds': z.number().int().min(0).max(AUTO_ADVANCE_MAX_SECONDS),
 });
 
 export const updateSettingsSchema = appSettingsSchema

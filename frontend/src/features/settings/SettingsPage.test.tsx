@@ -21,6 +21,10 @@ const SETTINGS: AppSettings = {
   'ui.defaultTheme': 'cinema',
   'player.lyricsEffectEnabled': true,
   'player.lyricsEffect': 'smooth',
+  'queue.maxRequestsPerPerson': 3,
+  'queue.stageBypassesLimit': true,
+  'queue.shuffle': false,
+  'queue.autoAdvanceSeconds': 15,
 };
 
 const WORKER = {

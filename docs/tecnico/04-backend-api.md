@@ -192,8 +192,8 @@ Regras: rejeitar vídeos com mais de **12 min** (`VIDEO_TOO_LONG`). Título e ar
 ### Fila de cantores (ADR-008) — `modules/singQueue/`
 | Método | Rota | Descrição |
 |---|---|---|
-| GET | `/api/sing-queue` | `{ items: SingRequestDTO[] }` em ordem de `position` |
-| POST | `/api/sing-queue` | `{ profileId, songId }` → `201 SingRequestDTO`. 404 `PROFILE_NOT_FOUND`/`SONG_NOT_FOUND`; 409 `SONG_UNAVAILABLE` (música com erro); 409 `ALREADY_REQUESTED` (mesma pessoa e música); 409 `TOO_MANY_REQUESTS` ("Você já tem 3 músicas na fila") |
+| GET | `/api/sing-queue` | `{ items: SingRequestDTO[], nextId: string \| null }` em ordem de `position`. `nextId` = quem é o próximo (ADR-009): o primeiro pedido pronto ou, com `queue.shuffle`, um sorteado no servidor entre os prontos (evita a pessoa da última apresentação quando há outra opção; o sorteio é mantido enquanto o pedido continuar na fila) |
+| POST | `/api/sing-queue` | `{ profileId, songId }` → `201 SingRequestDTO`. 404 `PROFILE_NOT_FOUND`/`SONG_NOT_FOUND`; 409 `SONG_UNAVAILABLE` (música com erro); 409 `ALREADY_REQUESTED` (mesma pessoa e música); 409 `TOO_MANY_REQUESTS` ("Você já tem N músicas na fila"; N = `queue.maxRequestsPerPerson`, 0 = sem limite; a TV não tem limite se `queue.stageBypassesLimit`) |
 | PUT | `/api/sing-queue/order` | (palco) `{ ids }` → regrava as posições; ids desconhecidos são ignorados e os que faltarem vão para o fim, na ordem atual |
 | DELETE | `/api/sing-queue/:id?profileId=` | 204. Do celular, `profileId` é obrigatório e precisa ser o dono (403 `NOT_YOUR_REQUEST`); o palco remove qualquer um |
 
@@ -204,7 +204,7 @@ type SingRequestDTO = {
   song: SongDTO;                     // status diz se está pronta (READY) ou "preparando"
 }
 ```
-Toda mudança (criar, remover, reordenar, apresentação começou, perfil ou música apagados) emite `singQueue:changed` com a fila inteira.
+Toda mudança (criar, remover, reordenar, apresentação começou, perfil ou música apagados, música ficou pronta, settings `queue.*` mudaram) emite `singQueue:changed` com `{ items, nextId }`.
 
 ### Fila de processamento (jobs)
 | Método | Rota | Descrição |

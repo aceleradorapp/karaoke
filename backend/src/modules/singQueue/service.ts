@@ -1,18 +1,18 @@
 import { Prisma } from '@prisma/client';
-import {
-  MAX_SING_REQUESTS_PER_PROFILE,
-  type CreateSingRequestInput,
-  type SingRequestDTO,
-} from '@caraoke/shared';
+import type { AppSettings, CreateSingRequestInput, SingQueueResponse, SingRequestDTO } from '@caraoke/shared';
 import { prisma } from '../../db.js';
 import { emitToAll } from '../../realtime.js';
 import { AppError, conflict, notFound } from '../../utils/errors.js';
+import { getAppSettings } from '../settings/service.js';
 import { LATEST_JOB, toListedSongDTO } from '../songs/service.js';
 
 const FORBIDDEN = 403;
 const UNIQUE_CONSTRAINT_FAILED = 'P2002';
+const NO_LIMIT = 0;
 
 const QUEUE_ORDER: Prisma.SingRequestOrderByWithRelationInput[] = [{ position: 'asc' }, { createdAt: 'asc' }];
+
+let shuffledPick: string | null = null;
 
 function queueInclude() {
   return { profile: true, song: { include: LATEST_JOB } } satisfies Prisma.SingRequestInclude;
@@ -43,13 +43,46 @@ function isUniqueViolation(error: unknown): boolean {
   return error instanceof Prisma.PrismaClientKnownRequestError && error.code === UNIQUE_CONSTRAINT_FAILED;
 }
 
-export async function listSingQueue(): Promise<SingRequestDTO[]> {
-  const requests = await prisma.singRequest.findMany({ orderBy: QUEUE_ORDER, include: queueInclude() });
-  return requests.map(toSingRequestDTO);
+async function lastSingerId(): Promise<string | null> {
+  const last = await prisma.performance.findFirst({
+    orderBy: { startedAt: 'desc' },
+    select: { profileId: true },
+  });
+  return last?.profileId ?? null;
 }
 
-export async function publishSingQueue(): Promise<void> {
-  emitToAll('singQueue:changed', { items: await listSingQueue() });
+export function pickNext(
+  items: SingRequestDTO[],
+  isShuffled: boolean,
+  previousPick: string | null,
+  avoidProfileId: string | null,
+  random: () => number = Math.random,
+): string | null {
+  const ready = items.filter((request) => request.song.status === 'READY');
+  if (ready.length === 0) return null;
+  if (!isShuffled) return ready[0]?.id ?? null;
+  if (previousPick && ready.some((request) => request.id === previousPick)) return previousPick;
+  const others = ready.filter((request) => request.profile.id !== avoidProfileId);
+  const candidates = others.length > 0 ? others : ready;
+  return candidates[Math.floor(random() * candidates.length)]?.id ?? null;
+}
+
+export async function getSingQueue(): Promise<SingQueueResponse> {
+  const [requests, settings] = await Promise.all([
+    prisma.singRequest.findMany({ orderBy: QUEUE_ORDER, include: queueInclude() }),
+    getAppSettings(),
+  ]);
+  const items = requests.map(toSingRequestDTO);
+  const isShuffled = settings['queue.shuffle'];
+  const nextId = pickNext(items, isShuffled, shuffledPick, isShuffled ? await lastSingerId() : null);
+  shuffledPick = isShuffled ? nextId : null;
+  return { items, nextId };
+}
+
+export async function publishSingQueue(): Promise<SingQueueResponse> {
+  const queue = await getSingQueue();
+  emitToAll('singQueue:changed', queue);
+  return queue;
 }
 
 async function assertCanRequest(input: CreateSingRequestInput): Promise<void> {
@@ -64,8 +97,17 @@ async function assertCanRequest(input: CreateSingRequestInput): Promise<void> {
   }
 }
 
-export async function addSingRequest(input: CreateSingRequestInput): Promise<SingRequestDTO> {
+function limitFor(settings: AppSettings, isFromStage: boolean): number {
+  if (isFromStage && settings['queue.stageBypassesLimit']) return NO_LIMIT;
+  return settings['queue.maxRequestsPerPerson'];
+}
+
+export async function addSingRequest(
+  input: CreateSingRequestInput,
+  isFromStage = false,
+): Promise<SingRequestDTO> {
   await assertCanRequest(input);
+  const limit = limitFor(await getAppSettings(), isFromStage);
 
   const created = await prisma
     .$transaction(async (transaction) => {
@@ -74,10 +116,10 @@ export async function addSingRequest(input: CreateSingRequestInput): Promise<Sin
         select: { songId: true },
       });
       if (mine.some((request) => request.songId === input.songId)) throw alreadyRequested();
-      if (mine.length >= MAX_SING_REQUESTS_PER_PROFILE) {
+      if (limit !== NO_LIMIT && mine.length >= limit) {
         throw conflict(
           'TOO_MANY_REQUESTS',
-          `Você já tem ${MAX_SING_REQUESTS_PER_PROFILE} músicas na fila. Espere cantar uma delas.`,
+          `Você já tem ${limit} ${limit === 1 ? 'música' : 'músicas'} na fila. Espere cantar uma delas.`,
         );
       }
       const last = await transaction.singRequest.aggregate({ _max: { position: true } });
@@ -105,7 +147,7 @@ export async function removeSingRequest(id: string, requesterProfileId: string |
   await publishSingQueue();
 }
 
-export async function reorderSingQueue(ids: string[]): Promise<SingRequestDTO[]> {
+export async function reorderSingQueue(ids: string[]): Promise<SingQueueResponse> {
   await prisma.$transaction(async (transaction) => {
     const current = await transaction.singRequest.findMany({ orderBy: QUEUE_ORDER, select: { id: true } });
     const currentIds = current.map((request) => request.id);
@@ -117,7 +159,5 @@ export async function reorderSingQueue(ids: string[]): Promise<SingRequestDTO[]>
     }
   });
 
-  const items = await listSingQueue();
-  emitToAll('singQueue:changed', { items });
-  return items;
+  return publishSingQueue();
 }
