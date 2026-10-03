@@ -4,7 +4,7 @@
 ```
 react@^19 react-dom@^19 react-router@^7 (modo biblioteca: import { ... } from "react-router")
 @tanstack/react-query@^5  zustand@^5  socket.io-client@^4
-qrcode.react  pitchy@^4  clsx  lucide-react (ícones)
+qrcode.react  pitchy@^4  clsx  lucide-react (ícones)  @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities (arrastar a fila, ADR-009)
 devDeps: vite  @vitejs/plugin-react  typescript  tailwindcss@^4  @tailwindcss/vite  vitest  @testing-library/react  jsdom
 ```
 
@@ -251,6 +251,7 @@ Próximos a cantar                                   [▶ Chamar o próximo]
 - **Chamar o próximo** = primeiro pedido com música `READY` → `/player/<songId>?pedido=<id>`. Também dá para chamar um pedido específico pelo botão ▶ da linha (se a música estiver pronta).
 - Vazia: "Ninguém na fila. Peça pelo celular: escaneie o QR code" + botão do QR code.
 - O contador da barra superior mostra o número de pedidos (some quando é zero).
+- **v2 (ADR-009):** botões **Adicionar** (janela "Pôr na fila de cantores": escolhe a pessoa, com "+ Convidado" ali mesmo, e a música da biblioteca; músicas com erro não aparecem) e **🔀 Aleatório** (`queue.shuffle`). O "Próximo" vem do servidor (`nextId`) e tem selo na linha. Cada linha tem uma alça para **arrastar** (dnd-kit: mouse com 6 px de distância, toque segurando 150 ms, teclado com espaço/setas) além de ↑↓. A página da música tem **"Pôr na fila"** (a mesma janela, com a música já escolhida).
 
 ### `/playlists` e `/playlists/:id`
 Grade de playlists (capa 2×2 com as 4 primeiras músicas). Página da playlist: [▶ Cantar tudo] [🔀 Aleatório], lista reordenável, remover item, renomear e excluir.
@@ -265,7 +266,8 @@ Pódio (1º, 2º e 3º com avatares grandes) da melhor média no período; abas 
 Seções:
 1. **Processamento:** dispositivo (Automático / GPU / CPU) + detectado ("GPU NVIDIA GeForce GT 1030, 2 GB: no modo automático será usada a CPU, porque a GPU tem pouca memória"); modelo Demucs; modelo Whisper; alinhar automaticamente; botão "Atualizar yt-dlp".
 2. **Pontuação:** modo (Afinação + plateia / Só afinação / Só plateia / Desligada); peso da plateia; tempo de votação; microfone (lista de `enumerateDevices`), **medidor de nível ao vivo** e latência (ms) com botão "Calibrar" (Fase 7).
-3. **Letra:** ligar/desligar o efeito de pintar e o modelo do efeito (o player só tem o botão liga/desliga).
+3. **Fila de cantores:** músicas esperando por pessoa (sem limite ou 1–10), "A TV pode passar do limite", "Chamar o próximo cantor" (desligado ou 5–60 s) e aleatório (ADR-009).
+3b. **Letra:** ligar/desligar o efeito de pintar e o modelo do efeito (o player só tem o botão liga/desliga).
 4. **Aparência:** tema padrão.
 5. **Acesso pelo celular:** código atual + "Gerar novo código".
 6. **Armazenamento:** espaço usado, número de músicas.

@@ -63,7 +63,7 @@ function SingQueueRow({
 function SingQueueSection() {
   const profileId = useMobileProfileStore((state) => state.profile?.id);
   const queue = useSingQueueQuery();
-  const requests = queue.data ?? [];
+  const requests = queue.data?.items ?? [];
 
   return (
     <section aria-label="Próximos a cantar" className="flex flex-col gap-2">

@@ -1,5 +1,5 @@
 import type { SongDTO } from '@caraoke/shared';
-import { AudioWaveform, Play, Trash2 } from 'lucide-react';
+import { AudioWaveform, ListPlus, Play, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { ApiError } from '../../api/client';
@@ -13,6 +13,7 @@ import { useProfileStore } from '../../stores/useProfileStore';
 import { toast } from '../../stores/useToastStore';
 import { AddToPlaylistButton } from '../playlists/AddToPlaylistButton';
 import { FavoriteButton } from '../playlists/FavoriteButton';
+import { AddRequestModal } from '../singQueue/AddRequestModal';
 import { LyricsPreview } from './LyricsPreview';
 import { SongEditor } from './SongEditor';
 import { LYRICS_LABELS, SOURCE_LABELS, describePlayCount } from './songLabels';
@@ -68,6 +69,7 @@ export function SongDetailPage() {
   const songQuery = useSongQuery(id, profileId);
   const deleteSong = useDeleteSongMutation();
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+  const [isQueueing, setIsQueueing] = useState(false);
 
   if (songQuery.isLoading) return <Spinner className="mx-auto mt-10 size-10" />;
   if (songQuery.isError) {
@@ -129,6 +131,12 @@ export function SongDetailPage() {
                 Ainda não está pronta · ver a fila
               </Link>
             )}
+            {song.status !== 'ERROR' && (
+              <Button variant="secondary" size="lg" onClick={() => setIsQueueing(true)}>
+                <ListPlus aria-hidden="true" className="size-5" />
+                Pôr na fila
+              </Button>
+            )}
             {isReady && (
               <>
                 <AddToPlaylistButton song={song} labeled />
@@ -163,6 +171,8 @@ export function SongDetailPage() {
           Excluir música
         </Button>
       </section>
+
+      <AddRequestModal isOpen={isQueueing} presetSong={song} onClose={() => setIsQueueing(false)} />
 
       <ConfirmDialog
         isOpen={isConfirmingDelete}

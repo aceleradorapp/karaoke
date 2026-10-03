@@ -1,5 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query';
-import type { JobDTO, JobStatus, SingRequestDTO, SongDTO, WorkerStatus } from '@caraoke/shared';
+import type { JobDTO, JobStatus, SingQueueResponse, SongDTO, WorkerStatus } from '@caraoke/shared';
 import { jobsQueryKey } from '../api/jobs';
 import { SING_QUEUE_QUERY_KEY } from '../api/singQueue';
 import type { SystemInfo } from '../api/system';
@@ -50,8 +50,15 @@ export function applyJobsReordered(queryClient: QueryClient, orderedIds: string[
 
 export function applySongUpdate(queryClient: QueryClient, song: SongDTO): void {
   queryClient.setQueryData(['song', song.id], song);
-  queryClient.setQueryData<SingRequestDTO[]>(SING_QUEUE_QUERY_KEY, (current) =>
-    current?.map((request) => (request.song.id === song.id ? { ...request, song } : request)),
+  queryClient.setQueryData<SingQueueResponse>(SING_QUEUE_QUERY_KEY, (current) =>
+    current
+      ? {
+          ...current,
+          items: current.items.map((request) =>
+            request.song.id === song.id ? { ...request, song } : request,
+          ),
+        }
+      : current,
   );
   void queryClient.invalidateQueries({ queryKey: ['songs'] });
   void queryClient.invalidateQueries({ queryKey: ['home'] });
@@ -69,6 +76,6 @@ export function applyWorkerStatus(queryClient: QueryClient, status: WorkerStatus
   );
 }
 
-export function applySingQueue(queryClient: QueryClient, items: SingRequestDTO[]): void {
-  queryClient.setQueryData(SING_QUEUE_QUERY_KEY, items);
+export function applySingQueue(queryClient: QueryClient, queue: SingQueueResponse): void {
+  queryClient.setQueryData(SING_QUEUE_QUERY_KEY, queue);
 }

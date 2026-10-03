@@ -40,7 +40,7 @@ export function MobileSongsPage() {
   const myRequests = useMemo(
     () =>
       new Map(
-        (queue.data ?? [])
+        (queue.data?.items ?? [])
           .filter((request) => request.profile.id === profileId)
           .map((request) => [request.song.id, request]),
       ),

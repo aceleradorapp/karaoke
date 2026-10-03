@@ -6,7 +6,7 @@ import { useLyricsQuery } from '../../api/lyrics';
 import { useCloseVotingMutation } from '../../api/performances';
 import { usePlaylistQuery } from '../../api/playlists';
 import { useProfilesQuery } from '../../api/profiles';
-import { firstReadyRequest, singRequestRoute, useSingQueueQuery } from '../../api/singQueue';
+import { nextRequestOf, singRequestRoute, useSingQueueQuery } from '../../api/singQueue';
 import { useSongQuery, useUpdateSongMutation } from '../../api/songs';
 import { Avatar } from '../../components/Avatar';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
@@ -113,8 +113,8 @@ function PlayerSession({ song }: { song: SongDTO }) {
   const carriedSingerId = (location.state as { singerId?: string } | null)?.singerId;
   const requestId = searchParams.get('pedido');
   const singQueue = useSingQueueQuery();
-  const request = singQueue.data?.find((item) => item.id === requestId) ?? null;
-  const nextRequest = firstReadyRequest(singQueue.data?.filter((item) => item.id !== requestId));
+  const request = singQueue.data?.items.find((item) => item.id === requestId) ?? null;
+  const nextRequest = nextRequestOf(singQueue.data, requestId);
   const hasChosenSinger = useRef(false);
 
   const [singerId, setSingerId] = useState<string | null>(carriedSingerId ?? currentProfile?.id ?? null);
