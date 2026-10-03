@@ -82,8 +82,13 @@ describe('access control', () => {
   it('never opens the audio to the phone, not even with the code in the address', async () => {
     const response = await request(`/media/some-song/voz.mp3?c=${ACCESS_CODE}`, PHONE_ADDRESS);
     expect(response.statusCode).toBe(401);
+  });
+
+  it('lets the phone read the lyrics with the code in the address, to follow along (ADR-009)', async () => {
     const lyrics = await request(`/media/some-song/letra.json?c=${ACCESS_CODE}`, PHONE_ADDRESS);
-    expect(lyrics.statusCode).toBe(401);
+    expect(lyrics.statusCode).not.toBe(401);
+    const withoutCode = await request('/media/some-song/letra.json', PHONE_ADDRESS);
+    expect(withoutCode.statusCode).toBe(401);
   });
 
   it('does not accept the code in the address for the API', async () => {

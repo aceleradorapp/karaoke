@@ -18,6 +18,7 @@ export const NAV_ITEMS: NavItem[] = [
 export const PROFILE_MENU_ITEMS: NavItem[] = [
   { to: '/favoritas', label: 'Favoritas' },
   { to: '/historico', label: 'Histórico' },
+  { to: '/perfis/gerenciar', label: 'Gerenciar perfis' },
   { to: '/configuracoes', label: 'Configurações' },
   { to: '/perfis', label: 'Trocar perfil' },
 ];

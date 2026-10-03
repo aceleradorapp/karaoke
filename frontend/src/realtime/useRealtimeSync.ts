@@ -26,7 +26,7 @@ export function useRealtimeSync(socket: RealtimeSocket = getSocket()): void {
     const onJobsReordered = ({ ids }: { ids: string[] }) => applyJobsReordered(queryClient, ids);
     const onSongUpdated = (song: Parameters<typeof applySongUpdate>[1]) => applySongUpdate(queryClient, song);
     const onSongDeleted = ({ id }: { id: string }) => applySongDeleted(queryClient, id);
-    const onSingQueue = ({ items }: SingQueueResponse) => applySingQueue(queryClient, items);
+    const onSingQueue = (queue: SingQueueResponse) => applySingQueue(queryClient, queue);
     const onProfilesChanged = () => void queryClient.invalidateQueries({ queryKey: PROFILES_QUERY_KEY });
     const onWorkerStatus = (status: Parameters<typeof applyWorkerStatus>[1]) =>
       applyWorkerStatus(queryClient, status);

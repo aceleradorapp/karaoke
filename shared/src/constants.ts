@@ -11,7 +11,9 @@ export const SUPPORTED_AUDIO_EXTENSIONS = [
   '.aac',
 ] as const;
 export const MAX_UPLOAD_FILES = 10;
-export const MAX_SING_REQUESTS_PER_PROFILE = 3;
+export const DEFAULT_MAX_REQUESTS_PER_PERSON = 3;
+export const MAX_REQUESTS_PER_PERSON_LIMIT = 10;
+export const AUTO_ADVANCE_MAX_SECONDS = 60;
 export const MAX_UPLOAD_BYTES = 60 * 1024 * 1024;
 
 export function isSupportedAudioFile(filename: string): boolean {

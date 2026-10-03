@@ -81,6 +81,8 @@ GET    /api/sing-queue
 POST   /api/sing-queue
 DELETE /api/sing-queue/:id     (só os próprios pedidos: ?profileId= tem que ser o dono)
 GET    /api/performances/voting/current
+GET    /api/player/state       (letra no celular, ADR-009)
+GET    /api/system/time        (acertar o relógio do celular)
 POST   /api/performances/:id/votes
 ```
 - Rotas fora de `/api` (estáticos do front) são liberadas para todos; `/media/*` só para o palco.
@@ -192,8 +194,8 @@ Regras: rejeitar vídeos com mais de **12 min** (`VIDEO_TOO_LONG`). Título e ar
 ### Fila de cantores (ADR-008) — `modules/singQueue/`
 | Método | Rota | Descrição |
 |---|---|---|
-| GET | `/api/sing-queue` | `{ items: SingRequestDTO[] }` em ordem de `position` |
-| POST | `/api/sing-queue` | `{ profileId, songId }` → `201 SingRequestDTO`. 404 `PROFILE_NOT_FOUND`/`SONG_NOT_FOUND`; 409 `SONG_UNAVAILABLE` (música com erro); 409 `ALREADY_REQUESTED` (mesma pessoa e música); 409 `TOO_MANY_REQUESTS` ("Você já tem 3 músicas na fila") |
+| GET | `/api/sing-queue` | `{ items: SingRequestDTO[], nextId: string \| null }` em ordem de `position`. `nextId` = quem é o próximo (ADR-009): o primeiro pedido pronto ou, com `queue.shuffle`, um sorteado no servidor entre os prontos (evita a pessoa da última apresentação quando há outra opção; o sorteio é mantido enquanto o pedido continuar na fila) |
+| POST | `/api/sing-queue` | `{ profileId, songId }` → `201 SingRequestDTO`. 404 `PROFILE_NOT_FOUND`/`SONG_NOT_FOUND`; 409 `SONG_UNAVAILABLE` (música com erro); 409 `ALREADY_REQUESTED` (mesma pessoa e música); 409 `TOO_MANY_REQUESTS` ("Você já tem N músicas na fila"; N = `queue.maxRequestsPerPerson`, 0 = sem limite; a TV não tem limite se `queue.stageBypassesLimit`) |
 | PUT | `/api/sing-queue/order` | (palco) `{ ids }` → regrava as posições; ids desconhecidos são ignorados e os que faltarem vão para o fim, na ordem atual |
 | DELETE | `/api/sing-queue/:id?profileId=` | 204. Do celular, `profileId` é obrigatório e precisa ser o dono (403 `NOT_YOUR_REQUEST`); o palco remove qualquer um |
 
@@ -204,7 +206,7 @@ type SingRequestDTO = {
   song: SongDTO;                     // status diz se está pronta (READY) ou "preparando"
 }
 ```
-Toda mudança (criar, remover, reordenar, apresentação começou, perfil ou música apagados) emite `singQueue:changed` com a fila inteira.
+Toda mudança (criar, remover, reordenar, apresentação começou, perfil ou música apagados, música ficou pronta, settings `queue.*` mudaram) emite `singQueue:changed` com `{ items, nextId }`.
 
 ### Fila de processamento (jobs)
 | Método | Rota | Descrição |
@@ -276,6 +278,15 @@ Ao encerrar a votação (timer de `voteSeconds` no servidor, `setTimeout` por pe
 
 **Implementação (2026-10-02):** `performances/voting.ts`. Só uma votação aberta por vez, guardada em memória: se outra música termina com a votação ainda aberta, a anterior é encerrada antes. Música deixada no meio (`completed=false`) não abre votação nem ganha nota. Sem modo de plateia, a nota final sai na resposta do `finish`. Se o backend reiniciar com uma votação aberta, ela se perde e a apresentação fica sem nota (aceitável no uso em casa).
 
+### Relógio da TV para a letra no celular (ADR-009) — `modules/player/`
+| Método | Rota | Descrição |
+|---|---|---|
+| POST | `/api/player/state` | (palco) `{ songId, singer: {name, avatar} \| null, position, playing, offsetMs, effect: {enabled, id, fillPercent} }` ou `{ stopped: true }`. O servidor completa título, artista, `lyricsUrl` e duração, carimba `at` (ms do relógio do PC), guarda em memória e emite `player:state` |
+| GET | `/api/player/state` | Estado atual ou `null` (celular que chega depois) |
+| GET | `/api/system/time` | `{ now }` em ms; o celular mede a diferença de relógio (3 amostras, usa a de menor ida e volta) |
+
+O celular calcula `posição = position + (agora + diferença − at) / 1000` quando `playing`. A letra (`/media/<id>/letra.json?c=CÓDIGO`) é liberada ao celular como as capas; o áudio continua bloqueado.
+
 ### Ranking
 | Método | Rota | Descrição |
 |---|---|---|
@@ -305,6 +316,7 @@ Ao encerrar a votação (timer de `voteSeconds` no servidor, `setTimeout` por pe
 | `score:final` | `{ performanceId, pitchScore, audienceScore, finalScore, votes }` | ambas | Fim da votação |
 | `settings:updated` | `AppSettings` | stage | Configurações mudaram |
 | `singQueue:changed` | `{ items: SingRequestDTO[] }` | ambas | Qualquer mudança na fila de cantores (ADR-008) |
+| `player:state` | `PlayerStateDTO \| null` | ambas | A TV deu play, pausou, mudou de posição, mudou o atraso/efeito, a cada 5 s, ou parou (`null`) — ADR-009 |
 | `profiles:changed` | — | ambas | Perfil criado, editado ou apagado (o convidado criado no celular aparece na TV na hora) |
 | `access:changed` | `{}` | mobile | Código regenerado (o celular mostra "escaneie de novo") |
 | `worker:status` | `{ online, device, gpuName }` | stage | Worker ficou online/offline |

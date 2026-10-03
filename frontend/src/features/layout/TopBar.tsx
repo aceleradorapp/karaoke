@@ -10,7 +10,7 @@ import { ProfileMenu } from './ProfileMenu';
 import { SearchBox } from './SearchBox';
 
 function SingQueueCount() {
-  const count = useSingQueueQuery().data?.length ?? 0;
+  const count = useSingQueueQuery().data?.items.length ?? 0;
   if (count === 0) return null;
   return (
     <>

@@ -29,6 +29,7 @@ import { MobileUploadPage } from './features/mobile/MobileUploadPage';
 import { MobileSongsPage } from './features/mobile/MobileSongsPage';
 import { MobileWhoAmIPage } from './features/mobile/MobileWhoAmIPage';
 import { MobileVotePage } from './features/mobile/MobileVotePage';
+import { MobileLyricsPage } from './features/mobile/MobileLyricsPage';
 
 export function App() {
   return (
@@ -43,6 +44,7 @@ export function App() {
           <Route path="/m/enviar" element={<MobileUploadPage />} />
           <Route path="/m/fila" element={<MobileQueuePage />} />
           <Route path="/m/votar" element={<MobileVotePage />} />
+          <Route path="/m/letra" element={<MobileLyricsPage />} />
           <Route path="/m/*" element={<Navigate to="/m/musicas" replace />} />
         </Route>
         <Route path="/perfis" element={<ProfilesPage />} />

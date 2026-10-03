@@ -4,12 +4,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
 import { useLyricsQuery } from '../../api/lyrics';
 import { useCloseVotingMutation } from '../../api/performances';
+import { useSettingsQuery } from '../../api/settings';
 import { usePlaylistQuery } from '../../api/playlists';
 import { useProfilesQuery } from '../../api/profiles';
-import { firstReadyRequest, singRequestRoute, useSingQueueQuery } from '../../api/singQueue';
+import { nextRequestOf, singRequestRoute, useSingQueueQuery } from '../../api/singQueue';
 import { useSongQuery, useUpdateSongMutation } from '../../api/songs';
 import { Avatar } from '../../components/Avatar';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
+import { CreateProfileModal } from '../profiles/CreateProfileModal';
 import { Spinner } from '../../components/Spinner';
 import type { LyricsEffectSettings } from '../../lib/lyrics/effects';
 import { coverGradient } from '../../lib/gradient';
@@ -27,6 +29,7 @@ import { SingerPicker } from './SingerPicker';
 import { useIdle } from './useIdle';
 import { useLyricsEffectChoice } from './useLyricsEffect';
 import { usePitchScoring } from './usePitchScoring';
+import { usePlayerBroadcast } from './usePlayerBroadcast';
 import { usePlayerSession, type PlayerSession } from './usePlayerSession';
 import { VotingScreen } from './VotingScreen';
 import { usePlayerShortcuts } from './usePlayerShortcuts';
@@ -98,6 +101,7 @@ function PlayerSession({ song }: { song: SongDTO }) {
   const profiles = useProfilesQuery();
   const lyrics = useLyricsQuery(song.lyricsUrl);
   const updateSong = useUpdateSongMutation(song.id);
+  const settings = useSettingsQuery();
   const pitch = usePitchScoring(song);
   const session = usePlayerSession(song, pitch);
   const closeVoting = useCloseVotingMutation();
@@ -112,12 +116,13 @@ function PlayerSession({ song }: { song: SongDTO }) {
   const carriedSingerId = (location.state as { singerId?: string } | null)?.singerId;
   const requestId = searchParams.get('pedido');
   const singQueue = useSingQueueQuery();
-  const request = singQueue.data?.find((item) => item.id === requestId) ?? null;
-  const nextRequest = firstReadyRequest(singQueue.data?.filter((item) => item.id !== requestId));
+  const request = singQueue.data?.items.find((item) => item.id === requestId) ?? null;
+  const nextRequest = nextRequestOf(singQueue.data, requestId);
   const hasChosenSinger = useRef(false);
 
   const [singerId, setSingerId] = useState<string | null>(carriedSingerId ?? currentProfile?.id ?? null);
   const [isConfirmingExit, setIsConfirmingExit] = useState(false);
+  const [isAddingGuest, setIsAddingGuest] = useState(false);
   const baseOffsetMs = useRef(song.lyricsOffsetMs);
 
   const isPerforming = session.phase === 'playing';
@@ -160,7 +165,7 @@ function PlayerSession({ song }: { song: SongDTO }) {
       toggleFullscreen,
       requestExit,
     },
-    isPerforming || session.phase === 'choosing',
+    (isPerforming || session.phase === 'choosing') && !isAddingGuest,
   );
 
   const queueStep = useMemo(
@@ -180,6 +185,16 @@ function PlayerSession({ song }: { song: SongDTO }) {
     session.stop();
     navigate(singRequestRoute(nextRequest), { replace: true });
   }, [nextRequest, session, navigate]);
+
+  usePlayerBroadcast({
+    songId: song.id,
+    singer: singer ? { name: singer.name, avatar: singer.avatar } : null,
+    isActive: isPerforming,
+    isPlaying: session.isPlaying,
+    offsetMs: baseOffsetMs.current + session.liveOffsetMs,
+    effect: { enabled: effectChoice.enabled, id: effectChoice.id, fillPercent: song.fillPercent },
+    getTime: session.getTime,
+  });
 
   const isLyricsLoading = song.lyricsUrl !== null && lyrics.isLoading;
   const effectiveOffsetMs = baseOffsetMs.current + session.liveOffsetMs;
@@ -207,6 +222,7 @@ function PlayerSession({ song }: { song: SongDTO }) {
                 hasChosenSinger.current = true;
                 setSingerId(profileId);
               }}
+              onAddGuest={() => setIsAddingGuest(true)}
               onStart={() => singerId && void session.start(singerId, requestId)}
               onBack={leave}
             />
@@ -272,6 +288,7 @@ function PlayerSession({ song }: { song: SongDTO }) {
             <FinishedScreen
               songTitle={song.title}
               score={session.result}
+              autoAdvanceSeconds={settings.data?.['queue.autoAdvanceSeconds'] ?? 0}
               onSingAgain={() => void session.restart()}
               onBack={leave}
               sequence={
@@ -363,6 +380,16 @@ function PlayerSession({ song }: { song: SongDTO }) {
           </>
         )}
       </div>
+
+      <CreateProfileModal
+        isOpen={isAddingGuest}
+        isGuest
+        onClose={() => setIsAddingGuest(false)}
+        onCreated={(profile) => {
+          hasChosenSinger.current = true;
+          setSingerId(profile.id);
+        }}
+      />
 
       <ConfirmDialog
         isOpen={isConfirmingExit}

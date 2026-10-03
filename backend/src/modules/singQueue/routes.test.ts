@@ -4,6 +4,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 import { resetDatabase } from '../../../test/database.js';
 import { buildApp } from '../../app.js';
 import { prisma } from '../../db.js';
+import { pickNext } from './service.js';
 import { emitToAll } from '../../realtime.js';
 
 vi.mock('../../realtime.js', () => ({ emitToRoom: vi.fn(), emitToAll: vi.fn(), disconnectRoom: vi.fn() }));
@@ -119,24 +120,120 @@ describe('sing queue routes', () => {
       expect(other.statusCode).toBe(201);
     });
 
-    it('limits each person to 3 waiting requests', async () => {
-      const ana = await createProfile('Ana');
-      const songs = await Promise.all(['A', 'B', 'C', 'D'].map((title) => createSong(title)));
-      for (const song of songs.slice(0, 3)) await request(ana.id, song.id);
-
-      const fourth = await request(ana.id, songs[3]!.id);
-
-      expect(fourth.statusCode).toBe(409);
-      expect(fourth.json().error).toMatchObject({ code: 'TOO_MANY_REQUESTS' });
-      expect(fourth.json().error.message).toContain('3 músicas');
-    });
-
     it('answers 404 for an unknown profile or song', async () => {
       const ana = await createProfile('Ana');
       const song = await createSong('Evidências');
 
       expect((await request('nope', song.id)).json().error.code).toBe('PROFILE_NOT_FOUND');
       expect((await request(ana.id, 'nope')).json().error.code).toBe('SONG_NOT_FOUND');
+    });
+  });
+
+  describe('limits', () => {
+    beforeEach(async () => {
+      await prisma.setting.create({ data: { key: 'access.code', value: 'ABC234' } });
+    });
+
+    const setSetting = (key: string, value: unknown) =>
+      prisma.setting.upsert({
+        where: { key },
+        update: { value: value as never },
+        create: { key, value: value as never },
+      });
+
+    async function fourSongsFor(name: string) {
+      const person = await createProfile(name);
+      const songs = await Promise.all(['A', 'B', 'C', 'D'].map((title) => createSong(`${title}-${name}`)));
+      return { person, songs };
+    }
+
+    it('limits a person to 3 waiting requests from the phone by default', async () => {
+      const { person, songs } = await fourSongsFor('Ana');
+      for (const song of songs.slice(0, 3)) await request(person.id, song.id, PHONE);
+
+      const fourth = await request(person.id, songs[3]!.id, PHONE);
+
+      expect(fourth.statusCode).toBe(409);
+      expect(fourth.json().error).toMatchObject({ code: 'TOO_MANY_REQUESTS' });
+      expect(fourth.json().error.message).toContain('3 músicas');
+    });
+
+    it('follows the limit chosen in the settings', async () => {
+      await setSetting('queue.maxRequestsPerPerson', 1);
+      const { person, songs } = await fourSongsFor('Ana');
+      await request(person.id, songs[0]!.id, PHONE);
+
+      const second = await request(person.id, songs[1]!.id, PHONE);
+
+      expect(second.statusCode).toBe(409);
+      expect(second.json().error.message).toContain('1 música na fila');
+    });
+
+    it('has no limit when it is set to zero', async () => {
+      await setSetting('queue.maxRequestsPerPerson', 0);
+      const { person, songs } = await fourSongsFor('Ana');
+
+      for (const song of songs) expect((await request(person.id, song.id, PHONE)).statusCode).toBe(201);
+    });
+
+    it('lets the TV go beyond the limit, unless the settings say otherwise', async () => {
+      const { person, songs } = await fourSongsFor('Ana');
+      for (const song of songs) expect((await request(person.id, song.id)).statusCode).toBe(201);
+
+      await setSetting('queue.stageBypassesLimit', false);
+      const other = await fourSongsFor('Bia');
+      for (const song of other.songs.slice(0, 3)) await request(other.person.id, song.id);
+      expect((await request(other.person.id, other.songs[3]!.id)).statusCode).toBe(409);
+    });
+  });
+
+  describe('who sings next', () => {
+    const setSetting = (key: string, value: unknown) =>
+      prisma.setting.upsert({
+        where: { key },
+        update: { value: value as never },
+        create: { key, value: value as never },
+      });
+    const queueResponse = async () => (await app.inject({ method: 'GET', url: '/api/sing-queue' })).json();
+
+    it('is the first request whose song is ready', async () => {
+      const ana = await createProfile('Ana');
+      const bia = await createProfile('Bia');
+      await request(ana.id, (await createSong('Nova', 'PROCESSING')).id);
+      const { id } = (await request(bia.id, (await createSong('Pronta')).id)).json();
+
+      expect((await queueResponse()).nextId).toBe(id);
+    });
+
+    it('is empty when no song is ready', async () => {
+      const ana = await createProfile('Ana');
+      await request(ana.id, (await createSong('Nova', 'PROCESSING')).id);
+
+      expect((await queueResponse()).nextId).toBeNull();
+    });
+
+    it('is drawn by the server in shuffle mode and stays the same until it is sung', async () => {
+      const people = await Promise.all(['Ana', 'Bia', 'Carla', 'Duda'].map((name) => createProfile(name)));
+      for (const person of people) await request(person.id, (await createSong(`Música ${person.name}`)).id);
+      await setSetting('queue.shuffle', true);
+
+      const first = (await queueResponse()).nextId;
+      const again = (await queueResponse()).nextId;
+
+      expect(first).not.toBeNull();
+      expect(again).toBe(first);
+    });
+
+    it('is announced again when the shuffle setting changes', async () => {
+      const ana = await createProfile('Ana');
+      await request(ana.id, (await createSong('Pronta')).id);
+      vi.mocked(emitToAll).mockClear();
+
+      await app.inject({ method: 'PATCH', url: '/api/settings', payload: { 'queue.shuffle': true } });
+
+      const events = vi.mocked(emitToAll).mock.calls.filter(([event]) => event === 'singQueue:changed');
+      expect(events).toHaveLength(1);
+      expect(events[0]?.[1]).toHaveProperty('nextId');
     });
   });
 
@@ -277,5 +374,29 @@ describe('sing queue routes', () => {
       expect(lastQueueEvent()).toEqual([]);
       expect(await queue()).toEqual([]);
     });
+  });
+});
+
+describe('pickNext', () => {
+  const item = (id: string, profileId: string, status = 'READY') =>
+    ({ id, profile: { id: profileId }, song: { status } }) as never;
+  const queue = [item('r1', 'ana', 'PROCESSING'), item('r2', 'ana'), item('r3', 'bia'), item('r4', 'carla')];
+
+  it('takes the first ready request in order when not shuffled', () => {
+    expect(pickNext(queue, false, 'r4', 'ana')).toBe('r2');
+  });
+
+  it('keeps the previous draw while it can still be sung', () => {
+    expect(pickNext(queue, true, 'r4', null, () => 0)).toBe('r4');
+  });
+
+  it('draws among ready requests, avoiding whoever sang last when possible', () => {
+    expect(pickNext(queue, true, null, 'ana', () => 0)).toBe('r3');
+    expect(pickNext(queue, true, null, 'ana', () => 0.99)).toBe('r4');
+    expect(pickNext([item('r2', 'ana')], true, null, 'ana', () => 0)).toBe('r2');
+  });
+
+  it('draws again when the previous one was sung', () => {
+    expect(pickNext(queue, true, 'gone', 'bia', () => 0)).toBe('r2');
   });
 });

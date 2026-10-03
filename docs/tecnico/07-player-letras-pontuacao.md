@@ -29,6 +29,8 @@ Overlay com o perfil atual pré-selecionado e os outros perfis em linha (o convi
 
 **Fim da música e a fila de cantores:** fora de uma playlist, se houver um pedido com música pronta, a tela de fim mostra "A seguir: João — Azul da Cor do Mar" e o botão **Chamar o próximo** (`/player/<songId>?pedido=<id>`, substituindo a página atual). A playlist tem prioridade quando o player foi aberto por ela.
 
+**Chamar o próximo sozinho (ADR-009):** com `queue.autoAdvanceSeconds > 0`, a tela de fim (com ou sem nota) mostra "Chamando em N s" com **Ir agora** e **Esperar** (que para a contagem e deixa o botão "Chamar o próximo"). Quando a contagem zera, abre o player do próximo pedido (`nextId` do servidor) com "Vez de Ana! 🎤" e o botão Começar; a música nunca começa sozinha.
+
 ### Atalhos de teclado
 | Tecla | Ação |
 |---|---|

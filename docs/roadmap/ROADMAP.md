@@ -18,6 +18,8 @@
 | 6 | Letras inteligentes | ✅ (feita antes da 5; só F6-02, transcrever músicas sem letra, ficou pausada) |
 | 5B | Convidados no celular e fila de cantores (ADR-008) | ✅ |
 | 7 | Pontuação e ranking | ✅ (sem teste com microfone real) |
+| 7B | Fila v2 e letra no celular (ADR-009) | ✅ |
+| 7C | Disputas (ADR-010) | ⬜ |
 | 8 | Publicação (futuro) | ⬜ |
 
 ---
@@ -155,15 +157,37 @@ Branch: `feature/f5b-fila-de-cantores`.
 | F7-07 | ✅ 2026-10-02 | API + tela `/ranking` (família e convidados juntos, filtro "Só a família") | T-04 §4.6 Ranking, T-06 §6.6 | 🟡 |
 | F7-08 | ✅ 2026-10-02 (29/29: TV + 3 celulares; sem microfone real) | ✔ Verificação: festa-teste com 2 celulares votando | — | 🟡 |
 
+## Fase 7B — Fila de cantores v2 e letra no celular (ADR-009)
+**Objetivo:** a festa anda quase sozinha (TV adiciona, arrasta, sorteia, chama o próximo com contagem) e quem não canta acompanha a letra pelo celular.
+Branch: `feature/f7b-fila-e-letra`.
+
+| ID | Status | Tarefa | Docs | Modelo |
+|---|---|---|---|---|
+| F7B-01 | ✅ 2026-10-03 | ADR-009/010 + roadmap + documento técnico | ADR-009, ADR-010 | 🟡 |
+| F7B-02 | ✅ 2026-10-03 | "+ Convidado" no "Quem vai cantar esta?" e "Gerenciar perfis" no menu | ADR-009 | 🟢 |
+| F7B-03 | ✅ 2026-10-03 | Backend da fila: limite configurável, TV passa do limite, aleatório com `nextId` no servidor + testes | ADR-009, T-04 Fila de cantores | 🔴 |
+| F7B-04 | ✅ 2026-10-03 | Palco: "+ Adicionar" e "Pôr na fila", arrastar (dnd-kit), botão Aleatório, "Próximo" vindo do servidor; seção Fila nas configurações | ADR-009, T-06 Próximos | 🟡 |
+| F7B-05 | ✅ 2026-10-03 | Chamar o próximo sozinho com contagem configurável depois da nota | ADR-009, T-07 §7.6 | 🟡 |
+| F7B-06 | ✅ 2026-10-03 | Letra no celular: relógio da TV (`/api/player/state`, `player:state`, `/api/system/time`), letra liberada, aba Letra, tela acesa | ADR-009, T-08 | 🔴 |
+| F7B-07 | ✅ 2026-10-03 (18/18: TV + 2 celulares) | ✔ Verificação: TV + celulares (adicionar, arrastar, aleatório, contagem, letra sincronizada) | — | 🟡 |
+
+## Fase 7C — Disputas (ADR-010)
+| ID | Status | Tarefa | Modelo |
+|---|---|---|---|
+| F7C-01 | ⬜ | Banco + API das disputas (criar, editar, participantes, músicas, imagem, iniciar, encerrar, placar) + testes | 🔴 |
+| F7C-02 | ⬜ | Modo disputa na fila e na votação (regras da disputa, pedidos normais guardados) + testes | 🔴 |
+| F7C-03 | ⬜ | Página `/disputas`: lista, criar/editar com arrastar participantes, músicas por pessoa | 🟡 |
+| F7C-04 | ⬜ | Placar ao vivo e pódio final da disputa | 🟡 |
+| F7C-05 | ⬜ | ✔ Verificação: disputa-teste com 3 participantes | 🟡 |
+
 ## Fase 8 — Publicação (futuro)
 | ID | Status | Tarefa | Modelo |
 |---|---|---|---|
 | F8-01 | ⬜ | ADR: onde hospedar e onde processar (PC de casa × nuvem com GPU) | 🔴 |
-| F8-02 | ⬜ | Conta da casa com senha acima dos perfis (ADR-003) + HTTPS | 🔴 |
+| F8-02 | ⬜ | Conta da casa com senha acima dos perfis (ADR-003) + HTTPS (servidor Linux da casa: domínio próprio apontando para o IP local + Caddy com Let's Encrypt via DNS; libera tela acesa, microfone de outro aparelho e instalar como app) | 🔴 |
 | F8-03 | ⬜ | Storage externo (S3 ou similar) e deploy | 🔴 |
 
 ## Backlog (ideias ainda sem fase)
-- Palco pôr música na fila de cantores para outra pessoa (hoje: só o celular pede; a TV toca direto)
 - Tocar a versão original enquanto o instrumental não fica pronto (hoje: play bloqueado)
 - Foto própria como avatar
 - Conquistas ("cantou 10 músicas", "nota 100")

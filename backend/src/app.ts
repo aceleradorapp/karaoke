@@ -8,6 +8,7 @@ import { favoriteRoutes } from './modules/favorites/routes.js';
 import { jobsInternalRoutes } from './modules/jobs/internalRoutes.js';
 import { jobRoutes } from './modules/jobs/routes.js';
 import { performanceRoutes } from './modules/performances/routes.js';
+import { playerRoutes } from './modules/player/routes.js';
 import { playlistRoutes } from './modules/playlists/routes.js';
 import { profileRoutes } from './modules/profiles/routes.js';
 import { rankingRoutes } from './modules/ranking/routes.js';
@@ -59,6 +60,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   await app.register(systemRoutes, { prefix: '/api' });
   await app.register(jobRoutes, { prefix: '/api' });
   await app.register(performanceRoutes, { prefix: '/api' });
+  await app.register(playerRoutes, { prefix: '/api' });
   await app.register(playlistRoutes, { prefix: '/api' });
   await app.register(favoriteRoutes, { prefix: '/api' });
   await app.register(profileRoutes, { prefix: '/api' });

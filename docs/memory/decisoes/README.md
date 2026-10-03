@@ -15,3 +15,5 @@ Architecture Decision Records — uma decisão por arquivo. Crie com `/nova-deci
 | ADR-006 | [Pontuação: afinação + bônus da plateia](ADR-006-pontuacao.md) | aceita |
 | ADR-007 | [Cancelamento e recuperação de jobs](ADR-007-cancelamento-e-recuperacao.md) | aceita |
 | ADR-008 | [Convidados pelo celular e fila de cantores](ADR-008-convidados-e-fila-de-cantores.md) | aceita |
+| ADR-009 | [Fila de cantores v2 e letra no celular](ADR-009-fila-v2-e-letra-no-celular.md) | aceita |
+| ADR-010 | [Disputas](ADR-010-disputas.md) | aceita |

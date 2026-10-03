@@ -114,7 +114,7 @@ describe('StageLayout', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Menu do perfil Ana' }));
     const menu = screen.getByRole('menu');
-    for (const label of ['Favoritas', 'Histórico', 'Configurações', 'Trocar perfil']) {
+    for (const label of ['Favoritas', 'Histórico', 'Gerenciar perfis', 'Configurações', 'Trocar perfil']) {
       expect(menu).toHaveTextContent(label);
     }
 
