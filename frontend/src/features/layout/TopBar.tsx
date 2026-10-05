@@ -69,7 +69,7 @@ export function TopBar() {
               end={item.end}
               className={({ isActive }) =>
                 clsx(
-                  'inline-flex min-h-11 items-center rounded-lg px-3 text-base hover:bg-surface-2',
+                  'inline-flex min-h-11 items-center rounded-lg px-3 text-base hover:bg-surface-2 xl:px-2 2xl:px-3',
                   isActive ? 'font-semibold text-primary' : 'text-text',
                 )
               }
@@ -89,7 +89,7 @@ export function TopBar() {
           aria-label="Buscar músicas"
           aria-expanded={isSearchOpen}
           onClick={() => setIsSearchOpen((open) => !open)}
-          className={clsx(ICON_BUTTON_CLASSES, 'xl:hidden')}
+          className={clsx(ICON_BUTTON_CLASSES, '2xl:hidden')}
         >
           <Search aria-hidden="true" />
         </button>

@@ -2,6 +2,18 @@
 
 > Entradas mais recentes no topo. Use `/fim-sessao` para registrar.
 
+## 2026-10-05 (10) — Fase 7C concluída: disputas
+**Antes da fase:** letra no celular ganhou botão de efeito e ajuste fino (±0,1 s) por celular, e o relógio passou a ser medido com 8 amostras e refeito a cada minuto (o Michael notou ~0,3 s de atraso). O "modo festa" (app empacotado, ~0,5 MB em vez de 15 MB no celular) ficou para depois, a pedido dele.
+**Feito:**
+- F7C-01/02: tabelas `competitions`, `competition_participants`, `competition_songs`; `competitionId` em pedidos e apresentações; único dos pedidos passou a incluir a disputa (migration escrita à mão, porque o Prisma pedia confirmação interativa).
+- API completa, com imagem por foto ou capa de música.
+- Iniciar põe os pedidos na fila por rodadas e guarda os pedidos normais; a fila e a votação usam as regras da disputa.
+- Placar por média (desempate pela melhor nota) e encerramento automático quando acabam os pedidos.
+- F7C-03/04: páginas `/disputas` e `/disputas/:id` (rascunho com perfis arrastados, convidado na hora, músicas por pessoa, regras salvas na hora; placar ao vivo; campeão com confete), faixa da disputa na página Próximos.
+**Verificado (F7C-05):** 391 testes backend, 831 frontend, 24 shared, 205 worker; disputa-teste no navegador com 3 participantes, 19/19 (criar, foto, arrastar, convidados, regras, rodadas, chamar o próximo sozinho, notas 100/80/60, encerramento automático, pedido normal de volta, sem rolagem de 360 a 1920 px).
+**Bug achado no navegador (corrigido):** com o item "Disputas", a barra superior quebrava em duas linhas em 1280/1366 px → abaixo de 1536 px a busca vira só o ícone de lupa.
+**Próximos passos:** modo festa (pendente a pedido do Michael); F6-02 pausada; Fase 8 no futuro.
+
 ## 2026-10-03 (9) — Fase 7B concluída: fila v2 e letra no celular
 **Antes da fase:** o player passou a ter só o botão "Efeito: ligado/desligado"; o modelo de pintar a letra foi para Configurações → Letra (o tempo continua por música, na página de sincronizar).
 **Decisões (conversa com o Michael):** ADR-009 (fila v2 + letra no celular) e ADR-010 (disputas, Fase 7C). Limite de pedidos configurável; HTTPS do futuro servidor Linux via domínio próprio + Caddy/Let's Encrypt anotado na Fase 8.

@@ -160,6 +160,7 @@ export const AVATARS = [
 ```
 - O indicador "⚙ N processando" leva a `/fila` e mostra o progresso do job atual (anel).
 - 📱 abre o **modal do QR code** (08).
+- Abaixo de 1536 px (2xl) a busca vira só o ícone de lupa, para os 8 itens caberem numa linha em 1280/1366 px.
 - Menu do perfil: trocar perfil, favoritas, histórico, tema, configurações.
 
 ### `/` — Início (estilo Netflix)
