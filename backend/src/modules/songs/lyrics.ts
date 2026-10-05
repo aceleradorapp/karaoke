@@ -57,7 +57,7 @@ export async function saveLyrics(songId: string, input: SaveLyricsInput): Promis
   await writeLyricsFiles(songId, doc);
   await prisma.song.update({
     where: { id: songId },
-    data: { lyricsSource: 'MANUAL', lyricsNeedsReview: false, lyricsOffsetMs: 0 },
+    data: { lyricsSource: 'MANUAL', lyricsNeedsReview: false, lyricsOffsetMs: 0, lyricsNotice: null },
   });
   return publishUpdated(songId);
 }

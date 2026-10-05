@@ -20,6 +20,7 @@ export function buildSong(overrides: Partial<SongDTO> = {}): SongDTO {
     melodyUrl: null,
     lyricsSource: 'NONE',
     lyricsNeedsReview: false,
+    lyricsNotice: null,
     lyricsOffsetMs: 0,
     fillPercent: 100,
     playCount: 0,

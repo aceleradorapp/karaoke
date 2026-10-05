@@ -2,6 +2,15 @@
 
 > Entradas mais recentes no topo. Use `/fim-sessao` para registrar.
 
+## 2026-10-05 (12) — Fase 7E concluída: saúde do sistema e reiniciar
+**Feito (ADR-011):**
+- F7E-02: relatório de saúde (`/api/system/health-report`: banco, worker, internet, LRCLIB, YouTube, disco, falhas recentes, cada um com dica do que fazer; 60 s de cache; uma segunda tentativa antes de acusar site fora do ar) e motivo da falta de letra (`lyricsNotice` NOT_FOUND/SITE_UNREACHABLE no worker e na música).
+- F7E-03: vigia `scripts/supervisor.mjs` no `npm run festa` (religa quem cair em 3 s; código 75 = reiniciar tudo) e `POST /api/system/restart`.
+- F7E-04: página `/saude`, ícone ⚠ na barra quando algo não está ok, seção Sistema nas configurações, tela "Reiniciando…" em todas as telas, motivo da letra na página da música.
+**Verificado (F7E-05):** 413 testes backend, 840 frontend, 24 shared, 205 worker; no modo festa de verdade, 9/9: página com as 7 verificações, worker derrubado e religado pelo vigia, botão Reiniciar com TV e celular mostrando "Reiniciando…" e voltando sozinhos (servidor novo, celular ainda identificado, worker de volta).
+**Achado real:** logo depois de ligar, o LRCLIB não respondeu em 6 s uma vez (depois ~1 s) → a verificação agora tenta duas vezes antes de avisar.
+**Pendente:** pacote de imagens (aguardando as imagens e as respostas do Michael); botão "Buscar a letra de novo" no backlog.
+
 ## 2026-10-05 (11) — Modo festa
 **Anotado para conversar:** pacote de imagens do app, botão "Reiniciar o sistema" nas configurações, mensagens de diagnóstico/painel de saúde (letras/LRCLIB, YouTube, worker, internet, disco) — em `contexto.md`.
 **Feito:** `npm run festa` monta o site e sobe servidor + worker; o servidor entrega o site comprimido (brotli/gzip, `@fastify/compress`, dependência nova registrada no T-04) com cache longo para os arquivos com hash e fallback SPA; QR na porta 3333.

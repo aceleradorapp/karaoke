@@ -243,3 +243,5 @@ Tamanho típico: 4 min ≈ 12.000 valores ≈ 60 KB. Ok.
 | LRCLIB | < 2 s |
 | Alinhamento stable-ts `small` CPU | 1–3 min |
 | Melodia | 5–15 s |
+
+**Motivo da falta de letra (ADR-011):** a etapa LYRICS manda `lyricsNotice` no resultado: `SITE_UNREACHABLE` quando o LRCLIB não respondeu (erro de rede/HTTP), `NOT_FOUND` quando respondeu sem letra, `null` quando achou ou é instrumental. O backend grava em `songs.lyricsNotice` (zerado ao salvar a letra à mão).

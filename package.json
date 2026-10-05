@@ -24,8 +24,7 @@
     "db:studio": "npm run db:studio -w backend",
     "worker:melody": "cd worker && .venv\\Scripts\\python.exe -m caraoke_worker.melody_backfill",
     "worker:setup": "powershell -ExecutionPolicy Bypass -File scripts/setup-worker.ps1",
-    "festa": "npm run build && concurrently -n api,worker -c blue,yellow \"npm:festa:api\" \"npm:dev:worker\"",
-    "festa:api": "npm run festa -w backend"
+    "festa": "npm run build && node scripts/supervisor.mjs"
   },
   "devDependencies": {
     "concurrently": "^9.0.0",

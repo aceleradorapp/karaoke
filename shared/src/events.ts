@@ -18,6 +18,7 @@ export const SOCKET_EVENTS = {
   profilesChanged: 'profiles:changed',
   playerState: 'player:state',
   competitionChanged: 'competition:changed',
+  systemRestarting: 'system:restarting',
   voteOpen: 'vote:open',
   voteProgress: 'vote:progress',
   scoreFinal: 'score:final',
@@ -44,6 +45,7 @@ export interface ServerToClientEvents {
   'profiles:changed': () => void;
   'player:state': (state: PlayerStateDTO | null) => void;
   'competition:changed': (payload: { id: string }) => void;
+  'system:restarting': () => void;
   'vote:open': (voting: VotingSummary) => void;
   'vote:progress': (payload: { performanceId: string; count: number }) => void;
   'score:final': (score: FinalScore) => void;

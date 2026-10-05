@@ -9,6 +9,13 @@ import { diskUsage } from '../../services/storage.js';
 import { updateYtdlp } from '../../services/ytdlp.js';
 import { getWorkerInfo } from '../../services/workerStatus.js';
 import { getAccessInfo, regenerateAccessCode } from './access.js';
+import { emitToAll } from '../../realtime.js';
+import { isSupervised, requestRestart } from '../../services/lifecycle.js';
+import { conflict } from '../../utils/errors.js';
+import { getHealthReport } from './health.js';
+
+const ACCEPTED = 202;
+const RESTART_DELAY_MS = 300;
 
 function readAppVersion(): string {
   const packagePath = path.join(REPO_ROOT, 'backend', 'package.json');
@@ -35,6 +42,26 @@ export async function systemRoutes(app: FastifyInstance): Promise<void> {
       worker: getWorkerInfo(),
       storage: { usedBytes: usage.usedBytes, songs },
     };
+  });
+
+  app
+    .withTypeProvider<ZodTypeProvider>()
+    .get(
+      '/system/health-report',
+      { schema: { querystring: z.object({ fresh: z.string().optional() }) } },
+      async (request) => getHealthReport(request.query.fresh === '1'),
+    );
+
+  app.post('/system/restart', async (_request, reply) => {
+    if (!isSupervised()) {
+      throw conflict(
+        'RESTART_UNAVAILABLE',
+        'Reiniciar pelo app só funciona no modo festa (npm run festa). No modo de desenvolvimento, reinicie pela janela do sistema.',
+      );
+    }
+    emitToAll('system:restarting');
+    setTimeout(() => void requestRestart(), RESTART_DELAY_MS);
+    return reply.status(ACCEPTED).send({ restarting: true });
   });
 
   app.get('/system/access', async () => getAccessInfo());
