@@ -20,6 +20,7 @@ function buildSong(overrides: Partial<Song> = {}): Song {
     hasMelody: false,
     lyricsSource: 'NONE',
     lyricsNeedsReview: false,
+    lyricsNotice: null,
     lyricsOffsetMs: 0,
     fillPercent: 100,
     playCount: 0,

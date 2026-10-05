@@ -4,6 +4,8 @@ export type SongSource = 'YOUTUBE' | 'UPLOAD';
 
 export type SongStatus = 'QUEUED' | 'PROCESSING' | 'READY' | 'ERROR';
 
+export type LyricsNotice = 'NOT_FOUND' | 'SITE_UNREACHABLE';
+
 export type LyricsSource = 'NONE' | 'LRCLIB' | 'PLAIN' | 'ALIGNED' | 'TRANSCRIBED' | 'MANUAL';
 
 export type JobStatus = 'PENDING' | 'RUNNING' | 'DONE' | 'FAILED' | 'CANCELED';
@@ -56,6 +58,7 @@ export interface SongDTO {
   melodyUrl: string | null;
   lyricsSource: LyricsSource;
   lyricsNeedsReview: boolean;
+  lyricsNotice: LyricsNotice | null;
   lyricsOffsetMs: number;
   fillPercent: number;
   playCount: number;
@@ -285,4 +288,22 @@ export interface CompetitionDTO extends CompetitionSummary {
   rules: CompetitionRules;
   participants: CompetitionParticipantDTO[];
   scoreboard: CompetitionScoreRow[];
+}
+
+export type HealthStatus = 'ok' | 'warning' | 'error';
+
+export interface HealthCheck {
+  id: string;
+  label: string;
+  status: HealthStatus;
+  message: string;
+  hint: string | null;
+}
+
+export interface HealthReport {
+  status: HealthStatus;
+  checkedAt: string;
+  checks: HealthCheck[];
+  canRestart: boolean;
+  mode: 'festa' | 'dev';
 }

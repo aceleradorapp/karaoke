@@ -64,6 +64,7 @@ model Song {
   lyricsSource      LyricsSource @default(NONE)
   lyricsNeedsReview Boolean      @default(false)
   lyricsOffsetMs    Int          @default(0)
+  lyricsNotice      String?      @db.VarChar(20)
   fillPercent       Int          @default(100)
   playCount         Int          @default(0)
   addedById         String?

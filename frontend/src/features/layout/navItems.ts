@@ -21,5 +21,6 @@ export const PROFILE_MENU_ITEMS: NavItem[] = [
   { to: '/historico', label: 'Histórico' },
   { to: '/perfis/gerenciar', label: 'Gerenciar perfis' },
   { to: '/configuracoes', label: 'Configurações' },
+  { to: '/saude', label: 'Saúde do sistema' },
   { to: '/perfis', label: 'Trocar perfil' },
 ];

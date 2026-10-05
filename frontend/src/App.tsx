@@ -11,6 +11,8 @@ import { QueuePage } from './features/processing/QueuePage';
 import { RankingPage } from './features/ranking/RankingPage';
 import { CompetitionPage } from './features/competitions/CompetitionPage';
 import { CompetitionsPage } from './features/competitions/CompetitionsPage';
+import { HealthPage } from './features/health/HealthPage';
+import { RestartingOverlay } from './features/health/RestartingOverlay';
 import { SingQueuePage } from './features/singQueue/SingQueuePage';
 import { SongDetailPage } from './features/songs/SongDetailPage';
 import { UploadPage } from './features/upload/UploadPage';
@@ -37,6 +39,7 @@ export function App() {
   return (
     <>
       <ThemeSync />
+      <RestartingOverlay />
       <Routes>
         <Route path="/m" element={<MobileEntry />} />
         <Route element={<MobileLayout />}>
@@ -62,6 +65,7 @@ export function App() {
             <Route path="/ranking" element={<RankingPage />} />
             <Route path="/disputas" element={<CompetitionsPage />} />
             <Route path="/disputas/:id" element={<CompetitionPage />} />
+            <Route path="/saude" element={<HealthPage />} />
             <Route path="/" element={<HomePage />} />
             <Route path="/biblioteca" element={<LibraryPage />} />
             <Route path="/favoritas" element={<FavoritesPage />} />

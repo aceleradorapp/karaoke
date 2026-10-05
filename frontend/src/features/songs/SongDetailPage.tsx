@@ -158,7 +158,7 @@ export function SongDetailPage() {
 
       <section aria-label="Letra" className="flex flex-col gap-3">
         <h2 className="text-xl font-semibold">Letra</h2>
-        <LyricsPreview url={song.lyricsUrl} />
+        <LyricsPreview url={song.lyricsUrl} notice={song.lyricsNotice} />
       </section>
 
       <section aria-label="Editar música" className="rounded-2xl bg-surface p-4 sm:p-6">

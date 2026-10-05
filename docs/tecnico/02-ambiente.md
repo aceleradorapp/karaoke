@@ -115,6 +115,7 @@ Scripts do frontend: `dev` (`vite`), `build` (`tsc -b && vite build`), `test` (`
 - Na TV: **http://localhost:3333**. O QR passa a apontar para `http://<ip>.nip.io:3333/m?c=…` (o backend usa `API_PORT` quando `NODE_ENV=production`; `backend/src/festa.ts` liga isso).
 - Medido (2026-10-05): celular abre em ~1–2 s, contra 15 MB e vários segundos no modo de desenvolvimento.
 - Mudança no código só aparece depois de rodar `npm run festa` de novo. Para desenvolver, use `npm run dev` (porta 5173, com recarga automática).
+- **Vigia (ADR-011):** `npm run festa` roda `scripts/supervisor.mjs`, que inicia o servidor (`node --import tsx src/festa.ts`) e o worker com `CARAOKE_SUPERVISED=1`, mostra as mensagens com `[api]`/`[worker]`, religa em 3 s quem cair e, quando o servidor sai com o código **75** (botão "Reiniciar o sistema", `POST /api/system/restart`), reinicia servidor e worker. Ctrl+C desliga tudo.
 
 ## 2.7 Setup do worker (Python)
 
