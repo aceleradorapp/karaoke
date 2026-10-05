@@ -48,6 +48,7 @@ Detecção: `isMobilePath(pathname)` em `lib/mobileApp.ts` = `/m` exato ou come�
 /fila                      Fila de processamento
 /proximos                  Fila de cantores: quem canta a seguir (ADR-008)
 /disputas                  Disputas: lista e "Nova disputa" (ADR-010)
+/saude                     Saúde do sistema: verificações com dica do que fazer + Reiniciar (ADR-011)
 /disputas/:id              Disputa: rascunho (nome, imagem, participantes arrastados, músicas, regras), placar ao vivo, campeão
 /playlists                 Minhas playlists
 /playlists/:id             Playlist (tocar em sequência, reordenar)
@@ -271,6 +272,12 @@ Listas simples com SongCard/linha; o histórico mostra data e nota.
 ### `/ranking`
 Pódio (1º, 2º e 3º com avatares grandes) da melhor média no período; abas Semana/Mês/Sempre; família e convidados juntos, com o filtro "Só a família" (ADR-008); listas "Quem mais cantou" e "Músicas mais cantadas"; destaque "Estrela do karaokê do mês" (nome neutro, sem supor gênero). Período e filtro ficam no endereço (`?periodo=week|all&familia=1`; o padrão é o mês). Convidados têm o selo "convidado".
 
+### `/saude` — Saúde do sistema (ADR-011)
+- Resumo (tudo funcionando / com avisos / com problemas), hora da verificação e modo (festa ou desenvolvimento); lista das verificações com os problemas primeiro, cada uma com mensagem e **"O que fazer"**; **Verificar agora** (`?fresh=1`); seção **Reiniciar**.
+- **Indicador** ⚠ na barra superior (âmbar = aviso, vermelho = problema) só quando algo não está ok; verificado a cada 2 min. Também no menu do perfil.
+- **Reiniciar o sistema** (aqui e em Configurações → Sistema): confirma, chama `POST /api/system/restart`; todas as telas (palco e celulares, pelo `system:restarting`) mostram "Reiniciando o sistema…" e recarregam quando `/api/health` volta. Fora do modo festa o botão fica desabilitado com a explicação.
+- Página da música: sem letra por **site fora do ar** mostra o motivo e aponta para a Saúde do sistema; sem letra porque **não existe** diz isso.
+
 ### `/configuracoes`
 Seções:
 1. **Processamento:** dispositivo (Automático / GPU / CPU) + detectado ("GPU NVIDIA GeForce GT 1030, 2 GB: no modo automático será usada a CPU, porque a GPU tem pouca memória"); modelo Demucs; modelo Whisper; alinhar automaticamente; botão "Atualizar yt-dlp".
@@ -279,7 +286,8 @@ Seções:
 3b. **Letra:** ligar/desligar o efeito de pintar e o modelo do efeito (o player só tem o botão liga/desliga).
 4. **Aparência:** tema padrão.
 5. **Acesso pelo celular:** código atual + "Gerar novo código".
-6. **Armazenamento:** espaço usado, número de músicas.
+6. **Sistema:** link para a Saúde do sistema + Reiniciar o sistema.
+6b. **Armazenamento:** espaço usado, número de músicas.
 7. **Perfis:** link para `/perfis/gerenciar`.
 
 ## 6.7 Estado

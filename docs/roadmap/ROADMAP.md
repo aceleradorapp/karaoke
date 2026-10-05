@@ -192,7 +192,7 @@ Branch: `feature/f7b-fila-e-letra`.
 | F7E-01 | ✅ 2026-10-05 | ADR-011 + roadmap | 🟡 |
 | F7E-02 | ✅ 2026-10-05 | Backend: relatório de saúde (banco, worker, internet, LRCLIB, YouTube, disco, falhas recentes) + motivo da falta de letra (`lyricsNotice`) no worker e na música + testes | 🔴 |
 | F7E-03 | ✅ 2026-10-05 | Reiniciar: vigia `scripts/supervisor.mjs` no `npm run festa`, `POST /api/system/restart`, `system:restarting` + testes | 🔴 |
-| F7E-04 | ⬜ | Telas: página `/saude`, indicador ⚠ na barra, seção Sistema nas configurações, camada "Reiniciando…", motivo da letra na música e na fila | 🟡 |
+| F7E-04 | ✅ 2026-10-05 | Telas: página `/saude`, indicador ⚠ na barra, seção Sistema nas configurações, camada "Reiniciando…", motivo da letra na música e na fila | 🟡 |
 | F7E-05 | ⬜ | ✔ Verificação: falhas simuladas (sem LRCLIB, worker parado) e reinício de verdade no modo festa | 🟡 |
 
 ## Fase 8 — Publicação (futuro)
@@ -204,6 +204,7 @@ Branch: `feature/f7b-fila-e-letra`.
 
 ## Backlog (ideias ainda sem fase)
 - **Para conversar:** pacote de imagens do app (aguardando o Michael). Detalhes em `docs/memory/contexto.md`
+- Botão "Buscar a letra de novo" na página da música (sem reprocessar tudo), útil quando o site das letras estava fora do ar
 - Tocar a versão original enquanto o instrumental não fica pronto (hoje: play bloqueado)
 - Foto própria como avatar
 - Conquistas ("cantou 10 músicas", "nota 100")

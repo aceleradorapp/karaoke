@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { within } from '@testing-library/react';
 import type { AppSettings, ProfileDTO } from '@caraoke/shared';
@@ -46,7 +47,9 @@ function renderPage(routes: Parameters<typeof mockApi>[0] = {}) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
     <QueryClientProvider client={queryClient}>
-      <SettingsPage />
+      <MemoryRouter>
+        <SettingsPage />
+      </MemoryRouter>
     </QueryClientProvider>,
   );
   return fetchMock;

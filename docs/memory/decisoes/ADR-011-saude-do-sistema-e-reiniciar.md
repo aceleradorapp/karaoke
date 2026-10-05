@@ -26,7 +26,7 @@ O Michael pediu mensagens que ajudem a entender o que está acontecendo, e um bo
 **Motivo da falta de letra, por música**
 - O worker passa a distinguir "letra não encontrada" de "o site das letras não respondeu".
 - O motivo vai no resultado do job (`lyricsNotice`: `NOT_FOUND` ou `SITE_UNREACHABLE`) e fica gravado na música (`songs.lyricsNotice`).
-- Aparece na música e na fila de processamento, com a dica de buscar de novo depois.
+- Aparece na página da música (e conta na saúde do sistema), com a dica do que fazer. Um botão "Buscar a letra de novo" ficou no backlog.
 
 **Reiniciar o sistema**
 - `npm run festa` passa a rodar um pequeno **vigia** (`scripts/supervisor.mjs`) que inicia o servidor e o worker.

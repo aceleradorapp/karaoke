@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router';
 import { useSingQueueQuery } from '../../api/singQueue';
 import { AccessQrModal } from '../mobile/AccessQrModal';
+import { HealthIndicator } from '../health/HealthIndicator';
 import { QueueIndicator } from '../processing/QueueIndicator';
 import { NAV_ITEMS } from './navItems';
 import { ProfileMenu } from './ProfileMenu';
@@ -94,6 +95,7 @@ export function TopBar() {
           <Search aria-hidden="true" />
         </button>
 
+        <HealthIndicator />
         <QueueIndicator />
 
         <button
