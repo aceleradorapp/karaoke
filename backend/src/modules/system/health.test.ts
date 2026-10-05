@@ -155,6 +155,20 @@ describe('system health', () => {
     });
   });
 
+  it('tries a second time before saying a site did not answer', async () => {
+    onlineWorker();
+    let lyricsCalls = 0;
+    const flaky: HealthProbes = {
+      ...probes(),
+      reach: async (url) => (url.includes('lrclib') ? (lyricsCalls += 1) > 1 : true),
+    };
+
+    const report = await buildHealthReport(flaky);
+
+    expect(lyricsCalls).toBe(2);
+    expect(byId(report, 'lyrics')?.status).toBe('ok');
+  });
+
   it('keeps the report for a minute unless asked to check again', async () => {
     onlineWorker();
     let calls = 0;

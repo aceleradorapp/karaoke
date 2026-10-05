@@ -235,9 +235,11 @@ export function worstStatus(checks: HealthCheck[]): HealthStatus {
 export async function buildHealthReport(probes: HealthProbes = defaultProbes): Promise<HealthReport> {
   const now = probes.now();
   const since = new Date(now - DAY_MS);
+  const reachTwice = async (url: string, timeoutMs: number) =>
+    (await probes.reach(url, timeoutMs)) || probes.reach(url, timeoutMs);
   const [hasInternet, hasLyricsSite] = await Promise.all([
-    probes.reach(INTERNET_URL, INTERNET_TIMEOUT_MS),
-    probes.reach(LYRICS_URL, LYRICS_TIMEOUT_MS),
+    reachTwice(INTERNET_URL, INTERNET_TIMEOUT_MS),
+    reachTwice(LYRICS_URL, LYRICS_TIMEOUT_MS),
   ]);
   const checks = await Promise.all([
     checkDatabase(),
