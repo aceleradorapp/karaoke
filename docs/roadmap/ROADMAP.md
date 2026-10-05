@@ -180,6 +180,12 @@ Branch: `feature/f7b-fila-e-letra`.
 | F7C-04 | ✅ 2026-10-05 | Placar ao vivo e pódio final da disputa | 🟡 |
 | F7C-05 | ✅ 2026-10-05 (19/19 no navegador) | ✔ Verificação: disputa-teste com 3 participantes | 🟡 |
 
+## Modo festa (2026-10-05)
+| ID | Status | Tarefa |
+|---|---|---|
+| MF-01 | ✅ 2026-10-05 | Servidor entrega o site empacotado e comprimido (`plugins/web.ts`, `@fastify/compress`) + `npm run festa`; QR na porta 3333 |
+| MF-02 | ✅ 2026-10-05 | Verificação: celular 0,3 MB/19 arquivos (~1–2 s, antes 15 MB/212), roteiros 7B (18/18) e 7C (19/19) rodando no modo festa |
+
 ## Fase 8 — Publicação (futuro)
 | ID | Status | Tarefa | Modelo |
 |---|---|---|---|
@@ -189,7 +195,6 @@ Branch: `feature/f7b-fila-e-letra`.
 
 ## Backlog (ideias ainda sem fase)
 - **Para conversar (2026-10-05):** pacote de imagens do app; botão "Reiniciar o sistema" nas configurações; mensagens de diagnóstico e painel de saúde (letras/LRCLIB, YouTube, worker, internet, disco). Detalhes em `docs/memory/contexto.md` → "Para conversar"
-- **Modo festa**: app empacotado e comprimido para o celular abrir rápido (hoje o modo de desenvolvimento manda ~15 MB; empacotado ~0,5 MB) — pedido para depois
 - Tocar a versão original enquanto o instrumental não fica pronto (hoje: play bloqueado)
 - Foto própria como avatar
 - Conquistas ("cantou 10 músicas", "nota 100")

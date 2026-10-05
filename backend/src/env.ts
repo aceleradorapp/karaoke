@@ -18,6 +18,7 @@ const envSchema = z.object({
   API_URL: z.string().url().default('http://127.0.0.1:3333'),
   YTDLP_PATH: z.string().default('./worker/.venv/Scripts/yt-dlp.exe'),
   PYTHON_PATH: z.string().default('./worker/.venv/Scripts/python.exe'),
+  WEB_DIST_DIR: z.string().default('./frontend/dist'),
   LRCLIB_USER_AGENT: z.string().default('caraoke-michael/0.1 (personal use)'),
 });
 
@@ -37,6 +38,7 @@ function loadEnv() {
     STORAGE_DIR: resolveFromRoot(env.STORAGE_DIR),
     YTDLP_PATH: resolveFromRoot(env.YTDLP_PATH),
     PYTHON_PATH: resolveFromRoot(env.PYTHON_PATH),
+    WEB_DIST_DIR: resolveFromRoot(env.WEB_DIST_DIR),
   };
 }
 
