@@ -2,6 +2,12 @@
 
 > Entradas mais recentes no topo. Use `/fim-sessao` para registrar.
 
+## 2026-10-05 (11) — Modo festa
+**Anotado para conversar:** pacote de imagens do app, botão "Reiniciar o sistema" nas configurações, mensagens de diagnóstico/painel de saúde (letras/LRCLIB, YouTube, worker, internet, disco) — em `contexto.md`.
+**Feito:** `npm run festa` monta o site e sobe servidor + worker; o servidor entrega o site comprimido (brotli/gzip, `@fastify/compress`, dependência nova registrada no T-04) com cache longo para os arquivos com hash e fallback SPA; QR na porta 3333.
+**Medido:** celular baixa 0,3 MB em 19 arquivos e abre em ~1–2 s (antes: 15,4 MB, 212 arquivos). Roteiros 7B (18/18) e 7C (19/19) passaram no modo festa; 397 testes backend.
+**Mudança para o Michael:** a janela "Karaoke - sistema" agora roda `npm run festa`; a TV abre **http://localhost:3333**; escanear o QR de novo. Para eu programar, volto para `npm run dev`.
+
 ## 2026-10-05 (10) — Fase 7C concluída: disputas
 **Antes da fase:** letra no celular ganhou botão de efeito e ajuste fino (±0,1 s) por celular, e o relógio passou a ser medido com 8 amostras e refeito a cada minuto (o Michael notou ~0,3 s de atraso). O "modo festa" (app empacotado, ~0,5 MB em vez de 15 MB no celular) ficou para depois, a pedido dele.
 **Feito:**

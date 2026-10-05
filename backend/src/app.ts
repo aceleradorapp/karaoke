@@ -1,3 +1,4 @@
+import compress from '@fastify/compress';
 import cors from '@fastify/cors';
 import multipart from '@fastify/multipart';
 import fastifyStatic from '@fastify/static';
@@ -21,7 +22,9 @@ import { uploadRoutes } from './modules/uploads/routes.js';
 import { youtubeRoutes } from './modules/youtube/routes.js';
 import { systemRoutes } from './modules/system/routes.js';
 import { registerAccessControl } from './plugins/access.js';
+import { env } from './env.js';
 import { registerErrorHandler } from './plugins/errors.js';
+import { hasBuiltWeb, registerWeb, webPageFallback } from './plugins/web.js';
 import { registerLenientJsonParser } from './plugins/jsonBody.js';
 import { storagePaths } from './services/storage.js';
 
@@ -30,6 +33,7 @@ const BODY_LIMIT_BYTES = 1_000_000;
 export interface BuildAppOptions {
   logger?: boolean;
   maxUploadBytes?: number;
+  webDistDir?: string | null;
 }
 
 export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyInstance> {
@@ -43,6 +47,14 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
 
+  const webDistDir =
+    options.webDistDir !== undefined
+      ? options.webDistDir
+      : env.NODE_ENV === 'production' && hasBuiltWeb(env.WEB_DIST_DIR)
+        ? env.WEB_DIST_DIR
+        : null;
+
+  if (webDistDir) await app.register(compress, { encodings: ['br', 'gzip'] });
   await app.register(cors, { origin: true });
   await app.register(multipart, {
     limits: { fileSize: options.maxUploadBytes ?? MAX_UPLOAD_BYTES, files: MAX_UPLOAD_FILES },
@@ -55,7 +67,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     list: false,
     dotfiles: 'deny',
   });
-  registerErrorHandler(app);
+  registerErrorHandler(app, webDistDir ? webPageFallback(webDistDir) : null);
   registerAccessControl(app);
 
   await app.register(systemRoutes, { prefix: '/api' });
@@ -74,6 +86,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   await app.register(youtubeRoutes, { prefix: '/api' });
   await app.register(systemInternalRoutes, { prefix: '/api' });
   await app.register(jobsInternalRoutes, { prefix: '/api' });
+  if (webDistDir) await registerWeb(app, webDistDir);
 
   return app;
 }

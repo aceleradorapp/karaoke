@@ -1,8 +1,10 @@
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { hasZodFastifySchemaValidationErrors } from 'fastify-type-provider-zod';
 import { AppError, type ErrorResponseBody } from '../utils/errors.js';
 
-export function registerErrorHandler(app: FastifyInstance): void {
+export type PageFallback = (request: FastifyRequest, reply: FastifyReply) => FastifyReply | null;
+
+export function registerErrorHandler(app: FastifyInstance, pageFallback: PageFallback | null = null): void {
   app.setErrorHandler((error, request, reply) => {
     if (error instanceof AppError) {
       const body: ErrorResponseBody = {
@@ -32,7 +34,9 @@ export function registerErrorHandler(app: FastifyInstance): void {
     return reply.status(500).send(body);
   });
 
-  app.setNotFoundHandler((_request, reply) => {
+  app.setNotFoundHandler((request, reply) => {
+    const page = pageFallback?.(request, reply);
+    if (page) return page;
     const body: ErrorResponseBody = {
       error: { code: 'ROUTE_NOT_FOUND', message: 'Rota não encontrada' },
     };
