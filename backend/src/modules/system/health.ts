@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import type { HealthCheck, HealthReport, HealthStatus } from '@caraoke/shared';
 import { prisma } from '../../db.js';
 import { env } from '../../env.js';
+import { isSupervised } from '../../services/lifecycle.js';
 import { storagePaths } from '../../services/storage.js';
 import { getWorkerInfo } from '../../services/workerStatus.js';
 
@@ -251,7 +252,7 @@ export async function buildHealthReport(probes: HealthProbes = defaultProbes): P
     status: worstStatus(checks),
     checkedAt: new Date(now).toISOString(),
     checks,
-    canRestart: process.env.CARAOKE_SUPERVISED === '1',
+    canRestart: isSupervised(),
     mode: env.NODE_ENV === 'production' ? 'festa' : 'dev',
   };
 }

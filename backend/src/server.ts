@@ -2,6 +2,7 @@ import { buildApp } from './app.js';
 import { env } from './env.js';
 import { attachRealtime, closeRealtime } from './realtime.js';
 import { recoverInterruptedJobs } from './modules/jobs/recovery.js';
+import { RESTART_EXIT_CODE, setRestartHandler } from './services/lifecycle.js';
 import { ensureDirs } from './services/storage.js';
 import { startUploadWatcher } from './services/watcher.js';
 import { startWorkerWatchdog } from './services/workerStatus.js';
@@ -19,14 +20,15 @@ async function main(): Promise<void> {
   startWorkerWatchdog();
   const uploadWatcher = startUploadWatcher();
 
-  const shutdown = async () => {
+  const shutdown = async (exitCode = 0) => {
     await uploadWatcher.close();
     await closeRealtime();
     await app.close();
-    process.exit(0);
+    process.exit(exitCode);
   };
-  process.on('SIGINT', shutdown);
-  process.on('SIGTERM', shutdown);
+  setRestartHandler(() => shutdown(RESTART_EXIT_CODE));
+  process.on('SIGINT', () => void shutdown());
+  process.on('SIGTERM', () => void shutdown());
 
   await app.listen({ host: env.API_HOST, port: env.API_PORT });
 }
