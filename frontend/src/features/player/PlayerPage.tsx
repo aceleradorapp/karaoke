@@ -288,7 +288,9 @@ function PlayerSession({ song }: { song: SongDTO }) {
             <FinishedScreen
               songTitle={song.title}
               score={session.result}
-              autoAdvanceSeconds={settings.data?.['queue.autoAdvanceSeconds'] ?? 0}
+              autoAdvanceSeconds={
+                singQueue.data?.autoAdvanceSeconds ?? settings.data?.['queue.autoAdvanceSeconds'] ?? 0
+              }
               onSingAgain={() => void session.restart()}
               onBack={leave}
               sequence={

@@ -16,11 +16,13 @@ model Profile {
   createdAt  DateTime @default(now())
   lastUsedAt DateTime @default(now())
 
-  playlists    Playlist[]
-  favorites    Favorite[]
-  performances Performance[]
-  songsAdded   Song[]        @relation("SongAddedBy")
-  singRequests SingRequest[]
+  playlists          Playlist[]
+  favorites          Favorite[]
+  performances       Performance[]
+  songsAdded         Song[]                   @relation("SongAddedBy")
+  singRequests       SingRequest[]
+  competitionEntries CompetitionParticipant[]
+  competitionSongs   CompetitionSong[]
 
   @@map("profiles")
 }
@@ -69,11 +71,12 @@ model Song {
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
 
-  jobs          Job[]
-  playlistItems PlaylistItem[]
-  favorites     Favorite[]
-  performances  Performance[]
-  singRequests  SingRequest[]
+  jobs             Job[]
+  playlistItems    PlaylistItem[]
+  favorites        Favorite[]
+  performances     Performance[]
+  singRequests     SingRequest[]
+  competitionSongs CompetitionSong[]
 
   @@index([status])
   @@index([artist])
@@ -156,19 +159,21 @@ model Favorite {
 }
 
 model Performance {
-  id             String    @id @default(cuid())
+  id             String       @id @default(cuid())
   profileId      String
-  profile        Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profile        Profile      @relation(fields: [profileId], references: [id], onDelete: Cascade)
   songId         String
-  song           Song      @relation(fields: [songId], references: [id], onDelete: Cascade)
-  startedAt      DateTime  @default(now())
+  song           Song         @relation(fields: [songId], references: [id], onDelete: Cascade)
+  startedAt      DateTime     @default(now())
   finishedAt     DateTime?
-  completed      Boolean   @default(false)
-  voiceGuideUsed Boolean   @default(false)
+  completed      Boolean      @default(false)
+  voiceGuideUsed Boolean      @default(false)
   pitchScore     Int?
   audienceScore  Int?
   finalScore     Int?
   votes          Vote[]
+  competitionId  String?
+  competition    Competition? @relation(fields: [competitionId], references: [id], onDelete: SetNull)
 
   @@index([profileId, startedAt])
   @@index([songId])
@@ -188,15 +193,17 @@ model Vote {
 }
 
 model SingRequest {
-  id        String   @id @default(cuid())
-  profileId String
-  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  songId    String
-  song      Song     @relation(fields: [songId], references: [id], onDelete: Cascade)
-  position  Int
-  createdAt DateTime @default(now())
+  id            String       @id @default(cuid())
+  profileId     String
+  profile       Profile      @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  songId        String
+  song          Song         @relation(fields: [songId], references: [id], onDelete: Cascade)
+  position      Int
+  createdAt     DateTime     @default(now())
+  competitionId String?
+  competition   Competition? @relation(fields: [competitionId], references: [id], onDelete: Cascade)
 
-  @@unique([profileId, songId])
+  @@unique([profileId, songId, competitionId])
   @@index([position])
   @@map("sing_requests")
 }
@@ -207,4 +214,59 @@ model Setting {
   updatedAt DateTime @updatedAt
 
   @@map("settings")
+}
+
+enum CompetitionStatus {
+  DRAFT
+  RUNNING
+  FINISHED
+}
+
+model Competition {
+  id                  String            @id @default(cuid())
+  name                String            @db.VarChar(80)
+  imageExt            String?           @db.VarChar(5)
+  status              CompetitionStatus @default(DRAFT)
+  songsPerParticipant Int               @default(2)
+  scoringMode         String            @default("audience") @db.VarChar(20)
+  voteSeconds         Int               @default(20)
+  autoAdvanceSeconds  Int               @default(15)
+  shuffle             Boolean           @default(false)
+  startedAt           DateTime?
+  finishedAt          DateTime?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  participants CompetitionParticipant[]
+  songs        CompetitionSong[]
+  requests     SingRequest[]
+  performances Performance[]
+
+  @@index([status])
+  @@map("competitions")
+}
+
+model CompetitionParticipant {
+  competitionId String
+  competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  profileId     String
+  profile       Profile     @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  position      Int
+
+  @@id([competitionId, profileId])
+  @@map("competition_participants")
+}
+
+model CompetitionSong {
+  id            String      @id @default(cuid())
+  competitionId String
+  competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  profileId     String
+  profile       Profile     @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  songId        String
+  song          Song        @relation(fields: [songId], references: [id], onDelete: Cascade)
+  position      Int
+
+  @@unique([competitionId, profileId, songId])
+  @@map("competition_songs")
 }

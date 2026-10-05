@@ -287,6 +287,25 @@ Ao encerrar a votação (timer de `voteSeconds` no servidor, `setTimeout` por pe
 
 O celular calcula `posição = position + (agora + diferença − at) / 1000` quando `playing`. A letra (`/media/<id>/letra.json?c=CÓDIGO`) é liberada ao celular como as capas; o áudio continua bloqueado.
 
+### Disputas (ADR-010) — `modules/competitions/` (só o palco)
+| Método | Rota | Descrição |
+|---|---|---|
+| GET | `/api/competitions` | `{ items: CompetitionSummary[] }` (mais recentes primeiro) |
+| POST | `/api/competitions` | `{ name }` → rascunho com as regras copiadas das configurações (modo da nota, tempo de voto, chamar o próximo) |
+| GET | `/api/competitions/:id` | `CompetitionDTO`: resumo + `rules` + `participants` (com as músicas) + `scoreboard` (média, melhor nota, cantou X de Y; ordem: média, desempate pela melhor nota, sem nota no fim) |
+| PATCH | `/api/competitions/:id` | `{ name?, songsPerParticipant? (1–5, só rascunho), scoringMode?, voteSeconds?, autoAdvanceSeconds?, shuffle? }` (regras mudam até encerrar) |
+| DELETE | `/api/competitions/:id` | 204; 409 `COMPETITION_RUNNING` se em andamento |
+| PUT | `/api/competitions/:id/participants` | `{ profileIds }` na ordem (só rascunho); tira as músicas de quem saiu |
+| POST | `/api/competitions/:id/songs` | `{ profileId, songId }` (só rascunho): 409 `TOO_MANY_SONGS`, `ALREADY_IN_COMPETITION`, `SONG_UNAVAILABLE`; 404 `PARTICIPANT_NOT_FOUND` |
+| DELETE | `/api/competitions/:id/songs/:entryId` | Tira uma música da lista |
+| POST | `/api/competitions/:id/start` | Precisa de 2+ participantes e alguma música; uma disputa por vez (409 `COMPETITION_ALREADY_RUNNING`). Cria os pedidos na fila **por rodadas** (`competitionId` preenchido) |
+| POST | `/api/competitions/:id/finish` | Encerra: apaga os pedidos que sobraram da disputa; os pedidos normais voltam |
+| POST | `/api/competitions/:id/image` | multipart `file` (JPG/PNG/WEBP até 5 MB) → `storage/disputas/<id>.<ext>` |
+| POST | `/api/competitions/:id/image/from-song` | `{ songId }` copia a capa da música |
+| DELETE / GET | `/api/competitions/:id/image` | Remove / serve a imagem |
+
+**Modo disputa:** com uma disputa `RUNNING`, a fila mostra **só os pedidos dela** (os normais ficam guardados, `competitionId = null`) e responde também `competition: {id, name}` e `autoAdvanceSeconds` (da disputa ou das configurações). O aleatório e o tempo para chamar o próximo vêm da disputa. A apresentação começada por um pedido da disputa leva o `competitionId`; o modo da nota e o tempo de votação vêm da disputa. Quando a nota de uma apresentação da disputa sai (ou a pessoa sai no meio) e não sobra pedido dela, a disputa **encerra sozinha**. Evento `competition:changed` `{ id }` a cada mudança.
+
 ### Ranking
 | Método | Rota | Descrição |
 |---|---|---|
@@ -317,6 +336,7 @@ O celular calcula `posição = position + (agora + diferença − at) / 1000` qu
 | `settings:updated` | `AppSettings` | stage | Configurações mudaram |
 | `singQueue:changed` | `{ items: SingRequestDTO[] }` | ambas | Qualquer mudança na fila de cantores (ADR-008) |
 | `player:state` | `PlayerStateDTO \| null` | ambas | A TV deu play, pausou, mudou de posição, mudou o atraso/efeito, a cada 5 s, ou parou (`null`) — ADR-009 |
+| `competition:changed` | `{ id }` | ambas | Disputa criada, editada, iniciada, nota nova ou encerrada (ADR-010) |
 | `profiles:changed` | — | ambas | Perfil criado, editado ou apagado (o convidado criado no celular aparece na TV na hora) |
 | `access:changed` | `{}` | mobile | Código regenerado (o celular mostra "escaneie de novo") |
 | `worker:status` | `{ online, device, gpuName }` | stage | Worker ficou online/offline |

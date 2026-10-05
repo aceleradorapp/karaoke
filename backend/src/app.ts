@@ -4,6 +4,7 @@ import fastifyStatic from '@fastify/static';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
 import { MAX_UPLOAD_BYTES, MAX_UPLOAD_FILES } from '@caraoke/shared';
+import { competitionRoutes } from './modules/competitions/routes.js';
 import { favoriteRoutes } from './modules/favorites/routes.js';
 import { jobsInternalRoutes } from './modules/jobs/internalRoutes.js';
 import { jobRoutes } from './modules/jobs/routes.js';
@@ -63,6 +64,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   await app.register(playerRoutes, { prefix: '/api' });
   await app.register(playlistRoutes, { prefix: '/api' });
   await app.register(favoriteRoutes, { prefix: '/api' });
+  await app.register(competitionRoutes, { prefix: '/api' });
   await app.register(profileRoutes, { prefix: '/api' });
   await app.register(rankingRoutes, { prefix: '/api' });
   await app.register(settingsRoutes, { prefix: '/api' });

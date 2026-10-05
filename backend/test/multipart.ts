@@ -3,6 +3,7 @@ export interface FormPart {
   value?: string;
   filename?: string;
   content?: Buffer | string;
+  contentType?: string;
 }
 
 const BOUNDARY = '----caraoke-test-boundary';
@@ -15,7 +16,9 @@ export function buildMultipart(parts: FormPart[]): { payload: Buffer; headers: R
       ? `form-data; name="${part.name}"; filename="${part.filename}"`
       : `form-data; name="${part.name}"`;
     const header = `--${BOUNDARY}\r\nContent-Disposition: ${disposition}\r\n`;
-    const contentType = part.filename ? 'Content-Type: application/octet-stream\r\n' : '';
+    const contentType = part.filename
+      ? `Content-Type: ${part.contentType ?? 'application/octet-stream'}\r\n`
+      : '';
     chunks.push(Buffer.from(`${header}${contentType}\r\n`));
     chunks.push(Buffer.from(part.filename ? (part.content ?? '') : (part.value ?? '')));
     chunks.push(Buffer.from('\r\n'));

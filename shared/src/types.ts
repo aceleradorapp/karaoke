@@ -201,9 +201,16 @@ export interface SingRequestDTO {
   song: SongDTO;
 }
 
+export interface SingQueueCompetition {
+  id: string;
+  name: string;
+}
+
 export interface SingQueueResponse {
   items: SingRequestDTO[];
   nextId: string | null;
+  competition: SingQueueCompetition | null;
+  autoAdvanceSeconds: number;
 }
 
 export type RankingPeriod = 'week' | 'month' | 'all';
@@ -237,4 +244,45 @@ export interface PlayerStateDTO {
   offsetMs: number;
   effect: PlayerEffectState;
   at: number;
+}
+
+export type CompetitionStatus = 'DRAFT' | 'RUNNING' | 'FINISHED';
+
+export interface CompetitionRules {
+  songsPerParticipant: number;
+  scoringMode: ScoringMode;
+  voteSeconds: number;
+  autoAdvanceSeconds: number;
+  shuffle: boolean;
+}
+
+export interface CompetitionSummary {
+  id: string;
+  name: string;
+  status: CompetitionStatus;
+  imageUrl: string | null;
+  participantsCount: number;
+  createdAt: string;
+  startedAt: string | null;
+  finishedAt: string | null;
+}
+
+export interface CompetitionParticipantDTO {
+  profile: RankingProfile;
+  position: number;
+  songs: Array<{ id: string; song: SongDTO }>;
+}
+
+export interface CompetitionScoreRow {
+  profile: RankingProfile;
+  avg: number | null;
+  best: number | null;
+  sung: number;
+  total: number;
+}
+
+export interface CompetitionDTO extends CompetitionSummary {
+  rules: CompetitionRules;
+  participants: CompetitionParticipantDTO[];
+  scoreboard: CompetitionScoreRow[];
 }

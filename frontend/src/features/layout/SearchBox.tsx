@@ -25,7 +25,7 @@ export function SearchBox({ isOpenOnSmallScreens, onSubmitted }: SearchBoxProps)
       role="search"
       onSubmit={handleSubmit}
       className={clsx(
-        'order-last w-full items-center gap-2 rounded-lg bg-surface-2 px-3 xl:order-none xl:flex xl:w-56',
+        'order-last w-full items-center gap-2 rounded-lg bg-surface-2 px-3 2xl:order-none 2xl:flex 2xl:w-56',
         isOpenOnSmallScreens ? 'flex' : 'hidden',
       )}
     >
