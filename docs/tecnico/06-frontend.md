@@ -133,6 +133,7 @@ export const AVATARS = [
   { id: 'disco',      emoji: '🪩', bg: '#7c3aed' },
 ] as const;
 ```
+**Avatares divertidos (2026-10-05):** mais 20 avatares com imagem (`image: '/avatars/<id>.svg'`), guardados em `frontend/public/avatars/` (148 KB no total, funcionam sem internet): 8 carinhas sorridentes (`sorriso-*`), 6 robôs (`robo-*`), 5 emojis (`emoji-*`) e 1 pirata desenhado (`rabisco-pirata`). Gerados pelo DiceBear com estilos de licença livre; créditos em `frontend/public/avatars/CREDITOS.txt` e `docs/creditos/avatares.txt` (CC BY pede o crédito). O `Avatar` mostra a imagem quando o avatar tem `image`, senão o emoji; o `emoji` continua no registro como reserva.
 (Backlog: permitir enviar foto própria.)
 
 ## 6.6 Telas do palco

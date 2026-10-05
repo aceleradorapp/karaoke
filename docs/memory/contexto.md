@@ -66,7 +66,7 @@ i5-4460 (4 núcleos) · 8 GB de RAM · GeForce GT 1030 com 2 GB → o Demucs rod
 - Votação: ninguém vota na própria apresentação. Ranking: família e convidados juntos, com filtro "Só a família".
 
 ## Perguntas em aberto / para conversar (anotado em 2026-10-05)
-- **Biblioteca pequena de imagens:** o Michael vai baixar um pacote de imagens para usar no app (ex.: imagens de disputa, fundos, avatares). Combinar onde guardar (pasta versionada × `storage/`), formato, licença e onde elas aparecem.
+- ~~Biblioteca pequena de imagens~~ → feito em 2026-10-05: 20 avatares divertidos (licença livre, créditos em `docs/creditos/avatares.txt`).
 - **Reiniciar o sistema pelas Configurações:** um botão que reinicia tudo sozinho (servidor, worker e site). Conversar como fazer com segurança (quem reinicia o processo quando ele mesmo cai: um "vigia"/script, serviço do Windows ou, no futuro, systemd no Linux) e o que mostrar na tela enquanto volta.
 - **Mensagens de diagnóstico para manutenção:** avisos claros quando algo externo falhar, por exemplo o site das letras (LRCLIB) fora do ar ou bloqueado, YouTube recusando (yt-dlp desatualizado), worker offline, sem internet, disco cheio. Ideia: um painel de "Saúde do sistema" e avisos na fila/na música explicando o que verificar.
 

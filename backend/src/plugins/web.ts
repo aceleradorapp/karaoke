@@ -19,8 +19,8 @@ export async function registerWeb(app: FastifyInstance, distDir: string): Promis
     root: distDir,
     prefix: '/',
     decorateReply: false,
-    index: false,
-    wildcard: false,
+    index: [INDEX_FILE],
+    wildcard: true,
     setHeaders: (reply, filePath) => {
       reply.header('Cache-Control', filePath.includes(HASHED_ASSETS_DIR) ? LONG_CACHE : NO_CACHE);
     },
