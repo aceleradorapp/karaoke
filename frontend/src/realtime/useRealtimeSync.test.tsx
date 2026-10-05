@@ -131,7 +131,7 @@ describe('useRealtimeSync', () => {
 
   it('stops listening when the component goes away', () => {
     const { socket, unmount } = setup();
-    expect(socket.totalListeners()).toBe(9);
+    expect(socket.totalListeners()).toBe(10);
 
     unmount();
 

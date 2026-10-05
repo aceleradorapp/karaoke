@@ -9,6 +9,8 @@ import { StageLayout } from './features/layout/StageLayout';
 import { SettingsPage } from './features/settings/SettingsPage';
 import { QueuePage } from './features/processing/QueuePage';
 import { RankingPage } from './features/ranking/RankingPage';
+import { CompetitionPage } from './features/competitions/CompetitionPage';
+import { CompetitionsPage } from './features/competitions/CompetitionsPage';
 import { SingQueuePage } from './features/singQueue/SingQueuePage';
 import { SongDetailPage } from './features/songs/SongDetailPage';
 import { UploadPage } from './features/upload/UploadPage';
@@ -58,6 +60,8 @@ export function App() {
             <Route path="/fila" element={<QueuePage />} />
             <Route path="/proximos" element={<SingQueuePage />} />
             <Route path="/ranking" element={<RankingPage />} />
+            <Route path="/disputas" element={<CompetitionsPage />} />
+            <Route path="/disputas/:id" element={<CompetitionPage />} />
             <Route path="/" element={<HomePage />} />
             <Route path="/biblioteca" element={<LibraryPage />} />
             <Route path="/favoritas" element={<FavoritesPage />} />

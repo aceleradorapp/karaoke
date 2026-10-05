@@ -176,8 +176,8 @@ Branch: `feature/f7b-fila-e-letra`.
 |---|---|---|---|
 | F7C-01 | ✅ 2026-10-05 | Banco + API das disputas (criar, editar, participantes, músicas, imagem, iniciar, encerrar, placar) + testes | 🔴 |
 | F7C-02 | ✅ 2026-10-05 | Modo disputa na fila e na votação (regras da disputa, pedidos normais guardados) + testes | 🔴 |
-| F7C-03 | ⬜ | Página `/disputas`: lista, criar/editar com arrastar participantes, músicas por pessoa | 🟡 |
-| F7C-04 | ⬜ | Placar ao vivo e pódio final da disputa | 🟡 |
+| F7C-03 | ✅ 2026-10-05 | Página `/disputas`: lista, criar/editar com arrastar participantes, músicas por pessoa | 🟡 |
+| F7C-04 | ✅ 2026-10-05 | Placar ao vivo e pódio final da disputa | 🟡 |
 | F7C-05 | ⬜ | ✔ Verificação: disputa-teste com 3 participantes | 🟡 |
 
 ## Fase 8 — Publicação (futuro)

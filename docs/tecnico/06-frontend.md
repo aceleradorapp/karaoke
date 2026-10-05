@@ -47,6 +47,8 @@ Detecção: `isMobilePath(pathname)` em `lib/mobileApp.ts` = `/m` exato ou come�
 /enviar                    Upload de arquivos
 /fila                      Fila de processamento
 /proximos                  Fila de cantores: quem canta a seguir (ADR-008)
+/disputas                  Disputas: lista e "Nova disputa" (ADR-010)
+/disputas/:id              Disputa: rascunho (nome, imagem, participantes arrastados, músicas, regras), placar ao vivo, campeão
 /playlists                 Minhas playlists
 /playlists/:id             Playlist (tocar em sequência, reordenar)
 /favoritas                 Favoritas do perfil
@@ -252,6 +254,12 @@ Próximos a cantar                                   [▶ Chamar o próximo]
 - Vazia: "Ninguém na fila. Peça pelo celular: escaneie o QR code" + botão do QR code.
 - O contador da barra superior mostra o número de pedidos (some quando é zero).
 - **v2 (ADR-009):** botões **Adicionar** (janela "Pôr na fila de cantores": escolhe a pessoa, com "+ Convidado" ali mesmo, e a música da biblioteca; músicas com erro não aparecem) e **🔀 Aleatório** (`queue.shuffle`). O "Próximo" vem do servidor (`nextId`) e tem selo na linha. Cada linha tem uma alça para **arrastar** (dnd-kit: mouse com 6 px de distância, toque segurando 150 ms, teclado com espaço/setas) além de ↑↓. A página da música tem **"Pôr na fila"** (a mesma janela, com a música já escolhida).
+
+### `/disputas` e `/disputas/:id` (ADR-010)
+- Lista em cartões (imagem 16:9, nome, status, número de participantes) e **Nova disputa** (só o nome; abre a disputa).
+- **Rascunho:** nome com salvamento automático; imagem (**Enviar foto** JPG/PNG/WEBP até 5 MB, **Usar capa de música**, **Tirar imagem**); quadro **Perfis → Na disputa** (arrastar com dnd-kit ou tocar no +; "Convidado" cria e já põe na disputa; a ordem da direita é a ordem das rodadas e também se arrasta); cada participante mostra as músicas escolhidas (X/N) e **"Música para Ana"** abre a busca da biblioteca; **Regras da disputa** (músicas por pessoa, modo da nota, tempo de voto, chamar o próximo, aleatório) salvas na hora; **Começar a disputa** (precisa de 2+ participantes e alguma música) leva para `/proximos`.
+- **Em andamento:** **Ir para a fila**, **Encerrar disputa** (confirma), **Placar** ao vivo (`competition:changed`) e as regras (menos músicas por pessoa). A página Próximos mostra a faixa "Disputa X em andamento".
+- **Encerrada:** campeão (coroa, avatar grande, nota com `ScoreReveal`) e placar final. Apagar só fora do andamento.
 
 ### `/playlists` e `/playlists/:id`
 Grade de playlists (capa 2×2 com as 4 primeiras músicas). Página da playlist: [▶ Cantar tudo] [🔀 Aleatório], lista reordenável, remover item, renomear e excluir.

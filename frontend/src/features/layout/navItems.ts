@@ -13,6 +13,7 @@ export const NAV_ITEMS: NavItem[] = [
   { to: '/enviar', label: 'Enviar' },
   { to: '/playlists', label: 'Playlists' },
   { to: '/ranking', label: 'Ranking' },
+  { to: '/disputas', label: 'Disputas' },
 ];
 
 export const PROFILE_MENU_ITEMS: NavItem[] = [
