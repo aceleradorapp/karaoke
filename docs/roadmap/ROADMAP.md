@@ -188,6 +188,7 @@ Branch: `feature/f7b-fila-e-letra`.
 | F8-03 | ⬜ | Storage externo (S3 ou similar) e deploy | 🔴 |
 
 ## Backlog (ideias ainda sem fase)
+- **Para conversar (2026-10-05):** pacote de imagens do app; botão "Reiniciar o sistema" nas configurações; mensagens de diagnóstico e painel de saúde (letras/LRCLIB, YouTube, worker, internet, disco). Detalhes em `docs/memory/contexto.md` → "Para conversar"
 - **Modo festa**: app empacotado e comprimido para o celular abrir rápido (hoje o modo de desenvolvimento manda ~15 MB; empacotado ~0,5 MB) — pedido para depois
 - Tocar a versão original enquanto o instrumental não fica pronto (hoje: play bloqueado)
 - Foto própria como avatar
