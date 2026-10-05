@@ -203,7 +203,7 @@ Branch: `feature/f7b-fila-e-letra`.
 | F8-03 | ⬜ | Storage externo (S3 ou similar) e deploy | 🔴 |
 
 ## Backlog (ideias ainda sem fase)
-- **Para conversar:** pacote de imagens do app (aguardando o Michael). Detalhes em `docs/memory/contexto.md`
+- ~~Pacote de imagens~~ → 20 avatares divertidos (2026-10-05)
 - Botão "Buscar a letra de novo" na página da música (sem reprocessar tudo), útil quando o site das letras estava fora do ar
 - Tocar a versão original enquanto o instrumental não fica pronto (hoje: play bloqueado)
 - Foto própria como avatar

@@ -1,0 +1,11 @@
+Avatares divertidos do Karaokê (gerados pelo DiceBear, https://www.dicebear.com)
+
+sorriso-*      "Custom Avatar" por Ashley Seo - CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+               https://www.figma.com/community/file/881358461963645496
+robo-*         "Bottts" por Pablo Stanley - livre para uso pessoal e comercial (https://bottts.com/)
+emoji-*        "Fun Emoji Set" por Davis Uche - CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+               https://www.figma.com/community/file/968125295144990435
+rabisco-*      "Croodles - Doodle your face" por vijay verma - CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+               https://www.figma.com/community/file/966199982810283152
+
+Cada arquivo SVG traz a licença original nos metadados. Os desenhos foram gerados pelo DiceBear (remix) e usados sem alteração.
