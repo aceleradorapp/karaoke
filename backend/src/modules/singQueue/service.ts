@@ -3,6 +3,7 @@ import type { AppSettings, CreateSingRequestInput, SingQueueResponse, SingReques
 import { prisma } from '../../db.js';
 import { emitToAll } from '../../realtime.js';
 import { AppError, conflict, notFound } from '../../utils/errors.js';
+import { competitionVisibilityFilter, runningCompetition } from '../competitions/service.js';
 import { getAppSettings } from '../settings/service.js';
 import { LATEST_JOB, toListedSongDTO } from '../songs/service.js';
 
@@ -68,15 +69,22 @@ export function pickNext(
 }
 
 export async function getSingQueue(): Promise<SingQueueResponse> {
-  const [requests, settings] = await Promise.all([
-    prisma.singRequest.findMany({ orderBy: QUEUE_ORDER, include: queueInclude() }),
-    getAppSettings(),
-  ]);
+  const [running, settings] = await Promise.all([runningCompetition(), getAppSettings()]);
+  const requests = await prisma.singRequest.findMany({
+    where: competitionVisibilityFilter(running),
+    orderBy: QUEUE_ORDER,
+    include: queueInclude(),
+  });
   const items = requests.map(toSingRequestDTO);
-  const isShuffled = settings['queue.shuffle'];
+  const isShuffled = running ? running.shuffle : settings['queue.shuffle'];
   const nextId = pickNext(items, isShuffled, shuffledPick, isShuffled ? await lastSingerId() : null);
   shuffledPick = isShuffled ? nextId : null;
-  return { items, nextId };
+  return {
+    items,
+    nextId,
+    competition: running ? { id: running.id, name: running.name } : null,
+    autoAdvanceSeconds: running ? running.autoAdvanceSeconds : settings['queue.autoAdvanceSeconds'],
+  };
 }
 
 export async function publishSingQueue(): Promise<SingQueueResponse> {
@@ -112,7 +120,7 @@ export async function addSingRequest(
   const created = await prisma
     .$transaction(async (transaction) => {
       const mine = await transaction.singRequest.findMany({
-        where: { profileId: input.profileId },
+        where: { profileId: input.profileId, competitionId: null },
         select: { songId: true },
       });
       if (mine.some((request) => request.songId === input.songId)) throw alreadyRequested();
@@ -149,7 +157,11 @@ export async function removeSingRequest(id: string, requesterProfileId: string |
 
 export async function reorderSingQueue(ids: string[]): Promise<SingQueueResponse> {
   await prisma.$transaction(async (transaction) => {
-    const current = await transaction.singRequest.findMany({ orderBy: QUEUE_ORDER, select: { id: true } });
+    const current = await transaction.singRequest.findMany({
+      where: competitionVisibilityFilter(await runningCompetition()),
+      orderBy: QUEUE_ORDER,
+      select: { id: true },
+    });
     const currentIds = current.map((request) => request.id);
     const requested = [...new Set(ids)].filter((id) => currentIds.includes(id));
     const ordered = [...requested, ...currentIds.filter((id) => !requested.includes(id))];

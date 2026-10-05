@@ -19,7 +19,7 @@
 | 5B | Convidados no celular e fila de cantores (ADR-008) | ✅ |
 | 7 | Pontuação e ranking | ✅ (sem teste com microfone real) |
 | 7B | Fila v2 e letra no celular (ADR-009) | ✅ |
-| 7C | Disputas (ADR-010) | ⬜ |
+| 7C | Disputas (ADR-010) | 🟨 |
 | 8 | Publicação (futuro) | ⬜ |
 
 ---
@@ -174,8 +174,8 @@ Branch: `feature/f7b-fila-e-letra`.
 ## Fase 7C — Disputas (ADR-010)
 | ID | Status | Tarefa | Modelo |
 |---|---|---|---|
-| F7C-01 | ⬜ | Banco + API das disputas (criar, editar, participantes, músicas, imagem, iniciar, encerrar, placar) + testes | 🔴 |
-| F7C-02 | ⬜ | Modo disputa na fila e na votação (regras da disputa, pedidos normais guardados) + testes | 🔴 |
+| F7C-01 | ✅ 2026-10-05 | Banco + API das disputas (criar, editar, participantes, músicas, imagem, iniciar, encerrar, placar) + testes | 🔴 |
+| F7C-02 | ✅ 2026-10-05 | Modo disputa na fila e na votação (regras da disputa, pedidos normais guardados) + testes | 🔴 |
 | F7C-03 | ⬜ | Página `/disputas`: lista, criar/editar com arrastar participantes, músicas por pessoa | 🟡 |
 | F7C-04 | ⬜ | Placar ao vivo e pódio final da disputa | 🟡 |
 | F7C-05 | ⬜ | ✔ Verificação: disputa-teste com 3 participantes | 🟡 |

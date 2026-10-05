@@ -11,6 +11,7 @@ export const storagePaths = {
   libraryDir: path.join(env.STORAGE_DIR, 'biblioteca'),
   errorDir: path.join(env.STORAGE_DIR, 'erro'),
   tmpDir: path.join(env.STORAGE_DIR, 'tmp'),
+  competitionsDir: path.join(env.STORAGE_DIR, 'disputas'),
 };
 
 export async function ensureDirs(): Promise<void> {
@@ -20,6 +21,7 @@ export async function ensureDirs(): Promise<void> {
     storagePaths.libraryDir,
     storagePaths.errorDir,
     storagePaths.tmpDir,
+    storagePaths.competitionsDir,
   ];
   await Promise.all(dirs.map((dir) => fs.mkdir(dir, { recursive: true })));
 }

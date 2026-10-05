@@ -3,6 +3,7 @@ import type { AppSettings, CastVoteInput, FinalScore, VotingSummary } from '@car
 import { prisma } from '../../db.js';
 import { emitToAll, emitToRoom } from '../../realtime.js';
 import { conflict, notFound } from '../../utils/errors.js';
+import { competitionRulesFor, onCompetitionPerformanceScored } from '../competitions/service.js';
 import { getAppSettings } from '../settings/service.js';
 
 type ScoringMode = AppSettings['scoring.mode'];
@@ -82,9 +83,10 @@ export async function closeVoting(performanceId: string): Promise<FinalScore> {
     prisma.vote.findMany({ where: { performanceId }, select: { stars: true } }),
     getAppSettings(),
   ]);
+  const rules = await competitionRulesFor(performance.competitionId);
   const audienceScore = audienceScoreOf(votes.map((vote) => vote.stars));
   const finalScore = computeFinalScore(
-    settings['scoring.mode'],
+    rules?.scoringMode ?? settings['scoring.mode'],
     performance.pitchScore,
     audienceScore,
     settings['scoring.audienceWeight'],
@@ -99,6 +101,7 @@ export async function closeVoting(performanceId: string): Promise<FinalScore> {
     votes: votes.length,
   };
   emitToAll('score:final', result);
+  await onCompetitionPerformanceScored(performance.competitionId);
   return result;
 }
 
