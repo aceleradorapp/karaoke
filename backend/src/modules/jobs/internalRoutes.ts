@@ -30,6 +30,7 @@ const completeBodySchema = z.object({
   hasMelody: z.boolean(),
   lyricsSource: z.enum(['NONE', 'LRCLIB', 'PLAIN', 'ALIGNED', 'TRANSCRIBED', 'MANUAL']),
   lyricsNeedsReview: z.boolean(),
+  lyricsNotice: z.enum(['NOT_FOUND', 'SITE_UNREACHABLE']).nullable().optional(),
   lyricsOffsetMs: z.number().int().min(-LYRICS_OFFSET_LIMIT_MS).max(LYRICS_OFFSET_LIMIT_MS).optional(),
 });
 

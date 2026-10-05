@@ -9,6 +9,7 @@ import { diskUsage } from '../../services/storage.js';
 import { updateYtdlp } from '../../services/ytdlp.js';
 import { getWorkerInfo } from '../../services/workerStatus.js';
 import { getAccessInfo, regenerateAccessCode } from './access.js';
+import { getHealthReport } from './health.js';
 
 function readAppVersion(): string {
   const packagePath = path.join(REPO_ROOT, 'backend', 'package.json');
@@ -36,6 +37,14 @@ export async function systemRoutes(app: FastifyInstance): Promise<void> {
       storage: { usedBytes: usage.usedBytes, songs },
     };
   });
+
+  app
+    .withTypeProvider<ZodTypeProvider>()
+    .get(
+      '/system/health-report',
+      { schema: { querystring: z.object({ fresh: z.string().optional() }) } },
+      async (request) => getHealthReport(request.query.fresh === '1'),
+    );
 
   app.get('/system/access', async () => getAccessInfo());
 

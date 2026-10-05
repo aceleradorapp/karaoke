@@ -159,6 +159,7 @@ def test_reports_instrumental_tracks_without_lyrics_and_without_review(make_cont
     assert context.result["lyricsSource"] == "NONE"
     assert context.result["lyricsNeedsReview"] is False
     assert not (context.song_dir / "letra.json").exists()
+    assert context.result["lyricsNotice"] is None
 
 
 def test_marks_the_song_for_review_when_nothing_is_found(make_context, monkeypatch):
@@ -169,6 +170,8 @@ def test_marks_the_song_for_review_when_nothing_is_found(make_context, monkeypat
 
     assert context.result["lyricsSource"] == "NONE"
     assert context.result["lyricsNeedsReview"] is True
+    assert context.result["lyricsNotice"] == "NOT_FOUND"
+    assert context.api.progress_calls[-1]["message"] == "Letra não encontrada"
 
 
 def test_tries_the_swapped_artist_and_title_when_the_first_order_finds_nothing(make_context, monkeypatch):
@@ -213,6 +216,8 @@ def test_does_not_fail_the_job_when_lrclib_is_unreachable(make_context, monkeypa
 
     assert context.result["lyricsSource"] == "NONE"
     assert context.result["lyricsNeedsReview"] is True
+    assert context.result["lyricsNotice"] == "SITE_UNREACHABLE"
+    assert context.api.progress_calls[-1]["message"] == "Sem letra: o site das letras não respondeu"
 
 
 def test_falls_back_to_plain_text_when_the_synced_lyrics_cannot_be_parsed():

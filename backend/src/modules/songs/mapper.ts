@@ -49,6 +49,7 @@ export function toSongDTO(song: Song, job?: Job | null, isFavorite?: boolean): S
     melodyUrl: song.hasMelody ? mediaUrl(song.id, 'melodia.json') : null,
     lyricsSource: song.lyricsSource,
     lyricsNeedsReview: song.lyricsNeedsReview,
+    lyricsNotice: (song.lyricsNotice as SongDTO['lyricsNotice']) ?? null,
     lyricsOffsetMs: song.lyricsOffsetMs,
     fillPercent: song.fillPercent,
     playCount: song.playCount,

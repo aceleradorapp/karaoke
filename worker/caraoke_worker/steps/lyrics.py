@@ -148,9 +148,14 @@ def add_word_timings(context: JobContext, document: dict[str, Any]) -> dict[str,
     return build_document("ALIGNED", True, lines) if lines else None
 
 
+NOTICE_NOT_FOUND = "NOT_FOUND"
+NOTICE_SITE_UNREACHABLE = "SITE_UNREACHABLE"
+
+
 def run(context: JobContext) -> None:
     context.report("LYRICS", 0, "Buscando a letra…")
     duration = context.result.get("durationSec")
+    is_site_unreachable = False
 
     try:
         with requests.Session() as session:
@@ -159,6 +164,7 @@ def run(context: JobContext) -> None:
     except requests.RequestException as error:
         logger.warning("Lyrics lookup failed: %s", error)
         match = None
+        is_site_unreachable = True
 
     document, source, needs_review = build_result(match)
     if document:
@@ -166,5 +172,14 @@ def run(context: JobContext) -> None:
         final = add_word_timings(context, aligned) or aligned
         write_documents(context, final, original=document if final is not document else None)
         source = "ALIGNED" if final is not document else source
-    context.result.update(lyricsSource=source, lyricsNeedsReview=needs_review, lyricsOffsetMs=0)
-    context.report("LYRICS", 100, "Letra encontrada" if document else "Letra não encontrada")
+    notice = None
+    if not document and needs_review:
+        notice = NOTICE_SITE_UNREACHABLE if is_site_unreachable else NOTICE_NOT_FOUND
+    context.result.update(lyricsSource=source, lyricsNeedsReview=needs_review, lyricsOffsetMs=0, lyricsNotice=notice)
+    if document:
+        message = "Letra encontrada"
+    elif notice == NOTICE_SITE_UNREACHABLE:
+        message = "Sem letra: o site das letras não respondeu"
+    else:
+        message = "Letra não encontrada"
+    context.report("LYRICS", 100, message)

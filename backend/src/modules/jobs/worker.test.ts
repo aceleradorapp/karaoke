@@ -154,6 +154,15 @@ describe('worker job routes', () => {
       expect(await storedSong(song.id)).toMatchObject({ lyricsOffsetMs: 15410 });
     });
 
+    it('stores why the song has no lyrics', async () => {
+      const { job, song } = await createJobFixture({ status: 'RUNNING', songStatus: 'PROCESSING' });
+
+      await complete(job.id, { ...COMPLETE_BODY, lyricsNotice: 'SITE_UNREACHABLE' });
+
+      expect(await storedSong(song.id)).toMatchObject({ lyricsNotice: 'SITE_UNREACHABLE' });
+      expect((await complete(job.id, { ...COMPLETE_BODY, lyricsNotice: 'OTHER' })).statusCode).toBe(400);
+    });
+
     it('keeps the offset the user already set when the worker sends none', async () => {
       const { job, song } = await createJobFixture({ status: 'RUNNING', songStatus: 'PROCESSING' });
       await prisma.song.update({ where: { id: song.id }, data: { lyricsOffsetMs: 700 } });

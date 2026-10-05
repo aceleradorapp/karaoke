@@ -23,6 +23,7 @@ export interface CompleteInput {
   hasMelody: boolean;
   lyricsSource: LyricsSource;
   lyricsNeedsReview: boolean;
+  lyricsNotice?: 'NOT_FOUND' | 'SITE_UNREACHABLE' | null;
   lyricsOffsetMs?: number;
 }
 
@@ -113,6 +114,7 @@ export async function completeJob(id: string, input: CompleteInput): Promise<voi
         hasMelody: input.hasMelody,
         lyricsSource: input.lyricsSource,
         lyricsNeedsReview: input.lyricsNeedsReview,
+        lyricsNotice: input.lyricsNotice ?? null,
         ...(input.lyricsOffsetMs === undefined ? {} : { lyricsOffsetMs: input.lyricsOffsetMs }),
       },
     }),
