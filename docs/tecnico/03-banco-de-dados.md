@@ -13,6 +13,8 @@ Profile 1───* Favorite *───1 Song
 Profile 1───* Performance *───1 Song
 Performance 1───* Vote
 Profile 1───* SingRequest *───1 Song   (fila de cantores, ADR-008)
+Competition 1───* CompetitionParticipant *───1 Profile   (disputas, ADR-010)
+Competition 1───* CompetitionSong (pessoa + música) · Competition 1───* SingRequest / Performance (competitionId)
 Song 1───* Job
 Profile 1───* Song (addedBy, opcional)
 Setting (chave/valor)
@@ -274,6 +276,8 @@ Guardadas na tabela `settings`. O backend expõe um objeto tipado (`shared/types
 | `access.code` | string | gerado (6 chars A-Z0-9, sem 0/O/1/I) | Código do QR code |
 
 Settings da fila (ADR-009): `queue.maxRequestsPerPerson` (0–10, 0 = sem limite, padrão 3), `queue.stageBypassesLimit` (padrão `true`), `queue.shuffle` (padrão `false`), `queue.autoAdvanceSeconds` (0–60, 0 = desligado, padrão 15).
+
+**Disputas (ADR-010):** tabelas `competitions` (nome, `imageExt`, status DRAFT/RUNNING/FINISHED, regras), `competition_participants` (ordem) e `competition_songs` (músicas escolhidas por pessoa). `sing_requests.competitionId` (cascata) e `performances.competitionId` (SetNull). O único de `sing_requests` passou a ser `(profileId, songId, competitionId)`, para a mesma música poder estar na fila normal e na disputa.
 
 ## 3.4 Regras de negócio no banco
 - **Posição na fila:** novo job recebe `position = max(position) + 1` entre os jobs PENDING/RUNNING (ou 1).

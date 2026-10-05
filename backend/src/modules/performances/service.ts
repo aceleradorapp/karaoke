@@ -6,6 +6,7 @@ import type {
 } from '@caraoke/shared';
 import { prisma } from '../../db.js';
 import { conflict, notFound } from '../../utils/errors.js';
+import { competitionRulesFor, onCompetitionPerformanceScored } from '../competitions/service.js';
 import { getAppSettings } from '../settings/service.js';
 import { publishSingQueue } from '../singQueue/service.js';
 import { LATEST_JOB, favoriteIdsOf, toListedSongDTO } from '../songs/service.js';
@@ -21,8 +22,17 @@ export async function startPerformance(input: CreatePerformanceInput): Promise<{
   if (song.status !== 'READY')
     throw conflict('SONG_NOT_READY', 'Esta música ainda não está pronta para cantar');
 
+  const request = input.requestId
+    ? await prisma.singRequest.findUnique({ where: { id: input.requestId }, select: { competitionId: true } })
+    : null;
   const [performance, , removedRequests] = await prisma.$transaction([
-    prisma.performance.create({ data: { profileId: input.profileId, songId: input.songId } }),
+    prisma.performance.create({
+      data: {
+        profileId: input.profileId,
+        songId: input.songId,
+        competitionId: request?.competitionId ?? null,
+      },
+    }),
     prisma.song.update({ where: { id: input.songId }, data: { playCount: { increment: 1 } } }),
     prisma.singRequest.deleteMany({ where: { id: input.requestId ?? '' } }),
   ]);
@@ -36,7 +46,7 @@ export async function finishPerformance(
 ): Promise<FinishPerformanceResult> {
   const performance = await prisma.performance.findUnique({
     where: { id },
-    select: { finishedAt: true, profileId: true },
+    select: { finishedAt: true, profileId: true, competitionId: true },
   });
   if (!performance) throw notFound('PERFORMANCE_NOT_FOUND', 'Apresentação não encontrada');
   if (performance.finishedAt) {
@@ -52,17 +62,25 @@ export async function finishPerformance(
       pitchScore: input.pitchScore,
     },
   });
-  if (!input.completed) return { finalScore: null };
+  if (!input.completed) {
+    await onCompetitionPerformanceScored(performance.competitionId);
+    return { finalScore: null };
+  }
 
-  const settings = await getAppSettings();
-  const mode = settings['scoring.mode'];
+  const [settings, rules] = await Promise.all([
+    getAppSettings(),
+    competitionRulesFor(performance.competitionId),
+  ]);
+  const mode = rules?.scoringMode ?? settings['scoring.mode'];
   if (usesAudience(mode)) {
-    const endsAt = await startVoting(id, performance.profileId, settings['scoring.voteSeconds']);
+    const seconds = rules?.voteSeconds ?? settings['scoring.voteSeconds'];
+    const endsAt = await startVoting(id, performance.profileId, seconds);
     return { voting: { endsAt: endsAt.toISOString() } };
   }
 
   const finalScore = computeFinalScore(mode, input.pitchScore, null, settings['scoring.audienceWeight']);
   await prisma.performance.update({ where: { id }, data: { finalScore } });
+  await onCompetitionPerformanceScored(performance.competitionId);
   return { finalScore };
 }
 

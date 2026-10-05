@@ -135,6 +135,40 @@ export const playerStateInputSchema = z.union([
 
 export type PlayerStateInput = z.infer<typeof playerStateInputSchema>;
 
+export const COMPETITION_NAME_MAX_LENGTH = 80;
+export const COMPETITION_MAX_SONGS_PER_PARTICIPANT = 5;
+export const COMPETITION_MAX_PARTICIPANTS = 30;
+
+const competitionNameSchema = z
+  .string()
+  .trim()
+  .min(1, 'Dê um nome para a disputa')
+  .max(COMPETITION_NAME_MAX_LENGTH, `Use até ${COMPETITION_NAME_MAX_LENGTH} caracteres`);
+
+export const createCompetitionSchema = z.object({ name: competitionNameSchema });
+
+export const updateCompetitionSchema = z
+  .object({
+    name: competitionNameSchema.optional(),
+    songsPerParticipant: z.number().int().min(1).max(COMPETITION_MAX_SONGS_PER_PARTICIPANT).optional(),
+    scoringMode: z.enum(['pitch+audience', 'pitch', 'audience', 'off']).optional(),
+    voteSeconds: z.number().int().min(5).max(120).optional(),
+    autoAdvanceSeconds: z.number().int().min(0).max(AUTO_ADVANCE_MAX_SECONDS).optional(),
+    shuffle: z.boolean().optional(),
+  })
+  .refine((changes) => Object.keys(changes).length > 0, 'Nenhuma alteração informada');
+
+export const competitionParticipantsSchema = z.object({
+  profileIds: z.array(z.string().min(1)).max(COMPETITION_MAX_PARTICIPANTS),
+});
+
+export const competitionSongSchema = z.object({ profileId: z.string().min(1), songId: z.string().min(1) });
+
+export const competitionImageFromSongSchema = z.object({ songId: z.string().min(1) });
+
+export type CreateCompetitionInput = z.infer<typeof createCompetitionSchema>;
+export type UpdateCompetitionInput = z.infer<typeof updateCompetitionSchema>;
+
 export const rankingQuerySchema = z.object({
   period: z.enum(['week', 'month', 'all']).default('month'),
   scope: z.enum(['all', 'family']).default('all'),

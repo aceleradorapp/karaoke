@@ -27,6 +27,10 @@ export function useRealtimeSync(socket: RealtimeSocket = getSocket()): void {
     const onSongUpdated = (song: Parameters<typeof applySongUpdate>[1]) => applySongUpdate(queryClient, song);
     const onSongDeleted = ({ id }: { id: string }) => applySongDeleted(queryClient, id);
     const onSingQueue = (queue: SingQueueResponse) => applySingQueue(queryClient, queue);
+    const onCompetitionChanged = ({ id }: { id: string }) => {
+      void queryClient.invalidateQueries({ queryKey: ['competitions'] });
+      void queryClient.invalidateQueries({ queryKey: ['competition', id] });
+    };
     const onProfilesChanged = () => void queryClient.invalidateQueries({ queryKey: PROFILES_QUERY_KEY });
     const onWorkerStatus = (status: Parameters<typeof applyWorkerStatus>[1]) =>
       applyWorkerStatus(queryClient, status);
@@ -39,6 +43,7 @@ export function useRealtimeSync(socket: RealtimeSocket = getSocket()): void {
     socket.on('song:deleted', onSongDeleted);
     socket.on('singQueue:changed', onSingQueue);
     socket.on('profiles:changed', onProfilesChanged);
+    socket.on('competition:changed', onCompetitionChanged);
     socket.on('worker:status', onWorkerStatus);
     socket.on('settings:updated', onSettingsUpdated);
 
@@ -50,6 +55,7 @@ export function useRealtimeSync(socket: RealtimeSocket = getSocket()): void {
       socket.off('song:deleted', onSongDeleted);
       socket.off('singQueue:changed', onSingQueue);
       socket.off('profiles:changed', onProfilesChanged);
+      socket.off('competition:changed', onCompetitionChanged);
       socket.off('worker:status', onWorkerStatus);
       socket.off('settings:updated', onSettingsUpdated);
     };

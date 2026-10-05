@@ -18,9 +18,9 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import type { SingRequestDTO } from '@caraoke/shared';
 import clsx from 'clsx';
-import { ArrowDown, ArrowUp, GripVertical, Play, Plus, Shuffle, Smartphone, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, GripVertical, Play, Plus, Shuffle, Smartphone, Trophy, X } from 'lucide-react';
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { useSettingsQuery, useUpdateSettingsMutation } from '../../api/settings';
 import {
   nextRequestOf,
@@ -217,6 +217,22 @@ export function SingQueuePage() {
           </Button>
         </div>
       </div>
+
+      {queue.data?.competition && (
+        <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-surface p-4 ring-2 ring-primary">
+          <Trophy aria-hidden="true" className="size-6 text-yellow-400" />
+          <p className="min-w-0 flex-1 text-base">
+            Disputa <strong>{queue.data.competition.name}</strong> em andamento: a fila mostra só as músicas
+            dela. Os outros pedidos voltam quando ela terminar.
+          </p>
+          <Link
+            to={`/disputas/${queue.data.competition.id}`}
+            className="min-h-11 content-center text-primary underline"
+          >
+            Ver o placar
+          </Link>
+        </div>
+      )}
 
       {queue.isLoading && <Spinner className="mx-auto size-10" />}
       {queue.isError && (

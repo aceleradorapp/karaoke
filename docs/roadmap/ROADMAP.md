@@ -19,7 +19,7 @@
 | 5B | Convidados no celular e fila de cantores (ADR-008) | ✅ |
 | 7 | Pontuação e ranking | ✅ (sem teste com microfone real) |
 | 7B | Fila v2 e letra no celular (ADR-009) | ✅ |
-| 7C | Disputas (ADR-010) | ⬜ |
+| 7C | Disputas (ADR-010) | ✅ |
 | 8 | Publicação (futuro) | ⬜ |
 
 ---
@@ -174,11 +174,11 @@ Branch: `feature/f7b-fila-e-letra`.
 ## Fase 7C — Disputas (ADR-010)
 | ID | Status | Tarefa | Modelo |
 |---|---|---|---|
-| F7C-01 | ⬜ | Banco + API das disputas (criar, editar, participantes, músicas, imagem, iniciar, encerrar, placar) + testes | 🔴 |
-| F7C-02 | ⬜ | Modo disputa na fila e na votação (regras da disputa, pedidos normais guardados) + testes | 🔴 |
-| F7C-03 | ⬜ | Página `/disputas`: lista, criar/editar com arrastar participantes, músicas por pessoa | 🟡 |
-| F7C-04 | ⬜ | Placar ao vivo e pódio final da disputa | 🟡 |
-| F7C-05 | ⬜ | ✔ Verificação: disputa-teste com 3 participantes | 🟡 |
+| F7C-01 | ✅ 2026-10-05 | Banco + API das disputas (criar, editar, participantes, músicas, imagem, iniciar, encerrar, placar) + testes | 🔴 |
+| F7C-02 | ✅ 2026-10-05 | Modo disputa na fila e na votação (regras da disputa, pedidos normais guardados) + testes | 🔴 |
+| F7C-03 | ✅ 2026-10-05 | Página `/disputas`: lista, criar/editar com arrastar participantes, músicas por pessoa | 🟡 |
+| F7C-04 | ✅ 2026-10-05 | Placar ao vivo e pódio final da disputa | 🟡 |
+| F7C-05 | ✅ 2026-10-05 (19/19 no navegador) | ✔ Verificação: disputa-teste com 3 participantes | 🟡 |
 
 ## Fase 8 — Publicação (futuro)
 | ID | Status | Tarefa | Modelo |
@@ -188,6 +188,7 @@ Branch: `feature/f7b-fila-e-letra`.
 | F8-03 | ⬜ | Storage externo (S3 ou similar) e deploy | 🔴 |
 
 ## Backlog (ideias ainda sem fase)
+- **Modo festa**: app empacotado e comprimido para o celular abrir rápido (hoje o modo de desenvolvimento manda ~15 MB; empacotado ~0,5 MB) — pedido para depois
 - Tocar a versão original enquanto o instrumental não fica pronto (hoje: play bloqueado)
 - Foto própria como avatar
 - Conquistas ("cantou 10 músicas", "nota 100")
