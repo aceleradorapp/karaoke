@@ -65,8 +65,10 @@ i5-4460 (4 núcleos) · 8 GB de RAM · GeForce GT 1030 com 2 GB → o Demucs rod
 - Fila de cantores: até 3 pedidos esperando por pessoa; o pedido sai da fila quando a apresentação começa.
 - Votação: ninguém vota na própria apresentação. Ranking: família e convidados juntos, com filtro "Só a família".
 
-## Perguntas em aberto
-- (nenhuma no momento)
+## Perguntas em aberto / para conversar (anotado em 2026-10-05)
+- **Biblioteca pequena de imagens:** o Michael vai baixar um pacote de imagens para usar no app (ex.: imagens de disputa, fundos, avatares). Combinar onde guardar (pasta versionada × `storage/`), formato, licença e onde elas aparecem.
+- **Reiniciar o sistema pelas Configurações:** um botão que reinicia tudo sozinho (servidor, worker e site). Conversar como fazer com segurança (quem reinicia o processo quando ele mesmo cai: um "vigia"/script, serviço do Windows ou, no futuro, systemd no Linux) e o que mostrar na tela enquanto volta.
+- **Mensagens de diagnóstico para manutenção:** avisos claros quando algo externo falhar, por exemplo o site das letras (LRCLIB) fora do ar ou bloqueado, YouTube recusando (yt-dlp desatualizado), worker offline, sem internet, disco cheio. Ideia: um painel de "Saúde do sistema" e avisos na fila/na música explicando o que verificar.
 
 ## Sincronização da letra
 É a prioridade do Michael (a sincronia decide o sucesso do app). O estado, as decisões, os números medidos e o que falta estão em [`sincronizacao-da-letra.md`](sincronizacao-da-letra.md).

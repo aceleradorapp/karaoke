@@ -4,7 +4,7 @@
 
 ```
 dependencies:
-  fastify@^5  @fastify/cors  @fastify/static  @fastify/multipart
+  fastify@^5  @fastify/cors  @fastify/static  @fastify/multipart  @fastify/compress (só no modo festa: brotli/gzip do site empacotado)
   fastify-type-provider-zod  zod
   socket.io@^4
   @prisma/client@^6
@@ -26,7 +26,7 @@ Ordem em `buildApp()`:
 6. Plugin `access` (ver 4.5).
 7. `@fastify/static` em `STORAGE_DIR/biblioteca`, com prefixo `/media/`.
 8. Rotas de cada módulo com prefixo `/api`.
-9. Em produção local: `@fastify/static` servindo `frontend/dist` com fallback SPA (`index.html` para rotas que não sejam `/api`, `/media` ou `/socket.io`).
+9. Em produção local (**modo festa**, `NODE_ENV=production` e `frontend/dist` existente): `@fastify/compress` (br/gzip) + `@fastify/static` servindo `frontend/dist` (`plugins/web.ts`), com fallback SPA no tratador de 404 (`index.html` para GET que não seja `/api`, `/media` ou `/socket.io`). Arquivos de `assets/` (com hash) vão com cache de 1 ano; `index.html` e o resto, `no-cache`. `WEB_DIST_DIR` (padrão `./frontend/dist`).
 
 Em `server.ts`:
 1. `storage.ensureDirs()` cria todas as pastas.

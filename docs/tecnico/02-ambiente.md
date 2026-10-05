@@ -110,6 +110,12 @@ Scripts do frontend: `dev` (`vite`), `build` (`tsc -b && vite build`), `test` (`
 
 > O worker roda pelo Python do venv, executado a partir da **raiz** (para que `caraoke_worker` seja encontrado, o `dev:worker` precisa de `cwd=worker`). Implementação recomendada: `"dev:worker": "cd worker && .venv\\Scripts\\python.exe -m caraoke_worker"`.
 
+### Modo festa (uso no dia a dia) — `npm run festa`
+- Monta o site otimizado (`npm run build`: ~0,3 MB comprimido, 19 arquivos) e sobe **servidor + worker**; o próprio servidor entrega o site na porta **3333** (sem o Vite).
+- Na TV: **http://localhost:3333**. O QR passa a apontar para `http://<ip>.nip.io:3333/m?c=…` (o backend usa `API_PORT` quando `NODE_ENV=production`; `backend/src/festa.ts` liga isso).
+- Medido (2026-10-05): celular abre em ~1–2 s, contra 15 MB e vários segundos no modo de desenvolvimento.
+- Mudança no código só aparece depois de rodar `npm run festa` de novo. Para desenvolver, use `npm run dev` (porta 5173, com recarga automática).
+
 ## 2.7 Setup do worker (Python)
 
 `scripts/setup-worker.ps1` deve executar:
