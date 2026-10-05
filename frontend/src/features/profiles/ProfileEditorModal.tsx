@@ -140,7 +140,7 @@ function ProfileEditorForm({ profile, onClose }: ProfileEditorFormProps) {
       <ConfirmDialog
         isOpen={isConfirmingDelete}
         title="Excluir perfil"
-        message={`Excluir "${profile.name}" apaga também as playlists, favoritas e o histórico dele. Essa ação não pode ser desfeita.`}
+        message={`Excluir "${profile.name}" apaga também as playlists, as favoritas e o histórico desse perfil. Essa ação não pode ser desfeita.`}
         confirmLabel="Excluir"
         onConfirm={confirmDelete}
         onCancel={() => setIsConfirmingDelete(false)}
