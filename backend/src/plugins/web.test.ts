@@ -56,6 +56,20 @@ describe('serving the built web app (party mode)', () => {
     expect(response.rawPayload.length).toBeLessThan(BIG_SCRIPT.length / 10);
   });
 
+  it('serves files created after the server started, as after building the site again', async () => {
+    await fs.writeFile(path.join(distDir, 'assets', 'index-new999.js'), 'console.log(1)');
+
+    const response = await get('/assets/index-new999.js');
+
+    expect(response.statusCode).toBe(200);
+    expect(response.headers['content-type']).toContain('javascript');
+  });
+
+  it('answers the page, not a broken file, for a file that does not exist', async () => {
+    const response = await get('/assets/missing-abc.js');
+    expect(response.headers['content-type']).toContain('text/html');
+  });
+
   it('serves the other public files', async () => {
     const response = await get('/keep-awake.mp4');
     expect(response.statusCode).toBe(200);

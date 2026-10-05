@@ -2,6 +2,12 @@
 
 > Entradas mais recentes no topo. Use `/fim-sessao` para registrar.
 
+## 2026-10-05 (13) — Avatares divertidos
+**Pedido:** umas 20 imagens legais e engraçadas para perfis ("ache em qualquer lugar, só faça").
+**Feito:** 20 avatares do DiceBear em estilos de licença livre (Custom Avatar/Ashley Seo CC BY, Bottts/Pablo Stanley livre, Fun Emoji/Davis Uche CC BY, Croodles/vijay verma CC BY), escolhidos numa folha de contato (os tristes ficaram de fora), guardados em `frontend/public/avatars/` com créditos. Aparecem no "Quem é você?", na criação de perfis e convidados e em todo lugar que mostra avatar.
+**Bug achado e corrigido:** montar o site de novo com o servidor ligado deixava a página em branco (o servidor só conhecia os arquivos do momento em que ligou) → `plugins/web.ts` agora procura os arquivos na hora (`wildcard: true`, `index.html` na raiz).
+**Verificado:** 844 testes frontend, 415 backend; no modo festa, 0 imagens quebradas, sem rolagem no celular.
+
 ## 2026-10-05 (12) — Fase 7E concluída: saúde do sistema e reiniciar
 **Feito (ADR-011):**
 - F7E-02: relatório de saúde (`/api/system/health-report`: banco, worker, internet, LRCLIB, YouTube, disco, falhas recentes, cada um com dica do que fazer; 60 s de cache; uma segunda tentativa antes de acusar site fora do ar) e motivo da falta de letra (`lyricsNotice` NOT_FOUND/SITE_UNREACHABLE no worker e na música).

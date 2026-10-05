@@ -31,7 +31,16 @@ export function Avatar({ avatarId, size = 'md', label, className }: AvatarProps)
         className,
       )}
     >
-      {avatar.emoji}
+      {'image' in avatar ? (
+        <img
+          src={avatar.image}
+          alt=""
+          draggable={false}
+          className="size-full rounded-[inherit] object-cover"
+        />
+      ) : (
+        avatar.emoji
+      )}
     </span>
   );
 }
