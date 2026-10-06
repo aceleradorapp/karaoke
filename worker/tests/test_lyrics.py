@@ -40,6 +40,10 @@ class FakeSession:
 
     def __init__(self) -> None:
         self.headers: dict[str, str] = {}
+        self.adapters: dict[str, Any] = {}
+
+    def mount(self, prefix: str, adapter: Any) -> None:
+        self.adapters[prefix] = adapter
 
     def __enter__(self):
         return self
@@ -379,3 +383,12 @@ def test_a_failure_while_aligning_the_words_never_breaks_the_lyrics(make_context
 
     assert stored_document(context)["source"] == "ALIGNED"
     assert context.result["lyricsSource"] == "ALIGNED"
+
+
+def test_tries_again_when_lrclib_fails_for_a_moment():
+    session = lyrics.build_session()
+    retry = session.get_adapter("https://lrclib.net/api/get").max_retries
+
+    assert retry.total == 3
+    assert 503 in retry.status_forcelist
+    assert session.headers["User-Agent"].startswith("caraoke-michael")

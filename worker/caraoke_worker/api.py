@@ -1,8 +1,15 @@
+import re
+from contextlib import ExitStack
+from pathlib import Path
 from typing import Any
+from urllib.parse import unquote
 
 import requests
 
 REQUEST_TIMEOUT_SECONDS = 15
+TRANSFER_TIMEOUT_SECONDS = 600
+CHUNK_BYTES = 1024 * 1024
+FILENAME_PATTERN = re.compile(r'filename="([^"]+)"')
 NO_CONTENT = 204
 
 
@@ -43,12 +50,30 @@ class Api:
             payload["step"] = step
         self._request("POST", f"/api/internal/jobs/{job_id}/fail", json=payload)
 
+    def download_source(self, job_id: str, destination_dir: Path) -> Path:
+        response = self._request(
+            "GET", f"/api/internal/jobs/{job_id}/source", stream=True, timeout=TRANSFER_TIMEOUT_SECONDS
+        )
+        match = FILENAME_PATTERN.search(response.headers.get("Content-Disposition", ""))
+        filename = Path(unquote(match.group(1))).name if match else f"{job_id}.audio"
+        target = destination_dir / filename
+        with target.open("wb") as output:
+            for chunk in response.iter_content(CHUNK_BYTES):
+                output.write(chunk)
+        return target
+
+    def upload_files(self, song_id: str, files: list[Path]) -> None:
+        with ExitStack() as stack:
+            parts = [("files", (path.name, stack.enter_context(path.open("rb")))) for path in files]
+            self._request(
+                "POST", f"/api/internal/songs/{song_id}/files", files=parts, timeout=TRANSFER_TIMEOUT_SECONDS
+            )
+
     def mark_melody(self, song_id: str) -> None:
         self._request("POST", f"/api/internal/songs/{song_id}/melody")
 
     def _request(self, method: str, path: str, **kwargs: Any) -> requests.Response:
-        response = self._session.request(
-            method, f"{self._base_url}{path}", timeout=REQUEST_TIMEOUT_SECONDS, **kwargs
-        )
+        kwargs.setdefault("timeout", REQUEST_TIMEOUT_SECONDS)
+        response = self._session.request(method, f"{self._base_url}{path}", **kwargs)
         response.raise_for_status()
         return response

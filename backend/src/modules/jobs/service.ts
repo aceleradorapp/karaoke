@@ -2,6 +2,7 @@ import type { Job, Prisma } from '@prisma/client';
 import type { JobStep, SongSource } from '@caraoke/shared';
 import { prisma } from '../../db.js';
 import { songDir, storagePaths } from '../../services/storage.js';
+import { LOCAL_WORKER_ID } from '../../services/workerStatus.js';
 import { stepsForSource } from './steps.js';
 
 const MAX_CLAIM_ATTEMPTS = 5;
@@ -26,10 +27,10 @@ export interface ClaimedJob {
   };
 }
 
-async function tryClaimNextJob(): Promise<ClaimedJob | null | 'retry'> {
+async function tryClaimNextJob(workerId: string): Promise<ClaimedJob | null | 'retry'> {
   return prisma.$transaction(async (transaction) => {
     const candidate = await transaction.job.findFirst({
-      where: { status: 'PENDING' },
+      where: { status: 'PENDING', OR: [{ targetWorkerId: null }, { targetWorkerId: workerId }] },
       orderBy: { position: 'asc' },
       include: { song: true },
     });
@@ -37,7 +38,7 @@ async function tryClaimNextJob(): Promise<ClaimedJob | null | 'retry'> {
 
     const claimed = await transaction.job.updateMany({
       where: { id: candidate.id, status: 'PENDING' },
-      data: { status: 'RUNNING', startedAt: new Date(), attempts: { increment: 1 } },
+      data: { status: 'RUNNING', startedAt: new Date(), attempts: { increment: 1 }, workerId },
     });
     if (claimed.count === 0) return 'retry';
 
@@ -66,9 +67,9 @@ async function tryClaimNextJob(): Promise<ClaimedJob | null | 'retry'> {
   });
 }
 
-export async function claimNextJob(): Promise<ClaimedJob | null> {
+export async function claimNextJob(workerId: string = LOCAL_WORKER_ID): Promise<ClaimedJob | null> {
   for (let attempt = 0; attempt < MAX_CLAIM_ATTEMPTS; attempt++) {
-    const result = await tryClaimNextJob();
+    const result = await tryClaimNextJob(workerId);
     if (result !== 'retry') return result;
   }
   return null;
@@ -86,7 +87,8 @@ export async function enqueueJob(
   transaction: Prisma.TransactionClient,
   songId: string,
   sourcePath: string | null,
+  targetWorkerId: string | null = null,
 ): Promise<Job> {
   const position = await nextQueuePosition(transaction);
-  return transaction.job.create({ data: { songId, position, sourcePath } });
+  return transaction.job.create({ data: { songId, position, sourcePath, targetWorkerId } });
 }

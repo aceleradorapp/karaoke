@@ -72,6 +72,7 @@ GET    /api/health
 GET    /api/system/access/check
 GET    /api/youtube/search
 POST   /api/youtube/import
+GET    /api/lyrics/check
 POST   /api/uploads
 GET    /api/jobs
 GET    /api/songs              (biblioteca do celular e "já existe?")
@@ -125,6 +126,15 @@ app.addHook('onRequest', async (req) => {
   req.isMobile = true; // decorate
 });
 ```
+**Chave para IA (ADR-014):** depois do teste de loopback, uma requisição com `Authorization: Bearer <chave>` é conferida pelo hash de `settings['ai.keyHash']`.
+- Com a chave certa, passa **só** nas rotas do MCP (`AI_ALLOWED_ROUTES`):
+  - `GET /health`;
+  - `GET /youtube/search` e `POST /youtube/import`;
+  - `GET /lyrics/check`;
+  - `GET /songs` e `GET /songs/:id`;
+  - `GET /jobs`, `GET /jobs/estimate`, `POST /jobs/:id/cancel` e `PATCH /jobs/reorder`.
+- Nesse caso, marca `req.isAi`. Com a chave errada ou em outra rota, responde 401 "Chave para IA inválida…".
+
 Teste obrigatório (vitest + `app.inject` com `remoteAddress`): palco passa; celular sem código → 401; celular com código em rota permitida passa; celular em rota não permitida → 401; internal sem token → 401.
 
 ## 4.6 Endpoints
@@ -182,6 +192,9 @@ type SongDTO = {
 | Método | Rota | Descrição |
 |---|---|---|
 | GET | `/api/youtube/search?q=&limit=12` | Executa o yt-dlp (4.9). Resposta: `{ items: [{ youtubeId, title, channel, durationSec, thumbnailUrl, suggested: { artist, title }, existingSongId \| null }] }`. Cache em memória por 10 min, por `q` |
+| GET | `/downloads/:file` | Público (fora de `/api`): `caraoke-mcp.mjs` (ADR-014) e `Processador-do-Karaoke.zip` (ADR-015); 404 "Arquivo ainda não gerado" se não existir |
+| GET / POST / DELETE | `/api/ai-key` | (só o palco, ADR-014) status `{ hasKey, createdAt, serverUrls, mcpDownloadPath }` / gera uma chave nova `{ key, createdAt }` (aparece só nesta resposta; guarda o SHA-256 em `settings['ai.keyHash']`) / revoga |
+| GET | `/api/lyrics/check?artist=&title=&duration=` | (palco e celular, ADR-013) `{ status: 'SYNCED' \| 'PLAIN' \| 'INSTRUMENTAL' \| 'NONE' \| 'UNKNOWN' }`. Consulta o LRCLIB com **as mesmas regras do worker** (`modules/lyricsCheck`; se mudar uma, mude a outra). Cache de 6 h (sem `UNKNOWN`), até 4 consultas simultâneas, cada chamada tenta até 4 vezes |
 | POST | `/api/youtube/import` | `{ youtubeId, title, artist, profileId? }` → cria Song + Job. Se o `youtubeId` já existir: `{ song, alreadyExists: true }` |
 
 Regras: rejeitar vídeos com mais de **12 min** (`VIDEO_TOO_LONG`). Título e artista obrigatórios (o usuário confirma no diálogo de importação).
@@ -218,9 +231,24 @@ Toda mudança (criar, remover, reordenar, apresentação começou, perfil ou mú
 | PATCH | `/api/jobs/reorder` | `{ ids: string[] }` (só PENDING) |
 | POST | `/api/jobs/:id/cancel` | PENDING → CANCELED na hora; RUNNING → marca `cancelRequested` (em memória) e o worker aborta na próxima chamada de progresso. Música → ERROR com mensagem "Cancelado" |
 | POST | `/api/jobs/:id/retry` | FAILED/CANCELED → cria um job novo PENDING no fim da fila |
+| PATCH | `/api/jobs/:id/target` | `{ targetWorkerId: string \| null }` só para PENDING: onde processar (ADR-015). `POST /youtube/import` também aceita `targetWorkerId` |
 | DELETE | `/api/jobs/:id` | Remove um job finalizado da lista (só DONE/FAILED/CANCELED) |
 
+### Máquinas de processamento (ADR-015)
+| Método | Rota | Descrição |
+|---|---|---|
+| GET | `/api/workers` | (palco) `{ items: [{ id, name, isLocal, online, device, gpuName, lastSeenAt, currentSongTitle }] }`; a primeira é sempre "Este PC" (`id: "local"`) |
+| POST / DELETE | `/api/workers/pairing` | (palco) gera `{ code (6 dígitos), expiresAt (+10 min), serverUrls, downloadPath }` / cancela. Um código por vez, em memória |
+| POST | `/api/workers/pair` | **Público** (sem código do celular): `{ code, name }` → `{ workerId, token, name }`. Código usado uma vez; 5 erros invalidam o código |
+| PATCH | `/api/workers/:id` | (palco) `{ name }` |
+| DELETE | `/api/workers/:id` | (palco) revoga: o token para de valer, o job RUNNING dela volta para a fila e os PENDING com `targetWorkerId` dela passam a "qualquer uma" |
+- Evento `workers:changed` `{ workerId }` (sala stage) quando uma máquina liga/desliga, é pareada, renomeada ou removida.
+- Watchdog: máquina sem heartbeat há **2 min** → os jobs RUNNING dela voltam para a fila (`recoverLostWorker`).
+
 ### Interno (worker) — header `X-Worker-Token`
+- O token pode ser o `WORKER_TOKEN` do `.env` (worker local, `req.workerId = "local"`) **ou** o token de uma máquina pareada e não revogada (`req.workerId = <id>`).
+- `GET /api/internal/jobs/:id/source` (só a máquina que pegou o job) entrega o arquivo de origem do upload; `POST /api/internal/songs/:id/files` (multipart) recebe os arquivos prontos — só nomes da lista (`instrumental.mp3`, `voz.mp3`, `letra.json`, `letra.original.json`, `letra.lrc`, `capa.jpg`, `melodia.json`), gravados como `.parte` e renomeados.
+- Claim: só pega jobs com `targetWorkerId` nulo ou igual ao seu e grava `workerId`. Heartbeat e recuperação após reinício valem **por máquina** (reiniciar o worker local não mexe no job de outra máquina).
 - `POST /api/internal/songs/:id/melody` → marca `hasMelody=true` e emite `song:updated` (usado por `npm run worker:melody`, Fase 7).
 | Método | Rota | Body | Resposta |
 |---|---|---|---|

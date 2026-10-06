@@ -1,5 +1,5 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { LyricsDoc, SaveLyricsInput, SongDTO } from '@caraoke/shared';
+import type { LyricsCheckDTO, LyricsDoc, SaveLyricsInput, SongDTO } from '@caraoke/shared';
 import { ApiError, apiGet, apiSend } from './client';
 
 const LYRICS_STALE_TIME_MS = 5 * 60 * 1000;
@@ -17,6 +17,26 @@ export function useLyricsQuery(url: string | null) {
     enabled: url !== null,
     staleTime: LYRICS_STALE_TIME_MS,
     placeholderData: keepPreviousData,
+    retry: false,
+  });
+}
+
+export interface LyricsCheckParams {
+  artist: string;
+  title: string;
+  durationSec: number;
+}
+
+export function useLyricsCheckQuery({ artist, title, durationSec }: LyricsCheckParams) {
+  return useQuery({
+    queryKey: ['lyrics-check', artist, title, durationSec],
+    queryFn: async () => {
+      const params = new URLSearchParams({ artist, title });
+      if (durationSec > 0) params.set('duration', String(Math.round(durationSec)));
+      return (await apiGet<LyricsCheckDTO>(`/lyrics/check?${params}`)).status;
+    },
+    enabled: title.trim().length > 0,
+    staleTime: Infinity,
     retry: false,
   });
 }

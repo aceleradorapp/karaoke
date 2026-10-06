@@ -1,4 +1,4 @@
-import type { JobDTO, ProcessingEstimate } from '@caraoke/shared';
+import type { JobDTO, ProcessingEstimate } from './types.js';
 
 export interface JobEta {
   startsInSec: number;

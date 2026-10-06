@@ -1,18 +1,36 @@
-import type { ProcessingEstimate } from '@caraoke/shared';
 import { describe, expect, it } from 'vitest';
-import { buildJob } from '../test/builders';
-import { describeEta, estimateQueue, formatEta } from './processingEstimate';
+import { describeEta, estimateQueue, formatEta } from './processingEstimate.js';
+import type { JobDTO, ProcessingEstimate } from './types.js';
 
 const ESTIMATE: ProcessingEstimate = { secondsPerSongSecond: 1, basedOnJobs: 5, unknownDurationSec: 240 };
 const NOW = Date.parse('2026-10-06T12:00:00.000Z');
 
-function job(id: string, status: 'RUNNING' | 'PENDING', position: number, durationSec: number | null, startedSecondsAgo = 0) {
-  const base = buildJob({ status, position });
+function job(
+  id: string,
+  status: 'RUNNING' | 'PENDING',
+  position: number,
+  durationSec: number | null,
+  startedSecondsAgo = 0,
+): JobDTO {
   return {
-    ...base,
     id,
+    songId: `song-${id}`,
+    status,
+    step: null,
+    progress: 0,
+    message: null,
+    position,
+    device: null,
+    workerId: null,
+    workerName: null,
+    targetWorkerId: null,
+    targetWorkerName: null,
+    error: null,
+    attempts: 0,
+    createdAt: new Date(NOW).toISOString(),
     startedAt: status === 'RUNNING' ? new Date(NOW - startedSecondsAgo * 1000).toISOString() : null,
-    song: { ...base.song, durationSec },
+    finishedAt: null,
+    song: { title: id, artist: 'Artista', coverUrl: null, durationSec },
   };
 }
 
