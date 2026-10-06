@@ -171,6 +171,7 @@ export interface AiKeyStatusDTO {
   createdAt: string | null;
   serverUrls: string[];
   mcpDownloadPath: string;
+  localSetup: { nodePath: string; mcpPath: string; url: string };
 }
 
 export interface AiKeyCreatedDTO {

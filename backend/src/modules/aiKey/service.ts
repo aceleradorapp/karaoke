@@ -1,7 +1,8 @@
 import { createHash, randomBytes } from 'node:crypto';
+import path from 'node:path';
 import type { AiKeyCreatedDTO, AiKeyStatusDTO } from '@caraoke/shared';
 import { prisma } from '../../db.js';
-import { env } from '../../env.js';
+import { env, REPO_ROOT } from '../../env.js';
 import { listPrivateIPv4 } from '../../services/network.js';
 import { safeEqual } from '../../utils/safeEqual.js';
 
@@ -41,6 +42,11 @@ export async function getAiKeyStatus(): Promise<AiKeyStatusDTO> {
     createdAt: stored?.createdAt ?? null,
     serverUrls: serverUrls(),
     mcpDownloadPath: MCP_DOWNLOAD_PATH,
+    localSetup: {
+      nodePath: process.execPath,
+      mcpPath: path.join(REPO_ROOT, 'mcp', 'dist', 'caraoke-mcp.mjs'),
+      url: `http://127.0.0.1:${env.API_PORT}`,
+    },
   };
 }
 

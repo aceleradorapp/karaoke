@@ -215,6 +215,12 @@ Branch: `feature/f7b-fila-e-letra`.
 | F7G-07 | ⏭ adiada | Opcional: extensão do Chrome "Mandar para o karaokê" | 🟡 |
 | F7G-08 | ✅ 2026-10-06 | ✔ Verificação: MCP de verdade no Claude Code; worker remoto simulado nesta máquina (outra pasta + token pareado) | 🟡 |
 
+## Fase 7H — Ajustes pedidos pelo Michael
+| ID | Status | Tarefa | Modelo |
+|---|---|---|---|
+| F7H-01 | ✅ 2026-10-06 | "Excluir música" junto dos botões do topo da página da música (antes ficava escondido no fim da página) | 🟢 |
+| F7H-02 | ✅ 2026-10-06 | MCP: importar só versões ORIGINAIS (o karaokê tira a voz sozinho); resultados que parecem karaokê/instrumental vêm marcados com ⚠; Configurações › IA mostra a configuração pronta para o Claude deste PC (sem chave) e avisa para fechar o Claude Desktop antes de editar | 🟡 |
+
 ## Fase 8 — Publicação (futuro)
 | ID | Status | Tarefa | Modelo |
 |---|---|---|---|

@@ -11,14 +11,26 @@ const KEY_PLACEHOLDER = '<sua chave>';
 const FALLBACK_SERVER_URL = 'http://<ip-do-pc-do-karaoke>:3333';
 const MCP_FILE_PATH = 'C:\\karaoke\\caraoke-mcp.mjs';
 
-export function claudeCodeCommand(serverUrl: string, key: string): string {
-  return `claude mcp add karaoke -e CARAOKE_URL=${serverUrl} -e CARAOKE_KEY=${key} -- node ${MCP_FILE_PATH}`;
+export interface McpLaunch {
+  command: string;
+  file: string;
 }
 
-export function claudeDesktopConfig(serverUrl: string, key: string): string {
+const REMOTE_LAUNCH: McpLaunch = { command: 'node', file: MCP_FILE_PATH };
+
+function quoted(value: string): string {
+  return value.includes(' ') ? `"${value}"` : value;
+}
+
+export function claudeCodeCommand(serverUrl: string, key: string, launch: McpLaunch = REMOTE_LAUNCH): string {
+  const keyPart = key ? ` -e CARAOKE_KEY=${key}` : '';
+  return `claude mcp add karaoke -e CARAOKE_URL=${serverUrl}${keyPart} -- ${quoted(launch.command)} ${quoted(launch.file)}`;
+}
+
+export function claudeDesktopConfig(serverUrl: string, key: string, launch: McpLaunch = REMOTE_LAUNCH): string {
   const config = {
     mcpServers: {
-      karaoke: { command: 'node', args: [MCP_FILE_PATH], env: { CARAOKE_URL: serverUrl, CARAOKE_KEY: key } },
+      karaoke: { command: launch.command, args: [launch.file], env: { CARAOKE_URL: serverUrl, CARAOKE_KEY: key } },
     },
   };
   return JSON.stringify(config, null, 2);
@@ -123,9 +135,38 @@ export function AiSection() {
         )}
       </div>
 
+      {status.data && (
+        <details className="flex flex-col gap-3">
+          <summary className="min-h-11 cursor-pointer content-center text-base font-semibold">
+            Como ligar no Claude deste PC (o do karaokê)
+          </summary>
+          <div className="flex min-w-0 flex-col gap-4 text-sm">
+            <p>Neste PC não precisa de chave nem de baixar nada: o Claude usa o arquivo do próprio karaokê.</p>
+            <CopyBlock
+              label="Configuração do Claude Desktop (este PC)"
+              text={claudeDesktopConfig(status.data.localSetup.url, '', {
+                command: status.data.localSetup.nodePath,
+                file: status.data.localSetup.mcpPath,
+              })}
+            />
+            <p className="text-muted">
+              Feche o Claude Desktop por completo (ícone perto do relógio › Sair) antes de editar o
+              claude_desktop_config.json: ele regrava o arquivo ao sair e apaga o que foi mudado com ele aberto.
+            </p>
+            <CopyBlock
+              label="Comando do Claude Code (este PC)"
+              text={claudeCodeCommand(status.data.localSetup.url, '', {
+                command: status.data.localSetup.nodePath,
+                file: status.data.localSetup.mcpPath,
+              })}
+            />
+          </div>
+        </details>
+      )}
+
       <details className="flex flex-col gap-3">
         <summary className="min-h-11 cursor-pointer content-center text-base font-semibold">
-          Como ligar no Claude
+          Como ligar no Claude de outro computador da casa
         </summary>
         <ol className="flex list-decimal flex-col gap-4 pl-5 text-sm">
           <li className="space-y-2">
@@ -148,14 +189,14 @@ export function AiSection() {
           </li>
           <li className="min-w-0 space-y-2">
             <span className="block">
-              Ou, no Claude Desktop, acrescente em Configurações › Desenvolvedor › Editar configuração
-              (claude_desktop_config.json) e reinicie o app:
+              Ou, no Claude Desktop, feche o app por completo e acrescente no claude_desktop_config.json
+              (Configurações › Desenvolvedor › Editar configuração mostra onde ele fica):
             </span>
             <CopyBlock label="Configuração do Claude Desktop" text={claudeDesktopConfig(serverUrl, key)} />
           </li>
           <li>
-            Depois é só pedir, por exemplo: “liste 10 músicas sertanejas famosas para karaokê, veja quais têm letra e
-            importe as que tiverem”.
+            Depois é só pedir, por exemplo: “liste 10 músicas sertanejas famosas, veja quais têm letra e importe as
+            versões originais”. O karaokê tira a voz sozinho, então não precisa de versões karaokê.
           </li>
         </ol>
       </details>

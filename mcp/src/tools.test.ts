@@ -116,6 +116,8 @@ describe('karaoke MCP', () => {
 
     expect(isError).toBe(false);
     expect(text).toContain('1. Titãs - Flores (Karaokê) (3:28)');
+    expect(text).toContain('⚠ PARECE VERSÃO SEM VOZ (karaokê/instrumental): evite, prefira a original · canal Karaokê BR');
+    expect(text).not.toContain('2. Flores - versão rara (5:00) · ⚠');
     expect(text).toContain('letra: sincronizada · JÁ ESTÁ NA BIBLIOTECA · youtube_id abc12345678');
     expect(text).toContain('letra: não encontrada · não está na biblioteca · youtube_id def12345678');
     expect(calls.every((request) => request.auth === 'Bearer ck_teste')).toBe(true);

@@ -6,11 +6,18 @@ import { mockApi, requestsTo, type MockRoutes } from '../../test/mockApi';
 import { AiSection, claudeCodeCommand, claudeDesktopConfig } from './AiSection';
 
 const KEY = 'ck_abcdefghijklmnopqrstuvwxyz012345';
+const NODE_PATH = String.raw`C:\Program Files\nodejs\node.exe`;
+const MCP_PATH = String.raw`D:\Projetos\caraoke-michael\mcp\dist\caraoke-mcp.mjs`;
 const STATUS = {
   hasKey: false,
   createdAt: null,
   serverUrls: ['http://192.168.0.10:3333'],
   mcpDownloadPath: '/downloads/caraoke-mcp.mjs',
+  localSetup: {
+    nodePath: NODE_PATH,
+    mcpPath: MCP_PATH,
+    url: 'http://127.0.0.1:3333',
+  },
 };
 
 function renderSection(routes: MockRoutes) {
@@ -64,6 +71,23 @@ describe('AiSection', () => {
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Revogar' }));
 
     await waitFor(() => expect(requestsTo(fetchMock, 'DELETE', '/api/ai-key')).toHaveLength(1));
+  });
+
+  it('gives a ready setup for the Claude on this same PC, without a key', async () => {
+    renderSection({ 'GET /api/ai-key': { body: STATUS } });
+
+    const local = JSON.parse(
+      (await screen.findByText(/"CARAOKE_URL": "http:\/\/127\.0\.0\.1:3333"/)).textContent ?? '{}',
+    );
+
+    expect(local.mcpServers.karaoke).toEqual({
+      command: NODE_PATH,
+      args: [MCP_PATH],
+      env: { CARAOKE_URL: 'http://127.0.0.1:3333', CARAOKE_KEY: '' },
+    });
+    expect(
+      screen.getByText(`claude mcp add karaoke -e CARAOKE_URL=http://127.0.0.1:3333 -- "${NODE_PATH}" ${MCP_PATH}`),
+    ).toBeInTheDocument();
   });
 
   it('builds the setup for both Claude apps', () => {
