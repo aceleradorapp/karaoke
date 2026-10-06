@@ -40,7 +40,14 @@ export interface JobDTO {
     title: string;
     artist: string;
     coverUrl: string | null;
+    durationSec: number | null;
   };
+}
+
+export interface ProcessingEstimate {
+  secondsPerSongSecond: number;
+  basedOnJobs: number;
+  unknownDurationSec: number;
 }
 
 export interface SongDTO {

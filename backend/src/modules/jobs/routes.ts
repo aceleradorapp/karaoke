@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
+import { getProcessingEstimate } from './estimate.js';
 import { cancelJob, deleteFinishedJob, listJobs, reorderJobs, retryJob } from './queueService.js';
 
 const NO_CONTENT = 204;
@@ -15,6 +16,8 @@ export async function jobRoutes(app: FastifyInstance): Promise<void> {
   typedApp.get('/jobs', { schema: { querystring: listQuerySchema } }, async (request) => ({
     items: await listJobs(request.query.scope),
   }));
+
+  typedApp.get('/jobs/estimate', async () => getProcessingEstimate());
 
   typedApp.patch('/jobs/reorder', { schema: { body: reorderBodySchema } }, async (request) => ({
     ids: await reorderJobs(request.body.ids),

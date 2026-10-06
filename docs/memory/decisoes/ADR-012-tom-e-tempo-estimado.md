@@ -23,8 +23,9 @@ O Michael pediu duas coisas das ideias guardadas: mudar o tom da música (para q
 - **Pontuação:** a nota alvo da melodia é deslocada pelo mesmo número de semitons.
 
 **Tempo estimado na fila de processamento**
-- **Modelo:** tempo de um job ≈ `segundos por segundo de música × duração + parte fixa`. Ele é calculado pela **mediana dos últimos 15 jobs concluídos** (com início, fim e duração).
-  - Com menos de 3 jobs no histórico, usa o padrão do aparelho: CPU 1,6 s por segundo de música, GPU 0,4. A parte fixa é de 45 s (letra, alinhamento, capa e melodia).
+- **Modelo:** tempo de um job ≈ `duração × segundos de processamento por segundo de música`. A taxa é a **mediana dos últimos 15 jobs concluídos** no mesmo tipo de aparelho do worker (CPU × placa de vídeo).
+  - No histórico real, a taxa é ~1,08 na CPU. A parte fixa (letra, capa, melodia) é pequena e já entra na taxa, então não há termo fixo separado.
+  - Com menos de 3 jobs no histórico, usa o padrão do aparelho: CPU 1,2 e GPU 0,4.
   - Música sem duração conhecida (upload ainda não processado): 4 min.
 - **Endpoint:** `GET /api/jobs/estimate` devolve o modelo. O front calcula para cada job da fila:
   - o que está rodando: "faltam ~X min" (estimado menos o já decorrido, mínimo de 30 s);

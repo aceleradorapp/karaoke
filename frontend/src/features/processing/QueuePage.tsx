@@ -17,8 +17,10 @@ import { Spinner } from '../../components/Spinner';
 import { applyJobsReordered } from '../../realtime/cacheUpdates';
 import { toast } from '../../stores/useToastStore';
 import { workerLabel } from '../health/workerLabel';
+import { describeEta, formatEta } from '../../lib/processingEstimate';
 import { JobRow } from './JobRow';
 import { PendingList } from './PendingList';
+import { useQueueEta } from './useQueueEta';
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -32,6 +34,8 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 function errorMessage(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
 }
+
+const EMPTY_JOBS: JobDTO[] = [];
 
 type PendingAction = { kind: 'cancel' | 'remove'; job: JobDTO };
 
@@ -60,6 +64,11 @@ export function QueuePage() {
   const deleteJob = useDeleteJobMutation();
   const reorderJobs = useReorderJobsMutation();
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
+  const eta = useQueueEta(active.data ?? EMPTY_JOBS);
+  const etaOf = (job: JobDTO) => {
+    const jobEta = eta?.byJob.get(job.id);
+    return jobEta ? describeEta(jobEta) : undefined;
+  };
 
   const running = active.data?.filter((job) => job.status === 'RUNNING') ?? [];
   const pending = active.data?.filter((job) => job.status === 'PENDING') ?? [];
@@ -105,7 +114,14 @@ export function QueuePage() {
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-8">
-      <h1 className="font-display text-4xl text-text sm:text-5xl">Fila de processamento</h1>
+      <div className="flex flex-col gap-1">
+        <h1 className="font-display text-4xl text-text sm:text-5xl">Fila de processamento</h1>
+        {eta && eta.allReadyInSec > 0 && (
+          <p className="text-base text-muted">
+            Tudo pronto em {formatEta(eta.allReadyInSec)} <span className="text-sm">(estimativa)</span>
+          </p>
+        )}
+      </div>
 
       {isLoading && <Spinner className="size-8" />}
 
@@ -143,6 +159,7 @@ export function QueuePage() {
               <li key={job.id} className="rounded-2xl bg-surface p-3">
                 <JobRow
                   job={job}
+                  eta={etaOf(job)}
                   actions={
                     <Button
                       variant="secondary"
@@ -166,6 +183,7 @@ export function QueuePage() {
             jobs={pending}
             onReorder={handleReorder}
             onCancel={(job) => setPendingAction({ kind: 'cancel', job })}
+            etaOf={etaOf}
           />
         </Section>
       )}

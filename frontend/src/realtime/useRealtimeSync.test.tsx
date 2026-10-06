@@ -48,7 +48,7 @@ const JOB: JobDTO = {
   createdAt: '2026-10-01T10:00:00.000Z',
   startedAt: '2026-10-01T10:00:01.000Z',
   finishedAt: null,
-  song: { title: 'Evidências', artist: 'X', coverUrl: null },
+  song: { title: 'Evidências', artist: 'X', coverUrl: null, durationSec: null },
 };
 
 describe('useRealtimeSync', () => {

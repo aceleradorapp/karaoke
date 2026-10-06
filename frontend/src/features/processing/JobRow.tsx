@@ -26,9 +26,10 @@ interface JobRowProps {
   job: JobDTO;
   leading?: ReactNode;
   actions?: ReactNode;
+  eta?: string;
 }
 
-export function JobRow({ job, leading, actions }: JobRowProps) {
+export function JobRow({ job, leading, actions, eta }: JobRowProps) {
   const isRunning = job.status === 'RUNNING';
   const isFailed = job.status === 'FAILED';
 
@@ -60,6 +61,7 @@ export function JobRow({ job, leading, actions }: JobRowProps) {
               <span className="ml-2 rounded bg-surface-2 px-1.5 py-0.5 text-xs">{job.device}</span>
             )}
           </p>
+          {eta && <p className="text-sm text-text">{eta}</p>}
           {isRunning && (
             <div
               role="progressbar"

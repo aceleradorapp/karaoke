@@ -103,6 +103,7 @@ describe('toJobDTO', () => {
       title: 'Evidências',
       artist: 'Chitãozinho & Xororó',
       coverUrl: `/media/song1/capa.jpg?v=${UPDATED_AT.getTime()}`,
+      durationSec: null,
     });
   });
 });

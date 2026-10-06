@@ -213,7 +213,8 @@ Toda mudança (criar, remover, reordenar, apresentação começou, perfil ou mú
 ### Fila de processamento (jobs)
 | Método | Rota | Descrição |
 |---|---|---|
-| GET | `/api/jobs?scope=active\|recent` | `active` = PENDING + RUNNING (por position); `recent` = DONE/FAILED/CANCELED das últimas 48 h. Inclui título, artista e capa da música |
+| GET | `/api/jobs?scope=active\|recent` | `active` = PENDING + RUNNING (por position); `recent` = DONE/FAILED/CANCELED das últimas 48 h. Inclui título, artista, capa e duração (`durationSec`) da música |
+| GET | `/api/jobs/estimate` | (palco e celular) `{ secondsPerSongSecond, basedOnJobs, unknownDurationSec }`: mediana de (tempo de processamento ÷ duração) dos últimos 15 jobs DONE do mesmo tipo de aparelho do worker (CPU × placa de vídeo). Com menos de 3, o padrão é CPU 1,2 e GPU 0,4 (`basedOnJobs: 0`). ADR-012 |
 | PATCH | `/api/jobs/reorder` | `{ ids: string[] }` (só PENDING) |
 | POST | `/api/jobs/:id/cancel` | PENDING → CANCELED na hora; RUNNING → marca `cancelRequested` (em memória) e o worker aborta na próxima chamada de progresso. Música → ERROR com mensagem "Cancelado" |
 | POST | `/api/jobs/:id/retry` | FAILED/CANCELED → cria um job novo PENDING no fim da fila |

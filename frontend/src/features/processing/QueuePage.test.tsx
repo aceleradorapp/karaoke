@@ -13,6 +13,7 @@ function renderQueue(active: JobDTO[], recent: JobDTO[] = [], extra: MockRoutes 
     'GET /api/jobs?scope=active': { body: { items: active } },
     'GET /api/jobs?scope=recent': { body: { items: recent } },
     'GET /api/system/info': { body: { worker: buildWorkerInfo(), storage: { usedBytes: 0, songs: 0 } } },
+    'GET /api/jobs/estimate': { body: { secondsPerSongSecond: 1, basedOnJobs: 5, unknownDurationSec: 240 } },
     ...extra,
   });
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -61,7 +62,7 @@ describe('QueuePage', () => {
       progress: 62,
       message: 'Separando voz (cpu)… 62%',
       device: 'cpu',
-      song: { title: 'Evidências', artist: 'Chitãozinho & Xororó', coverUrl: null },
+      song: { title: 'Evidências', artist: 'Chitãozinho & Xororó', coverUrl: null, durationSec: null },
     });
     renderQueue([running]);
 
@@ -72,6 +73,32 @@ describe('QueuePage', () => {
       'aria-valuenow',
       '62',
     );
+  });
+
+  it('estimates when each song will be ready', async () => {
+    const running = buildJob({
+      status: 'RUNNING',
+      position: 1,
+      startedAt: new Date(Date.now() - 60_000).toISOString(),
+      song: { title: 'Evidências', artist: 'Chitãozinho & Xororó', coverUrl: null, durationSec: 300 },
+    });
+    const waiting = buildJob({
+      status: 'PENDING',
+      position: 2,
+      song: { title: 'Flores', artist: 'Titãs', coverUrl: null, durationSec: 120 },
+    });
+    renderQueue([running, waiting]);
+
+    expect(await screen.findByText('Faltam ~4 min')).toBeInTheDocument();
+    expect(screen.getByText('Começa em ~4 min · pronta em ~6 min')).toBeInTheDocument();
+    expect(screen.getByText(/Tudo pronto em ~6 min/)).toBeInTheDocument();
+  });
+
+  it('shows no estimate when it cannot be loaded', async () => {
+    renderQueue([buildJob({ status: 'PENDING' })], [], { 'GET /api/jobs/estimate': { status: 500, body: {} } });
+    await screen.findByRole('region', { name: 'Na fila' });
+    expect(screen.queryByText(/Tudo pronto em/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Começa em/)).not.toBeInTheDocument();
   });
 
   it('falls back to the step name when the job has no message yet', async () => {
@@ -111,8 +138,8 @@ describe('QueuePage', () => {
   });
 
   it('cancels a waiting song and a running one', async () => {
-    const waiting = buildJob({ status: 'PENDING', song: { title: 'Espera', artist: 'A', coverUrl: null } });
-    const running = buildJob({ status: 'RUNNING', song: { title: 'Rodando', artist: 'A', coverUrl: null } });
+    const waiting = buildJob({ status: 'PENDING', song: { title: 'Espera', artist: 'A', coverUrl: null, durationSec: null } });
+    const running = buildJob({ status: 'RUNNING', song: { title: 'Rodando', artist: 'A', coverUrl: null, durationSec: null } });
     const fetchMock = renderQueue([running, waiting], [], {
       [`POST /api/jobs/${waiting.id}/cancel`]: { status: 204 },
       [`POST /api/jobs/${running.id}/cancel`]: { status: 204 },
@@ -181,7 +208,7 @@ describe('QueuePage', () => {
         status: 'FAILED',
         error: 'x',
         finishedAt: '2026-10-01T10:00:00.000Z',
-        song: { title: 'Evidências', artist: 'A', coverUrl: null },
+        song: { title: 'Evidências', artist: 'A', coverUrl: null, durationSec: null },
       });
 
     it('asks before removing a finished song from the list and says the song is kept', async () => {
@@ -210,7 +237,7 @@ describe('QueuePage', () => {
     it('asks before canceling and warns that the processed work is lost', async () => {
       const running = buildJob({
         status: 'RUNNING',
-        song: { title: 'Evidências', artist: 'A', coverUrl: null },
+        song: { title: 'Evidências', artist: 'A', coverUrl: null, durationSec: null },
       });
       const fetchMock = renderQueue([running], [], {
         [`POST /api/jobs/${running.id}/cancel`]: { status: 204 },
@@ -255,7 +282,7 @@ describe('QueuePage', () => {
         buildJob({
           status: 'PENDING',
           position: index,
-          song: { title: `Música ${index}`, artist: 'A', coverUrl: null },
+          song: { title: `Música ${index}`, artist: 'A', coverUrl: null, durationSec: null },
         }),
       );
 

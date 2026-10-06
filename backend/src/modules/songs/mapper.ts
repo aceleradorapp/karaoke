@@ -1,7 +1,7 @@
 import type { Job, Song } from '@prisma/client';
 import type { JobDTO, SongDTO } from '@caraoke/shared';
 
-type SongSummary = Pick<Song, 'id' | 'title' | 'artist' | 'hasCover' | 'updatedAt'>;
+type SongSummary = Pick<Song, 'id' | 'title' | 'artist' | 'hasCover' | 'updatedAt' | 'durationSec'>;
 
 const MEDIA_PREFIX = '/media';
 
@@ -29,7 +29,7 @@ export function toJobDTO(job: Job, song: SongSummary): JobDTO {
     createdAt: job.createdAt.toISOString(),
     startedAt: job.startedAt?.toISOString() ?? null,
     finishedAt: job.finishedAt?.toISOString() ?? null,
-    song: { title: song.title, artist: song.artist, coverUrl: coverUrlOf(song) },
+    song: { title: song.title, artist: song.artist, coverUrl: coverUrlOf(song), durationSec: song.durationSec },
   };
 }
 
