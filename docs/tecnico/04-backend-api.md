@@ -126,6 +126,15 @@ app.addHook('onRequest', async (req) => {
   req.isMobile = true; // decorate
 });
 ```
+**Chave para IA (ADR-014):** depois do teste de loopback, uma requisição com `Authorization: Bearer <chave>` é conferida pelo hash de `settings['ai.keyHash']`.
+- Com a chave certa, passa **só** nas rotas do MCP (`AI_ALLOWED_ROUTES`):
+  - `GET /health`;
+  - `GET /youtube/search` e `POST /youtube/import`;
+  - `GET /lyrics/check`;
+  - `GET /songs` e `GET /songs/:id`;
+  - `GET /jobs`, `GET /jobs/estimate`, `POST /jobs/:id/cancel` e `PATCH /jobs/reorder`.
+- Nesse caso, marca `req.isAi`. Com a chave errada ou em outra rota, responde 401 "Chave para IA inválida…".
+
 Teste obrigatório (vitest + `app.inject` com `remoteAddress`): palco passa; celular sem código → 401; celular com código em rota permitida passa; celular em rota não permitida → 401; internal sem token → 401.
 
 ## 4.6 Endpoints
@@ -183,6 +192,7 @@ type SongDTO = {
 | Método | Rota | Descrição |
 |---|---|---|
 | GET | `/api/youtube/search?q=&limit=12` | Executa o yt-dlp (4.9). Resposta: `{ items: [{ youtubeId, title, channel, durationSec, thumbnailUrl, suggested: { artist, title }, existingSongId \| null }] }`. Cache em memória por 10 min, por `q` |
+| GET / POST / DELETE | `/api/ai-key` | (só o palco, ADR-014) status `{ hasKey, createdAt, serverUrls, mcpDownloadPath }` / gera uma chave nova `{ key, createdAt }` (aparece só nesta resposta; guarda o SHA-256 em `settings['ai.keyHash']`) / revoga |
 | GET | `/api/lyrics/check?artist=&title=&duration=` | (palco e celular, ADR-013) `{ status: 'SYNCED' \| 'PLAIN' \| 'INSTRUMENTAL' \| 'NONE' \| 'UNKNOWN' }`. Consulta o LRCLIB com **as mesmas regras do worker** (`modules/lyricsCheck`; se mudar uma, mude a outra). Cache de 6 h (sem `UNKNOWN`), até 4 consultas simultâneas, cada chamada tenta até 4 vezes |
 | POST | `/api/youtube/import` | `{ youtubeId, title, artist, profileId? }` → cria Song + Job. Se o `youtubeId` já existir: `{ song, alreadyExists: true }` |
 

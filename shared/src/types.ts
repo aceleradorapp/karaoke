@@ -138,6 +138,18 @@ export interface YoutubeSearchResult {
   existingSongId: string | null;
 }
 
+export interface AiKeyStatusDTO {
+  hasKey: boolean;
+  createdAt: string | null;
+  serverUrls: string[];
+  mcpDownloadPath: string;
+}
+
+export interface AiKeyCreatedDTO {
+  key: string;
+  createdAt: string;
+}
+
 export type LyricsAvailability = 'SYNCED' | 'PLAIN' | 'INSTRUMENTAL' | 'NONE' | 'UNKNOWN';
 
 export interface LyricsCheckDTO {

@@ -12,6 +12,7 @@ import { MyThemeField } from './MyThemeField';
 import { QueueSection } from './QueueSection';
 import { ScoringSection } from './ScoringSection';
 import { SystemSection } from './SystemSection';
+import { AiSection } from './AiSection';
 import { LYRICS_EFFECT_LIST, LYRICS_EFFECTS } from '../../lib/lyrics/effects';
 import { YtdlpUpdater } from './YtdlpUpdater';
 
@@ -124,6 +125,8 @@ function SettingsForm({ initialSettings }: SettingsFormProps) {
       <QueueSection settings={draft} onChange={change} />
 
       <ScoringSection settings={draft} onChange={change} />
+
+      <AiSection />
 
       <SystemSection />
     </div>
