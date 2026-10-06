@@ -13,6 +13,7 @@ export function ProfilesPage() {
   const profiles = useProfilesQuery();
   const touchProfile = useTouchProfileMutation();
   const setProfile = useProfileStore((state) => state.setProfile);
+  const hasCurrentProfile = useProfileStore((state) => state.currentProfile !== null);
   const [creating, setCreating] = useState<NewProfileKind | null>(null);
 
   async function selectProfile(profile: ProfileDTO) {
@@ -48,12 +49,14 @@ export function ProfilesPage() {
         />
       )}
 
-      <Link
-        to="/perfis/gerenciar"
-        className="inline-flex min-h-11 items-center rounded-lg px-5 text-base text-muted hover:text-text"
-      >
-        Gerenciar perfis
-      </Link>
+      {hasCurrentProfile && (
+        <Link
+          to="/perfis/gerenciar"
+          className="inline-flex min-h-11 items-center rounded-lg px-5 text-base text-muted hover:text-text"
+        >
+          Gerenciar perfis
+        </Link>
+      )}
 
       <CreateProfileModal
         isOpen={creating !== null}
