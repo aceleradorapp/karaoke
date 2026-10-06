@@ -1,10 +1,10 @@
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
-import { saveLyricsSchema, updateSongSchema } from '@caraoke/shared';
+import { deleteManySongsSchema, saveLyricsSchema, updateSongSchema } from '@caraoke/shared';
 import { z } from 'zod';
 import { buildHome } from './home.js';
 import { getOriginalLyrics, restoreOriginalLyrics, saveLyrics } from './lyrics.js';
-import { deleteSong, getSong, listSongs, updateSong } from './service.js';
+import { deleteManySongs, deleteSong, getSong, listSongs, updateSong } from './service.js';
 
 const NO_CONTENT = 204;
 const DEFAULT_PAGE_SIZE = 24;
@@ -59,6 +59,10 @@ export async function songRoutes(app: FastifyInstance): Promise<void> {
 
   typedApp.post('/songs/:id/lyrics/restore', { schema: { params: idParamsSchema } }, async (request) =>
     restoreOriginalLyrics(request.params.id),
+  );
+
+  typedApp.post('/songs/delete-many', { schema: { body: deleteManySongsSchema } }, async (request) =>
+    deleteManySongs(request.body.ids),
   );
 
   typedApp.delete('/songs/:id', { schema: { params: idParamsSchema } }, async (request, reply) => {

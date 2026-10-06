@@ -219,6 +219,7 @@ Branch: `feature/f7b-fila-e-letra`.
 | ID | Status | Tarefa | Modelo |
 |---|---|---|---|
 | F7H-01 | ✅ 2026-10-06 | "Excluir música" junto dos botões do topo da página da música (antes ficava escondido no fim da página) | 🟢 |
+| F7H-03 | ✅ 2026-10-06 | Excluir várias músicas de uma vez: "Selecionar" na biblioteca + `POST /api/songs/delete-many`. Usado para apagar as 6 versões karaokê importadas pelo Claude | 🟡 |
 | F7H-02 | ✅ 2026-10-06 | MCP: importar só versões ORIGINAIS (o karaokê tira a voz sozinho); resultados que parecem karaokê/instrumental vêm marcados com ⚠; Configurações › IA mostra a configuração pronta para o Claude deste PC (sem chave) e avisa para fechar o Claude Desktop antes de editar | 🟡 |
 
 ## Fase 8 — Publicação (futuro)

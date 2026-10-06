@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, useLocation, useNavigate } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ProfileDTO, SongListResponse } from '@caraoke/shared';
@@ -59,6 +59,60 @@ describe('LibraryPage', () => {
     expect(await screen.findByRole('link', { name: 'Evidências' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Garçom' })).toBeInTheDocument();
     expect(screen.getByLabelText('Ordenar por')).toHaveValue('recent');
+  });
+
+  describe('deleting several songs', () => {
+    function songs() {
+      return {
+        body: {
+          items: [
+            buildSong({ id: 's1', title: 'Evidências' }),
+            buildSong({ id: 's2', title: 'Garçom' }),
+            buildSong({ id: 's3', title: 'Flores' }),
+          ],
+          nextCursor: null,
+        },
+      };
+    }
+
+    it('marks songs and deletes them all at once after confirming', async () => {
+      const fetchMock = renderLibrary({
+        [DEFAULT_URL]: songs(),
+        'POST /api/songs/delete-many': { body: { deleted: ['s1', 's3'], skipped: [] } },
+      });
+
+      fireEvent.click(await screen.findByRole('button', { name: 'Selecionar' }));
+      expect(screen.queryByRole('link', { name: 'Evidências' })).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Excluir' })).toBeDisabled();
+
+      fireEvent.click(screen.getByRole('checkbox', { name: /Evidências/ }));
+      fireEvent.click(screen.getByRole('checkbox', { name: /Flores/ }));
+      expect(screen.getByRole('checkbox', { name: /Flores/ })).toHaveAttribute('aria-checked', 'true');
+      expect(screen.getByText('2 músicas selecionada(s)')).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Excluir' }));
+      expect(screen.getByRole('dialog')).toHaveTextContent('Excluir 2 músicas?');
+      fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Excluir' }));
+
+      await waitFor(() => expect(requestsTo(fetchMock, 'POST', '/api/songs/delete-many')).toHaveLength(1));
+      expect(JSON.parse(String(requestsTo(fetchMock, 'POST', '/api/songs/delete-many')[0]?.[1]?.body))).toEqual({
+        ids: ['s1', 's3'],
+      });
+      await waitFor(() => expect(screen.queryByRole('toolbar')).not.toBeInTheDocument());
+    });
+
+    it('marks every loaded song at once and leaves without deleting', async () => {
+      renderLibrary({ [DEFAULT_URL]: songs() });
+
+      fireEvent.click(await screen.findByRole('button', { name: 'Selecionar' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Marcar todas' }));
+      expect(screen.getByText('3 músicas selecionada(s)')).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Desmarcar todas' }));
+      expect(screen.getByText('Toque nas músicas para marcar')).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
+      expect(await screen.findByRole('link', { name: 'Evidências' })).toBeInTheDocument();
+    });
   });
 
   describe('search', () => {
