@@ -54,6 +54,34 @@ describe('ProfilesPage', () => {
     vi.unstubAllGlobals();
   });
 
+  it('offers to manage profiles only when someone is already using the app', async () => {
+    mockApi({ 'GET /api/profiles': { body: { items: [] } } });
+    renderPage();
+    await waitFor(() =>
+      expect(screen.queryByRole('link', { name: 'Gerenciar perfis' })).not.toBeInTheDocument(),
+    );
+  });
+
+  it('links to the profile management page when a profile is in use', async () => {
+    useProfileStore.setState({
+      currentProfile: {
+        id: 'p1',
+        name: 'Ana',
+        avatar: 'lion',
+        theme: 'cinema',
+        isGuest: false,
+        createdAt: '',
+        lastUsedAt: '',
+      },
+    });
+    mockApi({ 'GET /api/profiles': { body: { items: [] } } });
+    renderPage();
+    expect(await screen.findByRole('link', { name: 'Gerenciar perfis' })).toHaveAttribute(
+      'href',
+      '/perfis/gerenciar',
+    );
+  });
+
   it('lists family profiles and guests in their own sections', async () => {
     mockApi({ 'GET /api/profiles': { body: { items: [ANA, TIO_BETO] } } });
     renderPage();

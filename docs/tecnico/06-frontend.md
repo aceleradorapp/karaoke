@@ -39,7 +39,7 @@ Detecção: `isMobilePath(pathname)` em `lib/mobileApp.ts` = `/m` exato ou come�
 
 ```
 /perfis                    Quem vai cantar?           (sem perfil → redireciona para cá)
-/perfis/gerenciar          Criar/editar/excluir perfis
+/perfis/gerenciar          Criar/editar/excluir perfis (dentro do layout com a barra superior; link na tela de perfis só com um perfil em uso)
 /                          Início (estilo Netflix)
 /biblioteca                Todas as músicas + busca + filtros
 /musica/:id                Detalhe da música

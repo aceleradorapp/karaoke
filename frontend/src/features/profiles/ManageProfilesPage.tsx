@@ -1,6 +1,5 @@
 import type { ProfileDTO } from '@caraoke/shared';
 import { useState } from 'react';
-import { Link } from 'react-router';
 import { useProfilesQuery } from '../../api/profiles';
 import { Spinner } from '../../components/Spinner';
 import { CreateProfileModal } from './CreateProfileModal';
@@ -16,12 +15,15 @@ export function ManageProfilesPage() {
     profiles.data?.find((profile) => profile.id === editingId) ?? null;
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-5xl flex-col items-center gap-10 px-4 py-10">
-      <h1 className="text-center font-display text-4xl text-text sm:text-5xl lg:text-6xl">
-        Gerenciar perfis
-      </h1>
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
+      <div>
+        <h1 className="font-display text-4xl sm:text-5xl">Gerenciar perfis</h1>
+        <p className="text-base text-muted">
+          Toque num perfil para mudar o nome, o avatar ou o tema, ou para excluir.
+        </p>
+      </div>
 
-      {profiles.isLoading && <Spinner className="size-10" />}
+      {profiles.isLoading && <Spinner className="mx-auto size-10" />}
 
       {profiles.isError && (
         <p role="alert" className="text-danger">
@@ -37,19 +39,12 @@ export function ManageProfilesPage() {
         />
       )}
 
-      <Link
-        to="/perfis"
-        className="inline-flex min-h-11 items-center rounded-lg bg-primary px-6 text-base font-semibold text-primary-contrast"
-      >
-        Concluído
-      </Link>
-
       <ProfileEditorModal profile={editingProfile} onClose={() => setEditingId(null)} />
       <CreateProfileModal
         isOpen={creating !== null}
         isGuest={creating === 'guest'}
         onClose={() => setCreating(null)}
       />
-    </main>
+    </div>
   );
 }
