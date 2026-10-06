@@ -203,6 +203,9 @@ Branch: `feature/f7b-fila-e-letra`.
 | F8-03 | ⬜ | Storage externo (S3 ou similar) e deploy | 🔴 |
 
 ## Backlog (ideias ainda sem fase)
+- **MCP do karaokê para IA** (2026-10-06): buscar no YouTube, ver se já existe e **se tem letra antes de importar**, importar uma ou várias, acompanhar a fila, por exemplo "liste as 20 mais cantadas de karaokê nacional" e depois "processe a 1, 3 e 7". Detalhes em `vault/10-ideias/mcp-e-processamento-remoto.md`
+- **Processar em outras máquinas (GPU)** (2026-10-06): worker remoto que baixa a origem e envia os arquivos prontos pela rede, várias máquinas com nome, escolher onde processar (pela tela ou pela IA via MCP). Mesmo arquivo de ideias
+- **Selo "tem letra / sem letra"** nos resultados da busca do YouTube (parte da ideia do MCP, útil sozinho)
 - ~~Pacote de imagens~~ → 20 avatares divertidos (2026-10-05)
 - Botão "Buscar a letra de novo" na página da música (sem reprocessar tudo), útil quando o site das letras estava fora do ar
 - Tocar a versão original enquanto o instrumental não fica pronto (hoje: play bloqueado)
