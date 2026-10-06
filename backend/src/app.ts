@@ -20,6 +20,10 @@ import { songRoutes } from './modules/songs/routes.js';
 import { systemInternalRoutes } from './modules/system/internalRoutes.js';
 import { uploadRoutes } from './modules/uploads/routes.js';
 import { youtubeRoutes } from './modules/youtube/routes.js';
+import { lyricsCheckRoutes } from './modules/lyricsCheck/routes.js';
+import { aiKeyRoutes } from './modules/aiKey/routes.js';
+import { workerRoutes } from './modules/workers/routes.js';
+import { DEFAULT_DOWNLOAD_FILES, downloadRoutes, type DownloadFiles } from './modules/downloads/routes.js';
 import { systemRoutes } from './modules/system/routes.js';
 import { registerAccessControl } from './plugins/access.js';
 import { env } from './env.js';
@@ -34,6 +38,7 @@ export interface BuildAppOptions {
   logger?: boolean;
   maxUploadBytes?: number;
   webDistDir?: string | null;
+  downloadFiles?: DownloadFiles;
 }
 
 export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyInstance> {
@@ -84,6 +89,10 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   await app.register(songRoutes, { prefix: '/api' });
   await app.register(uploadRoutes, { prefix: '/api' });
   await app.register(youtubeRoutes, { prefix: '/api' });
+  await app.register(lyricsCheckRoutes, { prefix: '/api' });
+  await app.register(aiKeyRoutes, { prefix: '/api' });
+  await app.register(workerRoutes, { prefix: '/api' });
+  await app.register(downloadRoutes, { files: options.downloadFiles ?? DEFAULT_DOWNLOAD_FILES });
   await app.register(systemInternalRoutes, { prefix: '/api' });
   await app.register(jobsInternalRoutes, { prefix: '/api' });
   if (webDistDir) await registerWeb(app, webDistDir);

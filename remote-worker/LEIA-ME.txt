@@ -1,0 +1,24 @@
+PROCESSADOR DO KARAOKÊ
+======================
+
+Usa esta máquina (de preferência com placa de vídeo NVIDIA) para separar a voz
+e preparar as músicas do karaokê da família, bem mais rápido.
+
+INSTALAR
+1. Descompacte este ZIP numa pasta qualquer.
+2. Dê dois cliques em "Instalar.cmd". A primeira vez baixa uns 3 GB.
+3. Quando terminar, abra o atalho "Processador do Karaokê" na área de trabalho.
+
+PAREAR (só na primeira vez)
+1. No PC do karaokê: Configurações › Máquinas de processamento › Parear uma máquina.
+2. No processador, digite o endereço que aparece lá (ex.: 192.168.0.10:3333)
+   e o código de 6 números.
+
+USAR
+Deixe a janela do processador aberta. As músicas da fila vão sendo
+processadas aqui e enviadas prontas para o karaokê. Feche a janela para parar.
+Na fila de processamento do karaokê dá para escolher em qual máquina cada
+música será processada.
+
+DESINSTALAR
+Dê dois cliques em "Desinstalar.cmd" e remova a máquina no karaokê.

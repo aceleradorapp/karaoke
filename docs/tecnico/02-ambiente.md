@@ -90,7 +90,7 @@ Regras:
     "dev:api": "npm run dev -w backend",
     "dev:web": "npm run dev -w frontend",
     "dev:worker": "worker\\.venv\\Scripts\\python.exe -m caraoke_worker",
-    "build": "npm run build -w frontend",
+    "build": "npm run build -w frontend && npm run build -w mcp",
     "start": "npm run start -w backend",
     "test": "npm run test --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",

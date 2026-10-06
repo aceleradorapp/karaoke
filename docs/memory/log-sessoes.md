@@ -2,6 +2,33 @@
 
 > Entradas mais recentes no topo. Use `/fim-sessao` para registrar.
 
+## 2026-10-06 (15) — Fase 7G: selo de letra, MCP e processador remoto
+**Pedido:** seguir a "ordem sugerida", com um app para instalar na outra máquina. Decidido com o Michael:
+- ZIP com instalador, para Windows com NVIDIA;
+- o MCP pode buscar e ver letra, importar e mexer na fila de processamento;
+- o MCP roda em qualquer PC, com chave.
+
+**Feito:**
+- **F7G-01 (ADR-013):** selo "Letra sincronizada / Só o texto / Sem letra" em cada resultado do YouTube (`/api/lyrics/check`, mesmas regras do worker).
+  - Achado: o LRCLIB falha ~30% das vezes de forma aleatória. Backend e **worker** passaram a tentar de novo; antes, várias importações podiam ficar "sem letra" à toa.
+- **F7G-02/03 (ADR-014):**
+  - Chave para IA (Bearer com hash, só nas rotas do MCP) e seção "IA (MCP)" com os comandos prontos;
+  - servidor MCP `mcp/` (7 ferramentas), arquivo único baixado em `/downloads/caraoke-mcp.mjs`.
+- **F7G-04/05 (ADR-015):**
+  - máquinas pareadas por código de 6 dígitos (tabela `workers`, token por máquina);
+  - claim e recuperação por máquina, watchdog de 2 min;
+  - modo remoto do worker (baixa a origem, envia os arquivos prontos);
+  - "Processar em" na fila; import e MCP com máquina.
+- **F7G-06:** `remote-worker/` (Instalar.cmd, atalho, console em português) e `npm run processador:pacote`.
+
+**Verificado:**
+- MCP de verdade por stdio, como se fosse outro PC: busca com selos, "já estava na biblioteca", fila, chave errada explicada.
+- Pareamento pela rede.
+- Worker remoto simulado processou uma música de 39 s direcionada a ele e enviou instrumental, voz, capa e melodia ao karaokê (a música de teste foi apagada).
+- Instalador rodado de verdade numa pasta isolada: instalou, pareou, processou uma música e a enviou, e o desinstalador removeu tudo.
+- Testes: backend 461, frontend 880, shared 30, mcp 8, worker 219.
+- F7G-07 (extensão do Chrome, opcional) ficou adiada.
+
 ## 2026-10-06 (14) — Fase 7F concluída: mudar o tom e tempo estimado
 **Pedido:** mudar o tom da música e mostrar o tempo estimado na fila de processamento. Depois, seguir a "ordem sugerida" (Fase 7G), com um app para instalar na outra máquina.
 **Feito (ADR-012):**

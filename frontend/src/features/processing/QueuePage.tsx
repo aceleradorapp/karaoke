@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
-import type { JobDTO } from '@caraoke/shared';
+import { describeEta, formatEta, type JobDTO } from '@caraoke/shared';
 import { RotateCcw, Trash2, X } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { Link } from 'react-router';
@@ -9,7 +9,9 @@ import {
   useJobsQuery,
   useReorderJobsMutation,
   useRetryJobMutation,
+  useSetJobTargetMutation,
 } from '../../api/jobs';
+import { useWorkersQuery } from '../../api/workers';
 import { useSystemInfoQuery } from '../../api/system';
 import { Button } from '../../components/Button';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
@@ -17,7 +19,6 @@ import { Spinner } from '../../components/Spinner';
 import { applyJobsReordered } from '../../realtime/cacheUpdates';
 import { toast } from '../../stores/useToastStore';
 import { workerLabel } from '../health/workerLabel';
-import { describeEta, formatEta } from '../../lib/processingEstimate';
 import { JobRow } from './JobRow';
 import { PendingList } from './PendingList';
 import { useQueueEta } from './useQueueEta';
@@ -63,6 +64,8 @@ export function QueuePage() {
   const retryJob = useRetryJobMutation();
   const deleteJob = useDeleteJobMutation();
   const reorderJobs = useReorderJobsMutation();
+  const setJobTarget = useSetJobTargetMutation();
+  const workers = useWorkersQuery();
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
   const eta = useQueueEta(active.data ?? EMPTY_JOBS);
   const etaOf = (job: JobDTO) => {
@@ -82,6 +85,13 @@ export function QueuePage() {
     reorderJobs.mutate(orderedIds, {
       onError: (error) => toast.error(errorMessage(error, 'Não foi possível reordenar a fila')),
     });
+  }
+
+  function handleTarget(job: JobDTO, targetWorkerId: string | null) {
+    setJobTarget.mutate(
+      { id: job.id, targetWorkerId },
+      { onError: (error) => toast.error(errorMessage(error, 'Não foi possível escolher a máquina')) },
+    );
   }
 
   function handleCancel(job: JobDTO) {
@@ -184,6 +194,8 @@ export function QueuePage() {
             onReorder={handleReorder}
             onCancel={(job) => setPendingAction({ kind: 'cancel', job })}
             etaOf={etaOf}
+            workers={workers.data ?? []}
+            onChangeTarget={handleTarget}
           />
         </Section>
       )}

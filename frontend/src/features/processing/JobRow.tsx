@@ -57,6 +57,9 @@ export function JobRow({ job, leading, actions, eta }: JobRowProps) {
             title={isFailed && job.error ? job.error : undefined}
           >
             {describeStatus(job)}
+            {isRunning && job.workerName && job.workerId !== 'local' && (
+              <span className="ml-2 rounded bg-surface-2 px-1.5 py-0.5 text-xs">{job.workerName}</span>
+            )}
             {isRunning && job.device && (
               <span className="ml-2 rounded bg-surface-2 px-1.5 py-0.5 text-xs">{job.device}</span>
             )}

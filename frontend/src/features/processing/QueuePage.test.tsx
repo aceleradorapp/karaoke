@@ -101,6 +101,45 @@ describe('QueuePage', () => {
     expect(screen.queryByText(/Começa em/)).not.toBeInTheDocument();
   });
 
+  it('lets each waiting song choose the machine that will process it', async () => {
+    const waiting = buildJob({ id: 'j9', status: 'PENDING', targetWorkerId: 'w1', targetWorkerName: 'Notebook GPU' });
+    const machine = (id: string, name: string, online: boolean) => ({
+      id,
+      name,
+      isLocal: id === 'local',
+      online,
+      device: null,
+      gpuName: null,
+      lastSeenAt: null,
+      currentSongTitle: null,
+    });
+    const fetchMock = renderQueue([waiting], [], {
+      'GET /api/workers': { body: { items: [machine('local', 'Este PC', true), machine('w1', 'Notebook GPU', false)] } },
+      'PATCH /api/jobs/j9/target': { status: 204 },
+    });
+
+    const picker = await screen.findByRole('combobox', { name: `Onde processar ${waiting.song.title}` });
+    expect(picker).toHaveValue('w1');
+    expect(screen.getByText('Notebook GPU está desligada: a música espera até ela ligar.')).toBeInTheDocument();
+
+    fireEvent.change(picker, { target: { value: '' } });
+
+    await waitFor(() => expect(requestsTo(fetchMock, 'PATCH', '/api/jobs/j9/target')).toHaveLength(1));
+    expect(JSON.parse(String(requestsTo(fetchMock, 'PATCH', '/api/jobs/j9/target')[0]?.[1]?.body))).toEqual({
+      targetWorkerId: null,
+    });
+  });
+
+  it('does not offer a choice when this PC is the only machine', async () => {
+    renderQueue([buildJob({ status: 'PENDING' })], [], {
+      'GET /api/workers': {
+        body: { items: [{ id: 'local', name: 'Este PC', isLocal: true, online: true, device: null, gpuName: null, lastSeenAt: null, currentSongTitle: null }] },
+      },
+    });
+    await screen.findByRole('region', { name: 'Na fila' });
+    expect(screen.queryByRole('combobox', { name: /Onde processar/ })).not.toBeInTheDocument();
+  });
+
   it('falls back to the step name when the job has no message yet', async () => {
     renderQueue([buildJob({ status: 'RUNNING', step: 'LYRICS', message: null })]);
     expect(await screen.findByText('Buscando a letra')).toBeInTheDocument();

@@ -1,9 +1,13 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { LYRICS_OFFSET_LIMIT_MS } from '@caraoke/shared';
 import { z } from 'zod';
 import { markSongMelody } from '../songs/service.js';
+import { saveResultFiles, sourceFileOf } from './remoteService.js';
 import { claimNextJob } from './service.js';
+import { LOCAL_WORKER_ID } from '../../services/workerStatus.js';
 import { completeJob, failJob, recordProgress } from './workerService.js';
 
 const NO_CONTENT = 204;
@@ -42,8 +46,8 @@ const failBodySchema = z.object({
 export async function jobsInternalRoutes(app: FastifyInstance): Promise<void> {
   const typedApp = app.withTypeProvider<ZodTypeProvider>();
 
-  typedApp.post('/internal/jobs/claim', async (_request, reply) => {
-    const claim = await claimNextJob();
+  typedApp.post('/internal/jobs/claim', async (request, reply) => {
+    const claim = await claimNextJob(request.workerId ?? undefined);
     if (!claim) return reply.status(NO_CONTENT).send();
     return claim;
   });
@@ -62,6 +66,18 @@ export async function jobsInternalRoutes(app: FastifyInstance): Promise<void> {
       return { ok: true };
     },
   );
+
+  typedApp.get('/internal/jobs/:id/source', { schema: { params: idParamsSchema } }, async (request, reply) => {
+    const sourcePath = await sourceFileOf(request.params.id, request.workerId ?? LOCAL_WORKER_ID);
+    return reply
+      .header('Content-Type', 'application/octet-stream')
+      .header('Content-Disposition', `attachment; filename="${encodeURIComponent(path.basename(sourcePath))}"`)
+      .send(fs.createReadStream(sourcePath));
+  });
+
+  typedApp.post('/internal/songs/:id/files', { schema: { params: idParamsSchema } }, async (request) => ({
+    saved: await saveResultFiles(request.params.id, request.workerId ?? LOCAL_WORKER_ID, request.parts()),
+  }));
 
   typedApp.post('/internal/songs/:id/melody', { schema: { params: idParamsSchema } }, async (request) => {
     await markSongMelody(request.params.id);

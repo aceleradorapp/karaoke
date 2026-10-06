@@ -72,6 +72,34 @@ describe('YoutubePage', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  it('tells if each result has lyrics before importing', async () => {
+    const check = (artist: string, title: string, duration: number) =>
+      `GET /api/lyrics/check?${new URLSearchParams({ artist, title, duration: String(duration) })}`;
+    renderPage({
+      [SEARCH_URL]: {
+        body: {
+          items: [
+            buildVideo(),
+            buildVideo({ youtubeId: 'def12345678', suggested: { artist: 'Banda', title: 'Rara' }, durationSec: 200 }),
+            buildVideo({ youtubeId: 'ghi12345678', suggested: { artist: 'Coral', title: 'Hino' }, durationSec: 100 }),
+            buildVideo({ youtubeId: 'jkl12345678', suggested: { artist: 'Off', title: 'Line' }, durationSec: 150 }),
+          ],
+        },
+      },
+      [check('Chitãozinho & Xororó', 'Evidências', 298)]: { body: { status: 'SYNCED' } },
+      [check('Banda', 'Rara', 200)]: { body: { status: 'NONE' } },
+      [check('Coral', 'Hino', 100)]: { body: { status: 'PLAIN' } },
+      [check('Off', 'Line', 150)]: { body: { status: 'UNKNOWN' } },
+    });
+
+    await searchFor('evidencias');
+
+    expect(await screen.findByText('Letra sincronizada')).toBeInTheDocument();
+    expect(await screen.findByText('Sem letra')).toBeInTheDocument();
+    expect(await screen.findByText('Só o texto da letra')).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByText('Verificando a letra…')).not.toBeInTheDocument());
+  });
+
   it('searches and lists the results with channel and duration', async () => {
     renderPage({ [SEARCH_URL]: { body: { items: [buildVideo()] } } });
 

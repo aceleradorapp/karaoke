@@ -5,6 +5,7 @@
 react@^19 react-dom@^19 react-router@^7 (modo biblioteca: import { ... } from "react-router")
 @tanstack/react-query@^5  zustand@^5  socket.io-client@^4
 qrcode.react  pitchy@^4  clsx  lucide-react (ícones)  @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities (arrastar a fila, ADR-009)  soundtouchjs@^0.3 (mudar o tom no navegador, LGPL-2.1, ADR-012)
+(workspace `mcp`: @modelcontextprotocol/sdk@^1.32, ADR-014)
 devDeps: vite  @vitejs/plugin-react  typescript  tailwindcss@^4  @tailwindcss/vite  vitest  @testing-library/react  jsdom
 ```
 
@@ -215,6 +216,7 @@ Capa grande, título, artista, duração, origem, quem adicionou, quantas vezes 
 
 ┌──────────┐ Título do vídeo                         [▶ Prévia] [⬇ Importar]
 │ thumb    │ Canal • 3:45                             (ou: ✓ Já na biblioteca)
+│          │ [Letra sincronizada]  ← selo (ADR-013)
 └──────────┘
 ...
 ┌ Prévia ────────────────────────┐
@@ -223,6 +225,10 @@ Capa grande, título, artista, duração, origem, quem adicionou, quantas vezes 
 ```
 - Prévia: `https://www.youtube-nocookie.com/embed/<id>?autoplay=1&start=<30% da duração>`.
 - **Importar** → modal "Confirmar música" com os campos **Artista** e **Título** pré-preenchidos por `suggested` (editáveis) → `POST /youtube/import` → toast "Adicionada à fila de processamento".
+- **Selo de letra (ADR-013):** cada resultado consulta `/lyrics/check` com `suggested` e a duração (`LyricsBadge`, cache infinito no React Query).
+  - Selos: "Verificando a letra…", "Letra sincronizada" (cor de destaque), "Só o texto da letra", "Instrumental" e "Sem letra" (vermelho).
+  - Com `UNKNOWN`, não mostra selo.
+  - Versões de karaokê com duração bem diferente da original costumam dar "Sem letra" porque o worker usa a mesma regra; o selo serve justamente para escolher a versão que terá letra.
 - Componente compartilhado com `/m/buscar` (`features/youtube/YoutubeSearch.tsx`, prop `compact`).
 
 ### `/enviar` — Upload

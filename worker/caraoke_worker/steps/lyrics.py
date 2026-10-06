@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from typing import Any
 
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 from ..context import JobContext
 from ..lrc import build_document, parse_lrc, plain_text_lines, to_lrc
@@ -22,6 +24,9 @@ DURATION_TOLERANCE_SECONDS = 5
 NOT_FOUND = 404
 ORIGINAL_FILE = "letra.original.json"
 AUTO_ALIGN_SETTING = "processing.autoAlign"
+RETRY_ATTEMPTS = 3
+RETRY_BACKOFF_SECONDS = 0.3
+RETRY_STATUSES = (500, 502, 503, 504)
 
 
 @dataclass
@@ -33,6 +38,20 @@ class LyricsMatch:
 
 def _headers() -> dict[str, str]:
     return {"User-Agent": os.environ.get("LRCLIB_USER_AGENT", DEFAULT_USER_AGENT)}
+
+
+def build_session() -> requests.Session:
+    session = requests.Session()
+    session.headers.update(_headers())
+    retry = Retry(
+        total=RETRY_ATTEMPTS,
+        backoff_factor=RETRY_BACKOFF_SECONDS,
+        status_forcelist=RETRY_STATUSES,
+        allowed_methods=("GET",),
+        raise_on_status=False,
+    )
+    session.mount("https://", HTTPAdapter(max_retries=retry))
+    return session
 
 
 def _to_match(entry: dict[str, Any]) -> LyricsMatch:
@@ -158,8 +177,7 @@ def run(context: JobContext) -> None:
     is_site_unreachable = False
 
     try:
-        with requests.Session() as session:
-            session.headers.update(_headers())
+        with build_session() as session:
             match = find_lyrics(session, context.song["artist"], context.song["title"], duration)
     except requests.RequestException as error:
         logger.warning("Lyrics lookup failed: %s", error)

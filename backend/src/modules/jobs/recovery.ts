@@ -1,4 +1,6 @@
+import type { Prisma } from '@prisma/client';
 import { prisma } from '../../db.js';
+import { LOCAL_WORKER_ID } from '../../services/workerStatus.js';
 
 export const MAX_JOB_ATTEMPTS = 3;
 const GAVE_UP_MESSAGE = 'Interrompida várias vezes; tente de novo';
@@ -8,9 +10,15 @@ export interface RecoveryResult {
   gaveUp: number;
 }
 
-export async function recoverInterruptedJobs(): Promise<RecoveryResult> {
+function runningOn(workerId: string | undefined): Prisma.JobWhereInput {
+  if (workerId === undefined) return { status: 'RUNNING' };
+  if (workerId === LOCAL_WORKER_ID) return { status: 'RUNNING', OR: [{ workerId }, { workerId: null }] };
+  return { status: 'RUNNING', workerId };
+}
+
+export async function recoverInterruptedJobs(workerId?: string): Promise<RecoveryResult> {
   const interrupted = await prisma.job.findMany({
-    where: { status: 'RUNNING' },
+    where: runningOn(workerId),
     select: { id: true, songId: true, attempts: true },
   });
 
@@ -20,7 +28,7 @@ export async function recoverInterruptedJobs(): Promise<RecoveryResult> {
   await prisma.$transaction([
     prisma.job.updateMany({
       where: { id: { in: toRequeue.map((job) => job.id) } },
-      data: { status: 'PENDING', step: null, progress: 0, message: null, device: null, startedAt: null },
+      data: { status: 'PENDING', step: null, progress: 0, message: null, device: null, workerId: null, startedAt: null },
     }),
     prisma.song.updateMany({
       where: { id: { in: toRequeue.map((job) => job.songId) } },

@@ -1,18 +1,22 @@
-import type { JobDTO } from '@caraoke/shared';
+import type { JobDTO, ProcessingWorkerDTO } from '@caraoke/shared';
 import { ArrowDown, ArrowUp, GripVertical, X } from 'lucide-react';
 import { useState, type DragEvent } from 'react';
 import { Button } from '../../components/Button';
 import { moveItem } from '../../lib/reorder';
 import { JobRow } from './JobRow';
+import { TargetPicker } from './TargetPicker';
 
 interface PendingListProps {
   jobs: JobDTO[];
   onReorder: (orderedIds: string[]) => void;
   onCancel: (job: JobDTO) => void;
   etaOf?: (job: JobDTO) => string | undefined;
+  workers?: ProcessingWorkerDTO[];
+  onChangeTarget?: (job: JobDTO, targetWorkerId: string | null) => void;
 }
 
-export function PendingList({ jobs, onReorder, onCancel, etaOf }: PendingListProps) {
+export function PendingList({ jobs, onReorder, onCancel, etaOf, workers = [], onChangeTarget }: PendingListProps) {
+  const canChooseMachine = workers.length > 1 && onChangeTarget !== undefined;
   const [draggedId, setDraggedId] = useState<string | null>(null);
 
   function moveTo(jobId: string, targetIndex: number) {
@@ -53,6 +57,9 @@ export function PendingList({ jobs, onReorder, onCancel, etaOf }: PendingListPro
             }
             actions={
               <>
+                {canChooseMachine && (
+                  <TargetPicker job={job} workers={workers} onChange={(target) => onChangeTarget(job, target)} />
+                )}
                 <Button
                   variant="ghost"
                   size="icon"

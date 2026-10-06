@@ -1,11 +1,13 @@
 import logging
 import shutil
 from collections.abc import Callable
+from pathlib import Path
 from typing import Any
 
 from .api import Api
 from .context import JobContext
 from .errors import JobCanceled
+from .remote import discard_local_files, fetch_source, send_results, with_local_paths
 from .steps import cover, download, lyrics, melody, separate
 
 logger = logging.getLogger(__name__)
@@ -44,12 +46,15 @@ def cleanup(context: JobContext, succeeded: bool) -> None:
         context.process.kill()
 
 
-def run_job(api: Api, claim: dict[str, Any], hardware: dict[str, Any]) -> None:
-    context = JobContext(api, claim, api.settings(), hardware)
+def run_job(api: Api, claim: dict[str, Any], hardware: dict[str, Any], work_dir: Path | None = None) -> None:
+    is_remote = work_dir is not None
+    context = JobContext(api, with_local_paths(claim, work_dir) if work_dir else claim, api.settings(), hardware)
     job_id = context.job["id"]
     succeeded = False
 
     try:
+        if is_remote:
+            fetch_source(context)
         for step in context.job["steps"]:
             handler = STEP_HANDLERS.get(step)
             if handler is None:
@@ -57,6 +62,8 @@ def run_job(api: Api, claim: dict[str, Any], hardware: dict[str, Any]) -> None:
                 continue
             context.current_step = step
             handler(context)
+        if is_remote:
+            send_results(context)
         api.complete(job_id, context.result)
         succeeded = True
     except JobCanceled:
@@ -67,3 +74,5 @@ def run_job(api: Api, claim: dict[str, Any], hardware: dict[str, Any]) -> None:
         api.fail(job_id, describe_error(error), context.current_step)
     finally:
         cleanup(context, succeeded)
+        if is_remote:
+            discard_local_files(context)

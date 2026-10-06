@@ -14,4 +14,5 @@ export async function resetDatabase(): Promise<void> {
   await prisma.song.deleteMany();
   await prisma.profile.deleteMany();
   await prisma.setting.deleteMany();
+  await prisma.worker.deleteMany();
 }

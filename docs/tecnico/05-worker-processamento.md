@@ -66,7 +66,27 @@ def run_job(api, claim, info):
 - `ctx.report()` faz no máximo 1 PATCH por segundo (exceto quando muda de etapa ou chega a 100%).
 - Se a resposta do PATCH trouxer `cancel: true`, levanta `JobCanceled` e **mata o subprocesso em execução** (guarde a referência em `ctx.proc`).
 
-## 5.4 Detecção de GPU (`device.py`)
+### Modo remoto (ADR-015)
+Com `CARAOKE_REMOTE=1` (e `API_URL`, `WORKER_TOKEN` = token da máquina pareada, `CARAOKE_WORK_DIR`, padrão `%LOCALAPPDATA%\ProcessadorKaraoke	rabalho`), o mesmo código roda em outra máquina:
+- `remote.with_local_paths` troca os caminhos do claim pelos da pasta local;
+- upload: `fetch_source` baixa a origem por `GET /internal/jobs/:id/source` antes das etapas (YouTube baixa sozinho);
+- depois das etapas, `send_results` envia os arquivos da lista por `POST /internal/songs/:id/files` e só então chama `complete`; se o envio falhar, o job falha;
+- no fim (deu certo ou não) a pasta local da música é apagada.
+
+### App da outra máquina (`caraoke_worker/remote_app.py`, ADR-015)
+- `npm run processador:pacote` junta `remote-worker/`, `worker/caraoke_worker/` e o `requirements.txt` (sem pytest) em `dist-downloads/Processador-do-Karaoke.zip` (~32 KB). O servidor publica o ZIP em `/downloads/`.
+- O `instalar.ps1` (UTF-8 com BOM, por causa do PowerShell 5.1):
+  - acha ou instala o Python 3.11 e o FFmpeg (winget);
+  - cria o venv em `%LOCALAPPDATA%\ProcessadorKaraokeenv`;
+  - instala torch 2.5.1 cu124 e as bibliotecas;
+  - copia o código para `app\`;
+  - cria o atalho "Processador do Karaokê".
+- O atalho roda `python -m caraoke_worker.remote_app`:
+  - na primeira vez pede o endereço (aceita `192.168.0.10`, completa `http://` e `:3333`), o código e o nome, e salva em `config.json`;
+  - se a máquina foi removida no karaokê (401), pareia de novo;
+  - mostra em português o que está processando (`ConsoleApi`) e roda o worker em modo remoto.
+
+
 ```python
 MIN_VRAM_AUTO_MB = 3500   # htdemucs precisa de ~3 GB+ com o segment padrão
 
@@ -158,7 +178,7 @@ Linhas vazias do LRC (pausas instrumentais) **não** entram em `lines`. No modo 
 ```
 1. artist, title = song.artist, clean_title(song.title)
 2. GET https://lrclib.net/api/get?artist_name=&track_name=&duration=<durationSec>
-   headers: User-Agent = LRCLIB_USER_AGENT; timeout 15 s
+   headers: User-Agent = LRCLIB_USER_AGENT; timeout 15 s; tenta de novo até 3 vezes em 500/502/503/504 (backoff 0,3 s; o LRCLIB falha ~30% das vezes de forma aleatória)
    → 200: usar; 404: passo 3
 3. GET https://lrclib.net/api/search?track_name=&artist_name=
    → escolher o 1º resultado com |duration - durationSec| <= 5 s e syncedLyrics;

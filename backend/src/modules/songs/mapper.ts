@@ -1,5 +1,6 @@
 import type { Job, Song } from '@prisma/client';
 import type { JobDTO, SongDTO } from '@caraoke/shared';
+import { workerLabel } from '../../services/workerNames.js';
 
 type SongSummary = Pick<Song, 'id' | 'title' | 'artist' | 'hasCover' | 'updatedAt' | 'durationSec'>;
 
@@ -24,6 +25,10 @@ export function toJobDTO(job: Job, song: SongSummary): JobDTO {
     message: job.message,
     position: job.position,
     device: job.device,
+    workerId: job.workerId,
+    workerName: workerLabel(job.workerId),
+    targetWorkerId: job.targetWorkerId,
+    targetWorkerName: workerLabel(job.targetWorkerId),
     error: job.error,
     attempts: job.attempts,
     createdAt: job.createdAt.toISOString(),

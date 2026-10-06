@@ -1,7 +1,6 @@
-import type { JobDTO } from '@caraoke/shared';
 import { useEffect, useMemo, useState } from 'react';
 import { useProcessingEstimateQuery } from '../../api/jobs';
-import { estimateQueue, type QueueEta } from '../../lib/processingEstimate';
+import { estimateQueue, type JobDTO, type QueueEta } from '@caraoke/shared';
 
 const REFRESH_MS = 15_000;
 

@@ -2,6 +2,7 @@ import type { YoutubeSearchResult } from '@caraoke/shared';
 import { Check, Download, Play } from 'lucide-react';
 import { Button } from '../../components/Button';
 import { formatDuration } from '../../lib/format';
+import { LyricsBadge } from './LyricsBadge';
 
 export type ImportState = 'available' | 'in-library' | 'queued';
 
@@ -30,6 +31,7 @@ export function YoutubeResultCard({ video, importState, onPreview, onImport }: Y
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <h3 className="line-clamp-2 text-base font-semibold">{video.title}</h3>
         <p className="truncate text-sm text-muted">{video.channel}</p>
+        <LyricsBadge artist={video.suggested.artist} title={video.suggested.title} durationSec={video.durationSec} />
       </div>
 
       <div className="flex flex-wrap items-center gap-2 sm:justify-end">

@@ -8,6 +8,7 @@ import { startUploadWatcher } from './services/watcher.js';
 import { startWorkerWatchdog } from './services/workerStatus.js';
 import { ensureAccessCode } from './modules/system/access.js';
 import { getAccessCode } from './modules/settings/service.js';
+import { loadWorkerNames, recoverLostWorker } from './modules/workers/service.js';
 
 async function main(): Promise<void> {
   await ensureDirs();
@@ -17,7 +18,8 @@ async function main(): Promise<void> {
   const app = await buildApp();
   await ensureAccessCode();
   attachRealtime(app.server, getAccessCode);
-  startWorkerWatchdog();
+  await loadWorkerNames();
+  startWorkerWatchdog((workerId) => void recoverLostWorker(workerId).catch((error) => console.error(error)));
   const uploadWatcher = startUploadWatcher();
 
   const shutdown = async (exitCode = 0) => {

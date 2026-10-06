@@ -56,7 +56,9 @@ describe('restarting the system', () => {
 
   it('tells the health report whether restarting is available', async () => {
     process.env[SUPERVISED_ENV] = '1';
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(null, { status: 204 })));
     const report = (await app.inject({ method: 'GET', url: '/api/system/health-report?fresh=1' })).json();
+    vi.unstubAllGlobals();
     expect(report.canRestart).toBe(true);
   });
 });
