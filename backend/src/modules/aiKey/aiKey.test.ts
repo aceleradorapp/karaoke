@@ -47,6 +47,9 @@ describe('AI key', () => {
     const status = (await fromStage('GET', '/api/ai-key')).json();
     expect(status).toMatchObject({ hasKey: false, createdAt: null, mcpDownloadPath: '/downloads/caraoke-mcp.mjs' });
     expect(Array.isArray(status.serverUrls)).toBe(true);
+    expect(status.localSetup.url).toBe('http://127.0.0.1:3333');
+    expect(status.localSetup.mcpPath).toMatch(/mcp[\\/]dist[\\/]caraoke-mcp\.mjs$/);
+    expect(status.localSetup.nodePath).toBe(process.execPath);
   });
 
   it('creates a key shown only once and keeps just its fingerprint', async () => {

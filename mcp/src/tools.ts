@@ -10,6 +10,7 @@ import {
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { KaraokeApiError, type KaraokeApi, type SongOrder } from './karaokeApi.js';
+import { looksWithoutVoice } from './versionKind.js';
 
 interface ToolResult {
   [key: string]: unknown;
@@ -110,9 +111,15 @@ export function registerKaraokeTools(server: McpServer, api: KaraokeApi): void {
       description:
         'Busca vídeos no YouTube para o karaokê. Para cada resultado diz se a música já está na biblioteca e se ' +
         'tem letra (sincronizada, só texto ou não encontrada). Use o youtube_id, o artista e o título sugeridos ' +
-        'para importar. Dica: inclua "karaoke" no termo para achar versões instrumentais.',
+        'para importar. IMPORTANTE: o karaokê separa a voz sozinho, então importe a música ORIGINAL (clipe ou ' +
+        'áudio oficial, com o cantor). Não busque nem importe versões "karaoke", "instrumental" ou "playback": ' +
+        'elas ficam sem voz guia e sem pontuação. Busque pelo artista e título, sem a palavra karaoke.',
       inputSchema: {
-        termo: z.string().min(1).max(100).describe('O que buscar, por exemplo "evidências karaoke"'),
+        termo: z
+          .string()
+          .min(1)
+          .max(100)
+          .describe('Artista e título da música original, por exemplo "Chitãozinho e Xororó Evidências"'),
         limite: z.number().int().min(1).max(25).optional().describe('Quantos resultados (padrão 10)'),
       },
       annotations: { readOnlyHint: true },
@@ -131,6 +138,9 @@ export function registerKaraokeTools(server: McpServer, api: KaraokeApi): void {
           ...items.map((video, index) =>
             [
               `${index + 1}. ${video.title} (${formatDuration(video.durationSec)})`,
+              ...(looksWithoutVoice(video.title)
+                ? ['⚠ PARECE VERSÃO SEM VOZ (karaokê/instrumental): evite, prefira a original']
+                : []),
               `canal ${video.channel}`,
               `sugestão: artista "${video.suggested.artist}", título "${video.suggested.title}"`,
               `letra: ${LYRICS_LABELS[lyrics[index] ?? 'UNKNOWN']}`,
@@ -202,7 +212,8 @@ export function registerKaraokeTools(server: McpServer, api: KaraokeApi): void {
       title: 'Importar músicas',
       description:
         'Importa uma ou várias músicas do YouTube para o karaokê. Elas entram na fila de processamento (separar ' +
-        'a voz, buscar a letra etc.). Use os dados de buscar_youtube. Confirme com a pessoa antes de importar muitas. ' +
+        'a voz, buscar a letra etc.). Use os dados de buscar_youtube e importe só versões ORIGINAIS (com o cantor), ' +
+        'nunca versões karaokê/instrumental/playback. Confirme com a pessoa antes de importar muitas. ' +
         'Opcional: "maquina" com o nome de uma máquina de processamento (veja fila_de_processamento).',
       inputSchema: {
         musicas: z
