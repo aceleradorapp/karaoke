@@ -66,6 +66,7 @@ model Song {
   lyricsOffsetMs    Int          @default(0)
   lyricsNotice      String?      @db.VarChar(20)
   fillPercent       Int          @default(100)
+  keyShift          Int          @default(0)
   playCount         Int          @default(0)
   addedById         String?
   addedBy           Profile?     @relation("SongAddedBy", fields: [addedById], references: [id], onDelete: SetNull)

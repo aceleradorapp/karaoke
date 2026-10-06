@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `songs` ADD COLUMN `keyShift` INTEGER NOT NULL DEFAULT 0;

@@ -31,13 +31,14 @@ export class PitchScorer {
     private readonly latencySec: number,
   ) {}
 
-  referenceAt(time: number): number | null {
+  referenceAt(time: number, keyShift = 0): number | null {
     const index = Math.round((time - this.latencySec - this.reference.start) / this.reference.step);
-    return this.reference.midi[index] ?? null;
+    const note = this.reference.midi[index];
+    return note == null ? null : note + keyShift;
   }
 
-  add(time: number, sung: number | null): void {
-    const target = this.referenceAt(time);
+  add(time: number, sung: number | null, keyShift = 0): void {
+    const target = this.referenceAt(time, keyShift);
     if (target == null) return;
     this.total += 1;
     if (sung == null) return;

@@ -7,6 +7,7 @@ export interface PlayerShortcutHandlers {
   seekBy: (seconds: number) => void;
   changeVolumeBy: (delta: number) => void;
   adjustLyricsOffset: (deltaMs: number) => void;
+  changeKeyBy: (delta: number) => void;
   toggleFullscreen: () => void;
   requestExit: () => void;
 }
@@ -41,6 +42,9 @@ export function usePlayerShortcuts(handlers: PlayerShortcutHandlers, isEnabled: 
         ArrowDown: () => actions.changeVolumeBy(-VOLUME_STEP),
         '[': () => actions.adjustLyricsOffset(-OFFSET_STEP_MS),
         ']': () => actions.adjustLyricsOffset(OFFSET_STEP_MS),
+        '-': () => actions.changeKeyBy(-1),
+        '=': () => actions.changeKeyBy(1),
+        '+': () => actions.changeKeyBy(1),
         f: actions.toggleFullscreen,
         Escape: actions.requestExit,
       };

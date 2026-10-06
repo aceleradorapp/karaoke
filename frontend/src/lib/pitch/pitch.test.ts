@@ -88,6 +88,17 @@ describe('PitchScorer', () => {
     expect(scorer.score).toBe(95);
   });
 
+  it('follows the key chosen in the player', () => {
+    const shifted = new PitchScorer(reference(), 0);
+    for (let index = 0; index < FRAMES; index += 1) shifted.add(index * STEP, A3 + 3, 3);
+    expect(shifted.score).toBe(100);
+    expect(shifted.referenceAt(0, 3)).toBe(A3 + 3);
+
+    const unshifted = new PitchScorer(reference(), 0);
+    sing(unshifted, FRAMES, () => A3 + 3);
+    expect(unshifted.score).toBe(0);
+  });
+
   it('gives a low score to random notes', () => {
     const scorer = new PitchScorer(reference(), 0);
     sing(scorer, FRAMES, (index) => A3 + ((index * 7) % 12));

@@ -238,6 +238,17 @@ describe('song routes', () => {
       expect((await prisma.song.findUniqueOrThrow({ where: { id: song.id } })).fillPercent).toBe(65);
     });
 
+    it('starts every song in the original key and saves a new one', async () => {
+      const song = await createSong();
+      expect((await get(`/api/songs/${song.id}`)).json().keyShift).toBe(0);
+
+      const response = await patch(song.id, { keyShift: -3 });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json().keyShift).toBe(-3);
+      expect((await prisma.song.findUniqueOrThrow({ where: { id: song.id } })).keyShift).toBe(-3);
+    });
+
     it('rejects invalid changes', async () => {
       const song = await createSong();
 
@@ -250,6 +261,9 @@ describe('song routes', () => {
         { fillPercent: 19 },
         { fillPercent: 151 },
         { fillPercent: 80.5 },
+        { keyShift: 7 },
+        { keyShift: -7 },
+        { keyShift: 1.5 },
       ]) {
         expect((await patch(song.id, payload)).statusCode).toBe(400);
       }

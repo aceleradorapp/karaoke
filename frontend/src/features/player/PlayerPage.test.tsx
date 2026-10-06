@@ -11,7 +11,7 @@ import { buildProcessingSong, buildSingRequest, buildSong } from '../../test/son
 import { PlayerPage } from './PlayerPage';
 
 const engineMock = vi.hoisted(() => {
-  const state = { instances: [] as unknown[], failLoad: false, hasVocals: true, deferLoad: false };
+  const state = { instances: [] as unknown[], failLoad: false, hasVocals: true, deferLoad: false, failKey: false };
   let releaseLoad: () => void = () => undefined;
 
   class FakeEngine {
@@ -25,6 +25,8 @@ const engineMock = vi.hoisted(() => {
     loadedWith: [string, string | null] | null = null;
     seeks: number[] = [];
     playCalls: Array<number | undefined> = [];
+    keyShift = 0;
+    keyCalls: number[] = [];
 
     constructor() {
       state.instances.push(this);
@@ -57,6 +59,13 @@ const engineMock = vi.hoisted(() => {
     seek(seconds: number) {
       this.seeks.push(seconds);
       this.time = seconds;
+    }
+
+    async setKeyShift(semitones: number) {
+      this.keyCalls.push(semitones);
+      if (state.failKey) throw new Error('falhou');
+      this.keyShift = semitones;
+      return true;
     }
 
     setVoiceGuide(isOn: boolean) {
@@ -227,6 +236,7 @@ describe('PlayerPage', () => {
     engineMock.state.instances = [];
     engineMock.state.failLoad = false;
     engineMock.state.hasVocals = true;
+    engineMock.state.failKey = false;
     engineMock.state.deferLoad = false;
     socketMock.handlers.clear();
     microphoneMock.fail = true;
@@ -493,6 +503,71 @@ describe('PlayerPage', () => {
         timeout: 4000,
       });
       expect(bodyOf(fetchMock, 'PATCH', '/api/songs/s1')).toEqual({ lyricsOffsetMs: 400 });
+    });
+  });
+
+  describe('key of the song', () => {
+    it('starts in the original key without processing anything', async () => {
+      renderPlayer();
+      await startSinging();
+      expect(screen.getByLabelText('Tom da música')).toHaveTextContent('Original');
+      expect(latestEngine().keyCalls).toEqual([]);
+      expect(screen.queryByRole('button', { name: 'Voltar ao tom original' })).not.toBeInTheDocument();
+    });
+
+    it('starts in the key saved for the song', async () => {
+      renderPlayer(baseRoutes(readySong({ keyShift: -2 })));
+      await startSinging();
+      expect(latestEngine().keyCalls).toEqual([-2]);
+      expect(latestEngine().playCalls).toEqual([0]);
+      expect(screen.getByLabelText('Tom da música')).toHaveTextContent('−2');
+    });
+
+    it('changes the key with the buttons, applies only the last one and saves it on its own', async () => {
+      const { fetchMock } = renderPlayer();
+      await startSinging();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Subir o tom' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Subir o tom' }));
+      expect(screen.getByLabelText('Tom da música')).toHaveTextContent('+2');
+      expect(screen.getByText('Mudando o tom…')).toBeInTheDocument();
+
+      await waitFor(() => expect(latestEngine().keyCalls).toEqual([2]));
+      await waitFor(() => expect(screen.queryByText('Mudando o tom…')).not.toBeInTheDocument());
+      await waitFor(() => expect(requestsTo(fetchMock, 'PATCH', '/api/songs/s1')).toHaveLength(1), {
+        timeout: 4000,
+      });
+      expect(bodyOf(fetchMock, 'PATCH', '/api/songs/s1')).toEqual({ keyShift: 2 });
+    });
+
+    it('goes back to the original key and stops at six semitones', async () => {
+      renderPlayer(baseRoutes(readySong({ keyShift: 6 })));
+      await startSinging();
+
+      expect(screen.getByRole('button', { name: 'Subir o tom' })).toBeDisabled();
+      fireEvent.click(screen.getByRole('button', { name: 'Voltar ao tom original' }));
+
+      expect(screen.getByLabelText('Tom da música')).toHaveTextContent('Original');
+      await waitFor(() => expect(latestEngine().keyCalls).toEqual([6, 0]));
+    });
+
+    it('changes the key with the minus and plus keys', async () => {
+      renderPlayer();
+      await startSinging();
+      fireEvent.keyDown(document, { key: '-' });
+      expect(screen.getByLabelText('Tom da música')).toHaveTextContent('−1');
+      await waitFor(() => expect(latestEngine().keyCalls).toEqual([-1]));
+    });
+
+    it('keeps the current key when changing it fails', async () => {
+      renderPlayer();
+      await startSinging();
+      engineMock.state.failKey = true;
+
+      fireEvent.click(screen.getByRole('button', { name: 'Baixar o tom' }));
+
+      await waitFor(() => expect(screen.getByLabelText('Tom da música')).toHaveTextContent('Original'));
+      expect(screen.queryByText('Mudando o tom…')).not.toBeInTheDocument();
     });
   });
 

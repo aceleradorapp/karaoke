@@ -199,7 +199,7 @@ Branch: `feature/f7b-fila-e-letra`.
 | ID | Status | Tarefa | Modelo |
 |---|---|---|---|
 | F7F-01 | ✅ 2026-10-06 | ADR-012 + roadmap (+ plano da Fase 7G) | 🟡 |
-| F7F-02 | ⬜ | Mudar o tom: SoundTouch num Web Worker, motor troca as faixas no mesmo ponto, controle no player (−6..+6, teclas - e =), `songs.keyShift` salvo por música, pontuação acompanha o tom + testes | 🔴 |
+| F7F-02 | ✅ 2026-10-06 | Mudar o tom: SoundTouch num Web Worker, motor troca as faixas no mesmo ponto, controle no player (−6..+6, teclas - e =), `songs.keyShift` salvo por música, pontuação acompanha o tom + testes | 🔴 |
 | F7F-03 | ⬜ | Tempo estimado: `/api/jobs/estimate` (mediana do histórico), "faltam/começa em/pronta em" na fila (TV e celular) e "Tudo pronto em ~X" + testes | 🟡 |
 | F7F-04 | ⬜ | ✔ Verificação no navegador (tom ouvido/medido e fila com estimativa) | 🟡 |
 

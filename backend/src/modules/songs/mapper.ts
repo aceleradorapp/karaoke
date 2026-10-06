@@ -52,6 +52,7 @@ export function toSongDTO(song: Song, job?: Job | null, isFavorite?: boolean): S
     lyricsNotice: (song.lyricsNotice as SongDTO['lyricsNotice']) ?? null,
     lyricsOffsetMs: song.lyricsOffsetMs,
     fillPercent: song.fillPercent,
+    keyShift: song.keyShift,
     playCount: song.playCount,
     createdAt: song.createdAt.toISOString(),
     ...(job !== undefined ? { job: job ? toJobDTO(job, song) : null } : {}),

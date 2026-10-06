@@ -16,7 +16,7 @@ O Michael pediu duas coisas das ideias guardadas: mudar o tom da música (para q
 - **Biblioteca:** `soundtouchjs` (LGPL-2.1, a mesma técnica dos programas de karaokê). Medido: 4 min estéreo em ~0,8 s, tom exato (+2 semitons: 220 → 246,9 Hz) e deslocamento ≤ 0,02 s (não afeta a letra). O final que o algoritmo come (~0,3 s) é completado com silêncio.
 - **Funcionamento:**
   - O motor guarda o instrumental e a voz originais.
-  - Ao mudar o tom, processa os dois num **Web Worker** (a tela não trava), guarda o resultado por tom e troca as faixas no **mesmo ponto** da música.
+  - Ao mudar o tom, processa os dois num **Web Worker** (a tela não trava), guarda o resultado dos 2 últimos tons usados e troca as faixas no **mesmo ponto** da música.
   - Enquanto processa, mostra "Mudando o tom…".
 - **Faixa:** de −6 a +6 semitons. Controle "Tom" no player (− / valor / + / voltar ao original), com as teclas `-` e `=`.
 - **Fica salvo por música** (`songs.keyShift`, com salvamento automático), como o tempo de preenchimento da letra. A próxima vez já começa no tom escolhido.
@@ -35,4 +35,4 @@ O Michael pediu duas coisas das ideias guardadas: mudar o tom da música (para q
 ## Consequências
 - Nova dependência `soundtouchjs` (registrada no T-06).
 - Nova coluna `songs.keyShift`, nova rota `/api/jobs/estimate` e um Web Worker no front.
-- Mudar o tom ocupa mais memória (um par de faixas por tom usado na sessão). Aceitável: as faixas são liberadas ao sair do player.
+- Mudar o tom ocupa mais memória: até dois pares de faixas a mais (≈ 90 MB cada par numa música de 4 min). As faixas são liberadas ao sair do player.

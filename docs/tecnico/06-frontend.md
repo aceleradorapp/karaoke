@@ -4,7 +4,7 @@
 ```
 react@^19 react-dom@^19 react-router@^7 (modo biblioteca: import { ... } from "react-router")
 @tanstack/react-query@^5  zustand@^5  socket.io-client@^4
-qrcode.react  pitchy@^4  clsx  lucide-react (ícones)  @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities (arrastar a fila, ADR-009)
+qrcode.react  pitchy@^4  clsx  lucide-react (ícones)  @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities (arrastar a fila, ADR-009)  soundtouchjs@^0.3 (mudar o tom no navegador, LGPL-2.1, ADR-012)
 devDeps: vite  @vitejs/plugin-react  typescript  tailwindcss@^4  @tailwindcss/vite  vitest  @testing-library/react  jsdom
 ```
 

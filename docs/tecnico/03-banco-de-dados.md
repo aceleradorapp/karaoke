@@ -95,6 +95,7 @@ model Song {
   lyricsNeedsReview Boolean     @default(false)
   lyricsOffsetMs   Int          @default(0)                // ajuste fino (+ atrasa a letra)
   fillPercent      Int          @default(100)              // tempo de preenchimento da letra: 100 = até o fim da linha (20..150)
+  keyShift         Int          @default(0)                // tom escolhido no player, em semitons (−6..+6, ADR-012)
 
   playCount        Int          @default(0)
   addedById        String?
