@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
-import type { JobDTO } from '@caraoke/shared';
+import { describeEta, formatEta, type JobDTO } from '@caraoke/shared';
 import { RotateCcw, Trash2, X } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { Link } from 'react-router';
@@ -17,7 +17,6 @@ import { Spinner } from '../../components/Spinner';
 import { applyJobsReordered } from '../../realtime/cacheUpdates';
 import { toast } from '../../stores/useToastStore';
 import { workerLabel } from '../health/workerLabel';
-import { describeEta, formatEta } from '../../lib/processingEstimate';
 import { JobRow } from './JobRow';
 import { PendingList } from './PendingList';
 import { useQueueEta } from './useQueueEta';

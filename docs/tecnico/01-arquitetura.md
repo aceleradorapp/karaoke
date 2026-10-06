@@ -82,7 +82,8 @@
 caraoke-michael/
 ├── CLAUDE.md
 ├── README.md
-├── package.json              # workspaces: frontend, backend, shared; scripts dev/test/lint
+├── package.json              # workspaces: frontend, backend, shared, mcp; scripts dev/test/lint
+├── mcp/                      # servidor MCP do karaokê (ADR-014): src/{index,karaokeApi,tools}.ts → dist/caraoke-mcp.mjs (arquivo único)
 ├── .env.example              # copiado para .env (lido pelo backend e pelo worker)
 ├── .gitignore
 ├── .claude/                  # config do Claude Code

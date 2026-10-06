@@ -1,4 +1,4 @@
-import type { JobDTO, SingRequestDTO } from '@caraoke/shared';
+import { describeEta, formatEta, type JobDTO, type SingRequestDTO } from '@caraoke/shared';
 import clsx from 'clsx';
 import { Link } from 'react-router';
 import { useJobsQuery } from '../../api/jobs';
@@ -10,7 +10,6 @@ import { useMobileProfileStore } from '../../stores/useMobileProfileStore';
 import { toast } from '../../stores/useToastStore';
 import { JobRow } from '../processing/JobRow';
 import { useQueueEta } from '../processing/useQueueEta';
-import { describeEta, formatEta } from '../../lib/processingEstimate';
 
 const RECENT_LIMIT = 5;
 const EMPTY_JOBS: JobDTO[] = [];

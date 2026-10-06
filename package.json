@@ -5,14 +5,15 @@
   "workspaces": [
     "shared",
     "backend",
-    "frontend"
+    "frontend",
+    "mcp"
   ],
   "scripts": {
     "dev": "concurrently -n api,web,worker -c blue,magenta,yellow \"npm:dev:api\" \"npm:dev:web\" \"npm:dev:worker\"",
     "dev:api": "npm run dev -w backend",
     "dev:web": "npm run dev -w frontend",
     "dev:worker": "cd worker && .venv\\Scripts\\python.exe -m caraoke_worker",
-    "build": "npm run build -w frontend",
+    "build": "npm run build -w frontend && npm run build -w mcp",
     "start": "npm run start -w backend",
     "test": "npm run test --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
@@ -24,7 +25,8 @@
     "db:studio": "npm run db:studio -w backend",
     "worker:melody": "cd worker && .venv\\Scripts\\python.exe -m caraoke_worker.melody_backfill",
     "worker:setup": "powershell -ExecutionPolicy Bypass -File scripts/setup-worker.ps1",
-    "festa": "npm run build && node scripts/supervisor.mjs"
+    "festa": "npm run build && node scripts/supervisor.mjs",
+    "mcp:build": "npm run build -w mcp"
   },
   "devDependencies": {
     "concurrently": "^9.0.0",

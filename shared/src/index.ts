@@ -3,6 +3,7 @@ export * from './constants.js';
 export * from './events.js';
 export * from './lyrics.js';
 export * from './lyricsEffects.js';
+export * from './processingEstimate.js';
 export * from './schemas.js';
 export * from './themes.js';
 export * from './titleParser.js';

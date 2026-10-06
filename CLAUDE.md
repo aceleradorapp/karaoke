@@ -62,7 +62,8 @@ npm run worker:melody     # gera a melodia (pontuação) das músicas que ainda 
 npm run db:migrate        # migrations Prisma
 npm run db:seed           # settings padrão + perfil inicial
 npm run dev               # desenvolvimento: api (3333) + web (5173) + worker
-npm run festa             # uso no dia a dia: monta o site e sobe api + worker; TV em http://localhost:3333
+npm run festa             # uso no dia a dia: monta o site (e o MCP) e sobe api + worker; TV em http://localhost:3333
+npm run mcp:build         # gera mcp/dist/caraoke-mcp.mjs (baixado em /downloads/caraoke-mcp.mjs, ADR-014)
 npm test                  # testes TS
 npm run typecheck
 worker\.venv\Scripts\python -m pytest worker

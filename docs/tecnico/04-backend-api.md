@@ -192,6 +192,7 @@ type SongDTO = {
 | Método | Rota | Descrição |
 |---|---|---|
 | GET | `/api/youtube/search?q=&limit=12` | Executa o yt-dlp (4.9). Resposta: `{ items: [{ youtubeId, title, channel, durationSec, thumbnailUrl, suggested: { artist, title }, existingSongId \| null }] }`. Cache em memória por 10 min, por `q` |
+| GET | `/downloads/:file` | Público (fora de `/api`): `caraoke-mcp.mjs` (ADR-014) e `Processador-do-Karaoke.zip` (ADR-015); 404 "Arquivo ainda não gerado" se não existir |
 | GET / POST / DELETE | `/api/ai-key` | (só o palco, ADR-014) status `{ hasKey, createdAt, serverUrls, mcpDownloadPath }` / gera uma chave nova `{ key, createdAt }` (aparece só nesta resposta; guarda o SHA-256 em `settings['ai.keyHash']`) / revoga |
 | GET | `/api/lyrics/check?artist=&title=&duration=` | (palco e celular, ADR-013) `{ status: 'SYNCED' \| 'PLAIN' \| 'INSTRUMENTAL' \| 'NONE' \| 'UNKNOWN' }`. Consulta o LRCLIB com **as mesmas regras do worker** (`modules/lyricsCheck`; se mudar uma, mude a outra). Cache de 6 h (sem `UNKNOWN`), até 4 consultas simultâneas, cada chamada tenta até 4 vezes |
 | POST | `/api/youtube/import` | `{ youtubeId, title, artist, profileId? }` → cria Song + Job. Se o `youtubeId` já existir: `{ song, alreadyExists: true }` |
