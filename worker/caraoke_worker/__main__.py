@@ -32,13 +32,13 @@ def poll_forever(api: Api, hardware: dict, poll_interval_seconds: float, work_di
             logger.exception("Could not finish job handling; continuing with the queue")
 
 
-def main() -> None:
+def main(config: Config | None = None, api: Api | None = None) -> None:
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s [worker] %(levelname)s %(message)s",
     )
-    config = Config.load()
-    api = Api(config.api_url, config.worker_token)
+    config = config or Config.load()
+    api = api or Api(config.api_url, config.worker_token)
     hardware = detect_hardware()
     logger.info("Worker started: %s", hardware)
 

@@ -25,8 +25,9 @@
     "db:studio": "npm run db:studio -w backend",
     "worker:melody": "cd worker && .venv\\Scripts\\python.exe -m caraoke_worker.melody_backfill",
     "worker:setup": "powershell -ExecutionPolicy Bypass -File scripts/setup-worker.ps1",
-    "festa": "npm run build && node scripts/supervisor.mjs",
-    "mcp:build": "npm run build -w mcp"
+    "festa": "npm run build && npm run processador:pacote && node scripts/supervisor.mjs",
+    "mcp:build": "npm run build -w mcp",
+    "processador:pacote": "node scripts/package-processor.mjs"
   },
   "devDependencies": {
     "concurrently": "^9.0.0",

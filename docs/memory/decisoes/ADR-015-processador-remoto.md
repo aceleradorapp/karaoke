@@ -55,4 +55,14 @@ O PC do karaokê processa na CPU, a ~1,1 s por segundo de música. O Michael tem
 - Nova tabela (`workers`), nova coluna (`jobs.targetWorkerId`, `jobs.workerId`) e rotas novas (pair, source, files, gerenciar máquinas).
 - O servidor precisa estar acessível pela rede da outra máquina (na mesma casa; fora de casa, só com a Fase 8).
 - O instalador baixa ~3 GB (PyTorch com CUDA e modelos) na primeira vez.
+- A configuração "Processamento › Dispositivo" vale para **todas** as máquinas. Com "auto", cada uma usa a sua placa NVIDIA se tiver memória suficiente. Se um dia o PC do karaokê for fixado em "CPU", a máquina com GPU também passaria a usar CPU. Fica para o backlog: dispositivo por máquina.
+- **Testado em 2026-10-06** (instalação isolada nesta máquina):
+  - o instalador achou o Python e o FFmpeg, instalou torch cu124 e reconheceu a GT 1030;
+  - o atalho pareou, processou uma música de 39 s mandada para ele e a enviou ao karaokê;
+  - a janela mostrou cada etapa em português;
+  - o desinstalador removeu tudo.
+  - Pegadinhas resolvidas no caminho:
+    - limite de 260 caracteres de caminho do Windows (só com pastas muito fundas);
+    - BOM na entrada do console;
+    - o FFmpeg do winget fica fora do PATH: o instalador grava a pasta dele no lançador.
 - A lógica de processamento continua uma só: o modo remoto troca só de onde vem a origem e para onde vão os arquivos.
