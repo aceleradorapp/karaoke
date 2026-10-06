@@ -1,9 +1,9 @@
 import type { Job, Prisma, Song, SongStatus } from '@prisma/client';
-import type { SongDTO, SongListResponse, UpdateSongInput } from '@caraoke/shared';
+import type { DeleteManySongsResult, SongDTO, SongListResponse, UpdateSongInput } from '@caraoke/shared';
 import { prisma } from '../../db.js';
 import { emitToAll } from '../../realtime.js';
 import { deleteSongDir, moveToError } from '../../services/storage.js';
-import { conflict, notFound } from '../../utils/errors.js';
+import { AppError, conflict, notFound } from '../../utils/errors.js';
 import { publishSingQueue } from '../singQueue/service.js';
 import { toSongDTO } from './mapper.js';
 
@@ -110,19 +110,45 @@ export async function updateSong(id: string, changes: UpdateSongInput): Promise<
 }
 
 export async function deleteSong(id: string): Promise<void> {
-  const song = await prisma.song.findUnique({ where: { id }, include: { jobs: true } });
-  if (!song) throw songNotFound();
+  await deleteSongWithoutRefresh(id);
+  await publishSingQueue();
+}
 
-  if (song.jobs.some((job) => job.status === 'RUNNING')) {
-    throw conflict('SONG_BEING_PROCESSED', 'Cancele o processamento antes de excluir a música');
-  }
-
-  for (const job of song.jobs) {
-    if (job.status === 'PENDING' && job.sourcePath) await moveToError(job.sourcePath);
-  }
-
+async function removeSong(id: string): Promise<void> {
   await prisma.song.delete({ where: { id } });
   await deleteSongDir(id);
   emitToAll('song:deleted', { id });
-  await publishSingQueue();
+}
+
+export async function deleteManySongs(ids: string[]): Promise<DeleteManySongsResult> {
+  const result: DeleteManySongsResult = { deleted: [], skipped: [] };
+  const titles = new Map(
+    (await prisma.song.findMany({ where: { id: { in: ids } }, select: { id: true, title: true } })).map((song) => [
+      song.id,
+      song.title,
+    ]),
+  );
+  for (const id of new Set(ids)) {
+    try {
+      await deleteSongWithoutRefresh(id);
+      result.deleted.push(id);
+    } catch (error) {
+      if (!(error instanceof AppError)) throw error;
+      result.skipped.push({ id, title: titles.get(id) ?? null, reason: error.message });
+    }
+  }
+  if (result.deleted.length > 0) await publishSingQueue();
+  return result;
+}
+
+async function deleteSongWithoutRefresh(id: string): Promise<void> {
+  const song = await prisma.song.findUnique({ where: { id }, include: { jobs: true } });
+  if (!song) throw songNotFound();
+  if (song.jobs.some((job) => job.status === 'RUNNING')) {
+    throw conflict('SONG_BEING_PROCESSED', 'Cancele o processamento antes de excluir a música');
+  }
+  for (const job of song.jobs) {
+    if (job.status === 'PENDING' && job.sourcePath) await moveToError(job.sourcePath);
+  }
+  await removeSong(id);
 }

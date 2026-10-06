@@ -5,7 +5,7 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
-import type { HomeResponse, SongDTO, SongListResponse, UpdateSongInput } from '@caraoke/shared';
+import type { DeleteManySongsResult, HomeResponse, SongDTO, SongListResponse, UpdateSongInput } from '@caraoke/shared';
 import { apiGet, apiSend } from './client';
 
 export type SongSort = 'recent' | 'title' | 'artist' | 'popular';
@@ -75,6 +75,19 @@ export function useDeleteSongMutation() {
       queryClient.removeQueries({ queryKey: ['song', id] });
       void queryClient.invalidateQueries({ queryKey: ['songs'] });
       void queryClient.invalidateQueries({ queryKey: ['home'] });
+    },
+  });
+}
+
+export function useDeleteSongsMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (ids: string[]) => apiSend<DeleteManySongsResult>('POST', '/songs/delete-many', { ids }),
+    onSuccess: (result) => {
+      for (const id of result.deleted) queryClient.removeQueries({ queryKey: ['song', id] });
+      void queryClient.invalidateQueries({ queryKey: ['songs'] });
+      void queryClient.invalidateQueries({ queryKey: ['home'] });
+      void queryClient.invalidateQueries({ queryKey: ['jobs'] });
     },
   });
 }

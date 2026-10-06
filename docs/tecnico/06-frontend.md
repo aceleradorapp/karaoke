@@ -207,6 +207,11 @@ Adicionar "Evidências" a…
 ### `/biblioteca`
 Campo de busca grande (debounce de 300 ms), filtros: artista, status (prontas, processando, com erro), ordenação. Grade de `SongCard`s com rolagem infinita.
 
+- **Excluir várias:** o botão "Selecionar" troca os cards por `SelectableSongCard` (checkbox: toque marca ou desmarca).
+  - Uma barra fixa embaixo mostra "N selecionada(s) · Marcar todas · Excluir · Cancelar".
+  - "Excluir" pede confirmação e chama `POST /songs/delete-many`. As que foram puladas aparecem em aviso com o motivo.
+  - Na página da música, "Excluir música" fica junto dos botões do topo.
+
 ### `/musica/:id` — Detalhe
 Capa grande, título, artista, duração, origem, quem adicionou, quantas vezes foi cantada, melhor nota da família. Ações: Cantar, Playlist, Favoritar, Editar título/artista, Ajustar letra (Fase 6), Reprocessar (YouTube), Excluir. Prévia da letra (rolável).
 

@@ -102,6 +102,12 @@ export const updateSongSchema = z
 
 export type UpdateSongInput = z.infer<typeof updateSongSchema>;
 
+export const DELETE_MANY_SONGS_LIMIT = 200;
+
+export const deleteManySongsSchema = z.object({
+  ids: z.array(z.string().min(1)).min(1).max(DELETE_MANY_SONGS_LIMIT),
+});
+
 export const createPerformanceSchema = z.object({
   profileId: z.string().min(1),
   songId: z.string().min(1),

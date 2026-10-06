@@ -190,6 +190,11 @@ export interface ImportResultDTO {
   alreadyExists: boolean;
 }
 
+export interface DeleteManySongsResult {
+  deleted: string[];
+  skipped: Array<{ id: string; title: string | null; reason: string }>;
+}
+
 export interface SongListResponse {
   items: SongDTO[];
   nextCursor: string | null;

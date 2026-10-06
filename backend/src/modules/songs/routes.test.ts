@@ -274,6 +274,37 @@ describe('song routes', () => {
     });
   });
 
+  describe('deleting several at once', () => {
+    const removeMany = (ids: string[]) =>
+      app.inject({ method: 'POST', url: '/api/songs/delete-many', payload: { ids } });
+
+    it('deletes the chosen songs and their files, skipping the one being processed', async () => {
+      const first = await createSong({ title: 'Primeira' });
+      const second = await createSong({ title: 'Segunda' });
+      const { song: running } = await createJobFixture({ title: 'Rodando', status: 'RUNNING', songStatus: 'PROCESSING' });
+      await createSong({ title: 'Fica' });
+      await fs.mkdir(songDir(first.id), { recursive: true });
+
+      const response = await removeMany([first.id, second.id, running.id, 'nao-existe', first.id]);
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json().deleted).toEqual([first.id, second.id]);
+      expect(response.json().skipped).toEqual([
+        { id: running.id, title: 'Rodando', reason: 'Cancele o processamento antes de excluir a música' },
+        { id: 'nao-existe', title: null, reason: 'Música não encontrada' },
+      ]);
+      expect((await prisma.song.findMany({ orderBy: { title: 'asc' } })).map((song) => song.title)).toEqual([
+        'Fica',
+        'Rodando',
+      ]);
+      expect(await fileExists(songDir(first.id))).toBe(false);
+    });
+
+    it('needs at least one song', async () => {
+      expect((await removeMany([])).statusCode).toBe(400);
+    });
+  });
+
   describe('deleting', () => {
     const remove = (id: string) => app.inject({ method: 'DELETE', url: `/api/songs/${id}` });
 
