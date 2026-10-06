@@ -32,8 +32,26 @@ describe('App routing', () => {
     expect(await screen.findByRole('heading', { name: 'Quem vai cantar?' })).toBeInTheDocument();
   });
 
-  it('serves the profile management screen without requiring a profile', async () => {
+  it('shows the profile management screen inside the stage layout, with the top bar', async () => {
+    useProfileStore.setState({
+      currentProfile: {
+        id: 'p1',
+        name: 'Ana',
+        avatar: 'lion',
+        theme: 'cinema',
+        isGuest: false,
+        createdAt: '',
+        lastUsedAt: '',
+      },
+    });
     renderApp('/perfis/gerenciar');
+
     expect(await screen.findByRole('heading', { name: 'Gerenciar perfis' })).toBeInTheDocument();
+    expect(screen.getByRole('navigation', { name: 'Navegação principal' })).toBeInTheDocument();
+  });
+
+  it('asks who is singing before managing profiles', async () => {
+    renderApp('/perfis/gerenciar');
+    expect(await screen.findByRole('heading', { name: 'Quem vai cantar?' })).toBeInTheDocument();
   });
 });
