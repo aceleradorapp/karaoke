@@ -183,6 +183,7 @@ type SongDTO = {
 | GET | `/api/songs/:id?profileId=` | `SongDTO` |
 | PATCH | `/api/songs/:id` | `{ title?, artist?, lyricsOffsetMs?, fillPercent?, keyShift? }` (`fillPercent` inteiro 20..150; `keyShift` inteiro −6..+6) |
 | DELETE | `/api/songs/:id` | Apaga a música + arquivos |
+| POST | `/api/songs/delete-many` | `{ ids }` (1..200) → `{ deleted: string[], skipped: [{ id, title, reason }] }`. Apaga uma por uma com a mesma regra do DELETE; pula (sem falhar o resto) as que estão sendo processadas ou não existem |
 | PUT | `/api/songs/:id/lyrics` | Body `LyricsDoc` → grava `letra.json`, `lyricsSource=MANUAL`, `lyricsNeedsReview=false` |
 | POST | `/api/songs/:id/lyrics/search` | (Fase 6) Pede ao worker para buscar/alinhar de novo: cria um job só com LYRICS |
 | POST | `/api/songs/:id/lyrics/align` | (Fase 6) Body `{ text }`: texto colado pelo usuário; cria um job de alinhamento |

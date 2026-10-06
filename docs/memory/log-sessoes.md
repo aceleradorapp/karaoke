@@ -2,6 +2,15 @@
 
 > Entradas mais recentes no topo. Use `/fim-sessao` para registrar.
 
+## 2026-10-06 (16) — Ajustes: MCP no Claude Desktop, Ollama, excluir músicas
+- **MCP no Claude Desktop (Microsoft Store):** o app lê `%LOCALAPPDATA%\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Roaming\Claude\claude_desktop_config.json` e regrava o arquivo ao sair. A configuração só "pega" se for gravada com o app fechado (Node pelo caminho completo e `mcp/dist/caraoke-mcp.mjs` do próprio projeto, URL 127.0.0.1, sem chave).
+- **Limpeza da máquina, a pedido:**
+  - Ollama desinstalado (programa, modelos de 1,5 GB, variável e PATH);
+  - containers, volumes, rede e imagens do Docker do Hapvida/CodeIntelligence removidos;
+  - o askbrain ficou intacto, aguardando decisão.
+- **O Claude importou 6 versões karaokê** (sem voz): a dica da ferramenta pedia "karaoke". Corrigido: o MCP manda importar a original e marca versões sem voz com ⚠ (F7H-02). As 6 foram apagadas com a exclusão em lote nova (títulos conferidos no YouTube; voz separada entre −60 e −80 dB em 5 delas).
+- **F7H-01/03:** "Excluir música" no topo da página da música; "Selecionar" na biblioteca para excluir várias.
+
 ## 2026-10-06 (15) — Fase 7G: selo de letra, MCP e processador remoto
 **Pedido:** seguir a "ordem sugerida", com um app para instalar na outra máquina. Decidido com o Michael:
 - ZIP com instalador, para Windows com NVIDIA;

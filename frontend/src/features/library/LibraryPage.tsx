@@ -1,12 +1,15 @@
-import { Search, X } from 'lucide-react';
+import { CheckSquare, Search, Trash2, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
-import { useSongsInfiniteQuery, type SongSort, type SongStatusFilter } from '../../api/songs';
+import { useDeleteSongsMutation, useSongsInfiniteQuery, type SongSort, type SongStatusFilter } from '../../api/songs';
 import { Button } from '../../components/Button';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { Spinner } from '../../components/Spinner';
 import { useDebouncedValue } from '../../lib/useDebouncedValue';
 import { useProfileStore } from '../../stores/useProfileStore';
+import { toast } from '../../stores/useToastStore';
 import { SongCard } from '../songs/SongCard';
+import { SelectableSongCard } from './SelectableSongCard';
 
 const SEARCH_DEBOUNCE_MS = 300;
 const DEFAULT_SORT: SongSort = 'recent';
@@ -39,6 +42,10 @@ function readStatus(value: string | null): SongStatusFilter | undefined {
   return value && STATUS_VALUES.has(value) ? (value as SongStatusFilter) : undefined;
 }
 
+function songsLabel(count: number): string {
+  return count === 1 ? '1 música' : `${count} músicas`;
+}
+
 export function LibraryPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const profileId = useProfileStore((state) => state.currentProfile?.id);
@@ -51,6 +58,10 @@ export function LibraryPage() {
   const [draft, setDraft] = useState(query);
   const debouncedDraft = useDebouncedValue(draft, SEARCH_DEBOUNCE_MS).trim();
   const sentinel = useRef<HTMLDivElement>(null);
+  const [isSelecting, setIsSelecting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+  const deleteSongs = useDeleteSongsMutation();
 
   function updateParam(key: string, value: string | undefined) {
     setSearchParams(
@@ -76,6 +87,40 @@ export function LibraryPage() {
   const items = songs.data?.pages.flatMap((page) => page.items) ?? [];
   const { hasNextPage, isFetchingNextPage, fetchNextPage } = songs;
   const hasFilters = Boolean(query || status || artist);
+  const selectedCount = selectedIds.size;
+  const areAllSelected = items.length > 0 && items.every((song) => selectedIds.has(song.id));
+
+  function stopSelecting() {
+    setIsSelecting(false);
+    setSelectedIds(new Set());
+  }
+
+  function toggleSong(id: string) {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleAll() {
+    setSelectedIds(areAllSelected ? new Set() : new Set(items.map((song) => song.id)));
+  }
+
+  function confirmDelete() {
+    setIsConfirmingDelete(false);
+    deleteSongs.mutate([...selectedIds], {
+      onSuccess: (result) => {
+        if (result.deleted.length > 0) toast.success(`${songsLabel(result.deleted.length)} excluída(s)`);
+        for (const skipped of result.skipped) {
+          toast.error(`Não excluí “${skipped.title ?? 'uma música'}”: ${skipped.reason}`);
+        }
+        stopSelecting();
+      },
+      onError: () => toast.error('Não foi possível excluir as músicas'),
+    });
+  }
 
   useEffect(() => {
     const element = sentinel.current;
@@ -92,7 +137,15 @@ export function LibraryPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="font-display text-4xl sm:text-5xl">Biblioteca</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="font-display text-4xl sm:text-5xl">Biblioteca</h1>
+        {items.length > 0 && !isSelecting && (
+          <Button variant="secondary" onClick={() => setIsSelecting(true)}>
+            <CheckSquare aria-hidden="true" className="size-5" />
+            Selecionar
+          </Button>
+        )}
+      </div>
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
         <label className="flex min-h-11 flex-1 items-center gap-3 rounded-xl bg-surface-2 px-4">
@@ -182,7 +235,15 @@ export function LibraryPage() {
         <ul className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
           {items.map((song) => (
             <li key={song.id}>
-              <SongCard song={song} />
+              {isSelecting ? (
+                <SelectableSongCard
+                  song={song}
+                  isSelected={selectedIds.has(song.id)}
+                  onToggle={() => toggleSong(song.id)}
+                />
+              ) : (
+                <SongCard song={song} />
+              )}
             </li>
           ))}
         </ul>
@@ -195,6 +256,43 @@ export function LibraryPage() {
           </Button>
         )}
       </div>
+      {isSelecting && (
+        <div
+          role="toolbar"
+          aria-label="Músicas selecionadas"
+          className="sticky bottom-4 z-30 flex flex-wrap items-center gap-2 rounded-2xl bg-surface p-3 shadow-2xl ring-1 ring-white/10"
+        >
+          <span className="mr-auto px-2 text-base font-semibold" aria-live="polite">
+            {selectedCount === 0 ? 'Toque nas músicas para marcar' : `${songsLabel(selectedCount)} selecionada(s)`}
+          </span>
+          <Button variant="ghost" onClick={toggleAll}>
+            {areAllSelected ? 'Desmarcar todas' : 'Marcar todas'}
+          </Button>
+          <Button
+            variant="danger"
+            onClick={() => setIsConfirmingDelete(true)}
+            disabled={selectedCount === 0}
+            isLoading={deleteSongs.isPending}
+          >
+            <Trash2 aria-hidden="true" className="size-5" />
+            Excluir
+          </Button>
+          <Button variant="secondary" onClick={stopSelecting}>
+            <X aria-hidden="true" className="size-5" />
+            Cancelar
+          </Button>
+        </div>
+      )}
+
+      <ConfirmDialog
+        isOpen={isConfirmingDelete}
+        title="Excluir músicas"
+        message={`Excluir ${songsLabel(selectedCount)}? O áudio, a letra e o histórico delas serão apagados. Não dá para desfazer.`}
+        confirmLabel="Excluir"
+        dismissLabel="Voltar"
+        onConfirm={confirmDelete}
+        onCancel={() => setIsConfirmingDelete(false)}
+      />
     </div>
   );
 }
