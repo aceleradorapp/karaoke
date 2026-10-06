@@ -53,7 +53,6 @@ export function App() {
           <Route path="/m/*" element={<Navigate to="/m/musicas" replace />} />
         </Route>
         <Route path="/perfis" element={<ProfilesPage />} />
-        <Route path="/perfis/gerenciar" element={<ManageProfilesPage />} />
         <Route element={<RequireProfile />}>
           <Route path="/player/:songId" element={<PlayerPage />} />
           <Route element={<StageLayout />}>
@@ -66,6 +65,7 @@ export function App() {
             <Route path="/disputas" element={<CompetitionsPage />} />
             <Route path="/disputas/:id" element={<CompetitionPage />} />
             <Route path="/saude" element={<HealthPage />} />
+            <Route path="/perfis/gerenciar" element={<ManageProfilesPage />} />
             <Route path="/" element={<HomePage />} />
             <Route path="/biblioteca" element={<LibraryPage />} />
             <Route path="/favoritas" element={<FavoritesPage />} />
