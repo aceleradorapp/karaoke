@@ -195,6 +195,22 @@ Branch: `feature/f7b-fila-e-letra`.
 | F7E-04 | ✅ 2026-10-05 | Telas: página `/saude`, indicador ⚠ na barra, seção Sistema nas configurações, camada "Reiniciando…", motivo da letra na música e na fila | 🟡 |
 | F7E-05 | ✅ 2026-10-05 (9/9 no modo festa) | ✔ Verificação: falhas simuladas (sem LRCLIB, worker parado) e reinício de verdade no modo festa | 🟡 |
 
+## Fase 7F — Tom da música e tempo estimado (ADR-012)
+| ID | Status | Tarefa | Modelo |
+|---|---|---|---|
+| F7F-01 | ✅ 2026-10-06 | ADR-012 + roadmap (+ plano da Fase 7G) | 🟡 |
+| F7F-02 | ⬜ | Mudar o tom: SoundTouch num Web Worker, motor troca as faixas no mesmo ponto, controle no player (−6..+6, teclas - e =), `songs.keyShift` salvo por música, pontuação acompanha o tom + testes | 🔴 |
+| F7F-03 | ⬜ | Tempo estimado: `/api/jobs/estimate` (mediana do histórico), "faltam/começa em/pronta em" na fila (TV e celular) e "Tudo pronto em ~X" + testes | 🟡 |
+| F7F-04 | ⬜ | ✔ Verificação no navegador (tom ouvido/medido e fila com estimativa) | 🟡 |
+
+## Fase 7G — IA e processamento em outras máquinas (planejada, ADRs a escrever)
+| ID | Status | Tarefa | Modelo |
+|---|---|---|---|
+| F7G-01 | ⬜ | Selo "tem letra / sem letra" na busca do YouTube (`/api/lyrics/check`) | 🟡 |
+| F7G-02 | ⬜ | MCP local para o app Claude (Desktop/Code) + "Chave para IA" nas configurações (buscar, verificar letra, importar várias, fila) | 🔴 |
+| F7G-03 | ⬜ | Processador remoto: worker em modo remoto (baixa origem, envia arquivos), pareamento por código, várias máquinas com nome, escolher onde processar + **app para instalar** na outra máquina | 🔴 |
+| F7G-04 | ⬜ | Opcional: extensão do Chrome "Mandar para o karaokê" | 🟡 |
+
 ## Fase 8 — Publicação (futuro)
 | ID | Status | Tarefa | Modelo |
 |---|---|---|---|
@@ -212,5 +228,4 @@ Branch: `feature/f7b-fila-e-letra`.
 - Foto própria como avatar
 - Conquistas ("cantou 10 músicas", "nota 100")
 - Dueto (duas vozes, duas notas)
-- Ajuste de tom (pitch shift) do instrumental
 - Ver também `vault/10-ideias/`
