@@ -158,7 +158,7 @@ Linhas vazias do LRC (pausas instrumentais) **não** entram em `lines`. No modo 
 ```
 1. artist, title = song.artist, clean_title(song.title)
 2. GET https://lrclib.net/api/get?artist_name=&track_name=&duration=<durationSec>
-   headers: User-Agent = LRCLIB_USER_AGENT; timeout 15 s
+   headers: User-Agent = LRCLIB_USER_AGENT; timeout 15 s; tenta de novo até 3 vezes em 500/502/503/504 (backoff 0,3 s; o LRCLIB falha ~30% das vezes de forma aleatória)
    → 200: usar; 404: passo 3
 3. GET https://lrclib.net/api/search?track_name=&artist_name=
    → escolher o 1º resultado com |duration - durationSec| <= 5 s e syncedLyrics;

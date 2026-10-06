@@ -17,6 +17,7 @@ const MOBILE_ALLOWED_ROUTES: AllowedRoute[] = [
   ['GET', /^\/api\/system\/access\/check$/],
   ['GET', /^\/api\/youtube\/search$/],
   ['POST', /^\/api\/youtube\/import$/],
+  ['GET', /^\/api\/lyrics\/check$/],
   ['POST', /^\/api\/uploads$/],
   ['GET', /^\/api\/jobs$/],
   ['GET', /^\/api\/jobs\/estimate$/],

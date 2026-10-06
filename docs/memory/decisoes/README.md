@@ -19,3 +19,4 @@ Architecture Decision Records — uma decisão por arquivo. Crie com `/nova-deci
 | ADR-010 | [Disputas](ADR-010-disputas.md) | aceita |
 | ADR-011 | [Saúde do sistema e reiniciar pelas configurações](ADR-011-saude-do-sistema-e-reiniciar.md) | aceita |
 | ADR-012 | [Mudar o tom da música e tempo estimado na fila](ADR-012-tom-e-tempo-estimado.md) | aceita |
+| ADR-013 | [Selo "tem letra" na busca do YouTube](ADR-013-selo-de-letra-na-busca.md) | aceita |

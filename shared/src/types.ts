@@ -138,6 +138,12 @@ export interface YoutubeSearchResult {
   existingSongId: string | null;
 }
 
+export type LyricsAvailability = 'SYNCED' | 'PLAIN' | 'INSTRUMENTAL' | 'NONE' | 'UNKNOWN';
+
+export interface LyricsCheckDTO {
+  status: LyricsAvailability;
+}
+
 export interface ImportResultDTO {
   song: SongDTO;
   alreadyExists: boolean;

@@ -20,6 +20,7 @@ import { songRoutes } from './modules/songs/routes.js';
 import { systemInternalRoutes } from './modules/system/internalRoutes.js';
 import { uploadRoutes } from './modules/uploads/routes.js';
 import { youtubeRoutes } from './modules/youtube/routes.js';
+import { lyricsCheckRoutes } from './modules/lyricsCheck/routes.js';
 import { systemRoutes } from './modules/system/routes.js';
 import { registerAccessControl } from './plugins/access.js';
 import { env } from './env.js';
@@ -84,6 +85,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   await app.register(songRoutes, { prefix: '/api' });
   await app.register(uploadRoutes, { prefix: '/api' });
   await app.register(youtubeRoutes, { prefix: '/api' });
+  await app.register(lyricsCheckRoutes, { prefix: '/api' });
   await app.register(systemInternalRoutes, { prefix: '/api' });
   await app.register(jobsInternalRoutes, { prefix: '/api' });
   if (webDistDir) await registerWeb(app, webDistDir);

@@ -203,10 +203,10 @@ Branch: `feature/f7b-fila-e-letra`.
 | F7F-03 | ✅ 2026-10-06 | Tempo estimado: `/api/jobs/estimate` (mediana do histórico), "faltam/começa em/pronta em" na fila (TV e celular) e "Tudo pronto em ~X" + testes | 🟡 |
 | F7F-04 | ✅ 2026-10-06 | ✔ Verificação no navegador (tom ouvido/medido e fila com estimativa) | 🟡 |
 
-## Fase 7G — IA e processamento em outras máquinas (planejada, ADRs a escrever)
+## Fase 7G — IA e processamento em outras máquinas (ADR-013 para o selo; os outros ADRs ainda serão escritos)
 | ID | Status | Tarefa | Modelo |
 |---|---|---|---|
-| F7G-01 | ⬜ | Selo "tem letra / sem letra" na busca do YouTube (`/api/lyrics/check`) | 🟡 |
+| F7G-01 | ✅ 2026-10-06 | Selo "tem letra / sem letra" na busca do YouTube (`/api/lyrics/check`) | 🟡 |
 | F7G-02 | ⬜ | MCP local para o app Claude (Desktop/Code) + "Chave para IA" nas configurações (buscar, verificar letra, importar várias, fila) | 🔴 |
 | F7G-03 | ⬜ | Processador remoto: worker em modo remoto (baixa origem, envia arquivos), pareamento por código, várias máquinas com nome, escolher onde processar + **app para instalar** na outra máquina | 🔴 |
 | F7G-04 | ⬜ | Opcional: extensão do Chrome "Mandar para o karaokê" | 🟡 |

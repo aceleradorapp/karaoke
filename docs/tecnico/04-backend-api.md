@@ -72,6 +72,7 @@ GET    /api/health
 GET    /api/system/access/check
 GET    /api/youtube/search
 POST   /api/youtube/import
+GET    /api/lyrics/check
 POST   /api/uploads
 GET    /api/jobs
 GET    /api/songs              (biblioteca do celular e "já existe?")
@@ -182,6 +183,7 @@ type SongDTO = {
 | Método | Rota | Descrição |
 |---|---|---|
 | GET | `/api/youtube/search?q=&limit=12` | Executa o yt-dlp (4.9). Resposta: `{ items: [{ youtubeId, title, channel, durationSec, thumbnailUrl, suggested: { artist, title }, existingSongId \| null }] }`. Cache em memória por 10 min, por `q` |
+| GET | `/api/lyrics/check?artist=&title=&duration=` | (palco e celular, ADR-013) `{ status: 'SYNCED' \| 'PLAIN' \| 'INSTRUMENTAL' \| 'NONE' \| 'UNKNOWN' }`. Consulta o LRCLIB com **as mesmas regras do worker** (`modules/lyricsCheck`; se mudar uma, mude a outra). Cache de 6 h (sem `UNKNOWN`), até 4 consultas simultâneas, cada chamada tenta até 4 vezes |
 | POST | `/api/youtube/import` | `{ youtubeId, title, artist, profileId? }` → cria Song + Job. Se o `youtubeId` já existir: `{ song, alreadyExists: true }` |
 
 Regras: rejeitar vídeos com mais de **12 min** (`VIDEO_TOO_LONG`). Título e artista obrigatórios (o usuário confirma no diálogo de importação).
