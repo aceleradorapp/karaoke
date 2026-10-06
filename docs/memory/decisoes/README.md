@@ -18,3 +18,4 @@ Architecture Decision Records — uma decisão por arquivo. Crie com `/nova-deci
 | ADR-009 | [Fila de cantores v2 e letra no celular](ADR-009-fila-v2-e-letra-no-celular.md) | aceita |
 | ADR-010 | [Disputas](ADR-010-disputas.md) | aceita |
 | ADR-011 | [Saúde do sistema e reiniciar pelas configurações](ADR-011-saude-do-sistema-e-reiniciar.md) | aceita |
+| ADR-012 | [Mudar o tom da música e tempo estimado na fila](ADR-012-tom-e-tempo-estimado.md) | aceita |

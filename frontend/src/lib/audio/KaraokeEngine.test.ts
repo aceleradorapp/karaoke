@@ -5,7 +5,36 @@ import {
   type AudioContextLike,
   type BufferSourceLike,
   type GainNodeLike,
+  type Transposer,
 } from './KaraokeEngine';
+
+interface ShiftedBuffer extends AudioBufferLike {
+  key: number;
+  from: AudioBufferLike;
+}
+
+class FakeTransposer implements Transposer {
+  calls: number[] = [];
+  disposed = false;
+  holds: Array<() => void> = [];
+  isHolding = false;
+  fails = false;
+
+  async transpose(buffers: AudioBufferLike[], semitones: number): Promise<AudioBufferLike[]> {
+    this.calls.push(semitones);
+    if (this.isHolding) await new Promise<void>((resolve) => this.holds.push(resolve));
+    if (this.fails) throw new Error('falhou');
+    return buffers.map((buffer): ShiftedBuffer => ({ duration: buffer.duration, key: semitones, from: buffer }));
+  }
+
+  release(): void {
+    for (const resolve of this.holds.splice(0)) resolve();
+  }
+
+  dispose(): void {
+    this.disposed = true;
+  }
+}
 
 class FakeGain implements GainNodeLike {
   gain = { value: 1, setTargetAtTime: vi.fn() };
@@ -92,8 +121,9 @@ function setup(options: { failVocals?: boolean; failInstrumental?: boolean } = {
     if (url.includes('voz') && options.failVocals) throw new Error('404');
     return new ArrayBuffer(url.includes('voz') ? VOCALS_SECONDS : SONG_SECONDS);
   });
-  const engine = new KaraokeEngine({ createContext: () => context, fetchAudio });
-  return { context, engine, fetchAudio };
+  const transposer = new FakeTransposer();
+  const engine = new KaraokeEngine({ createContext: () => context, fetchAudio, createTransposer: () => transposer });
+  return { context, engine, fetchAudio, transposer };
 }
 
 async function loaded(options: Parameters<typeof setup>[0] = {}) {
@@ -471,6 +501,103 @@ describe('KaraokeEngine', () => {
 
       engine.pause();
       expect(engine.currentTime).toBeCloseTo(107, 5);
+    });
+  });
+
+  describe('changing the key', () => {
+    const keyOf = (source: FakeSource | undefined) => (source?.buffer as ShiftedBuffer | undefined)?.key ?? 0;
+    const lastPair = (context: FakeContext) => context.sources.slice(-2) as [FakeSource, FakeSource];
+
+    it('starts in the original key', async () => {
+      const { engine, transposer } = await loaded();
+      expect(engine.keyShift).toBe(0);
+      expect(transposer.calls).toEqual([]);
+    });
+
+    it('shifts both tracks and keeps playing from the same point', async () => {
+      const { engine, context, transposer } = await loaded();
+      engine.play();
+      context.currentTime += START_DELAY + 30;
+
+      expect(await engine.setKeyShift(2)).toBe(true);
+
+      expect(transposer.calls).toEqual([2]);
+      expect(engine.keyShift).toBe(2);
+      const [instrumental, vocals] = lastPair(context);
+      expect(keyOf(instrumental)).toBe(2);
+      expect(keyOf(vocals)).toBe(2);
+      expect(instrumental.started?.offset).toBeCloseTo(30, 5);
+      expect(vocals.destination).toBe(context.gains[1]);
+      expect(context.sources[instrumentalSource]?.stopped).toBe(true);
+    });
+
+    it('uses the new key on the next play when paused', async () => {
+      const { engine, context } = await loaded();
+      engine.seek(50);
+      const sourcesBefore = context.sources.length;
+
+      await engine.setKeyShift(-3);
+      expect(context.sources).toHaveLength(sourcesBefore);
+
+      engine.play();
+      expect(keyOf(lastPair(context)[0])).toBe(-3);
+      expect(lastPair(context)[0].started?.offset).toBe(50);
+    });
+
+    it('goes back to the original tracks without processing again', async () => {
+      const { engine, context, transposer } = await loaded();
+      await engine.setKeyShift(4);
+      await engine.setKeyShift(0);
+      engine.play();
+
+      expect(transposer.calls).toEqual([4]);
+      expect(context.sources[vocalSource]?.buffer).toEqual({ duration: VOCALS_SECONDS });
+      expect(engine.keyShift).toBe(0);
+    });
+
+    it('reuses a key processed before', async () => {
+      const { engine, transposer } = await loaded();
+      await engine.setKeyShift(1);
+      await engine.setKeyShift(2);
+      await engine.setKeyShift(1);
+      expect(transposer.calls).toEqual([1, 2]);
+    });
+
+    it('applies only the last key asked for', async () => {
+      const { engine, transposer } = await loaded();
+      transposer.isHolding = true;
+      const first = engine.setKeyShift(1);
+      const second = engine.setKeyShift(3);
+      transposer.release();
+      await Promise.resolve();
+      transposer.release();
+
+      expect(await first).toBe(false);
+      expect(await second).toBe(true);
+      expect(engine.keyShift).toBe(3);
+    });
+
+    it('shifts only the instrumental when there is no guide voice', async () => {
+      const { engine, context } = setup();
+      await engine.load('/media/s/instrumental.mp3', null);
+      await engine.setKeyShift(2);
+      engine.play();
+      expect(context.sources).toHaveLength(1);
+      expect(keyOf(context.sources[0])).toBe(2);
+    });
+
+    it('keeps the current key when processing fails', async () => {
+      const { engine, transposer } = await loaded();
+      transposer.fails = true;
+      await expect(engine.setKeyShift(2)).rejects.toThrow('falhou');
+      expect(engine.keyShift).toBe(0);
+    });
+
+    it('stops the processing helper when destroyed', async () => {
+      const { engine, transposer } = await loaded();
+      engine.destroy();
+      expect(transposer.disposed).toBe(true);
+      expect(await engine.setKeyShift(2)).toBe(false);
     });
   });
 });

@@ -1,5 +1,6 @@
 import clsx from 'clsx';
-import { Maximize, Mic, Minimize, Minus, Pause, Play, Plus, Volume2, X } from 'lucide-react';
+import { KEY_SHIFT_LIMIT } from '@caraoke/shared';
+import { Loader2, Maximize, Mic, Minimize, Minus, Pause, Play, Plus, RotateCcw, Volume2, X } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
 import { formatDuration } from '../../lib/format';
 
@@ -14,6 +15,8 @@ interface PlayerControlsProps {
   volume: number;
   duration: number;
   lyricsOffsetMs: number;
+  keyShift: number;
+  isChangingKey: boolean;
   isFullscreen: boolean;
   getTime: () => number;
   onTogglePlay: () => void;
@@ -21,6 +24,7 @@ interface PlayerControlsProps {
   onToggleVoiceGuide: () => void;
   onVolumeChange: (volume: number) => void;
   onAdjustLyricsOffset: (deltaMs: number) => void;
+  onChangeKey: (semitones: number) => void;
   onToggleFullscreen: () => void;
   onExit: () => void;
   lyricsEffect?: ReactNode;
@@ -38,6 +42,58 @@ function useCurrentTime(getTime: () => number): number {
 function formatOffset(offsetMs: number): string {
   if (offsetMs === 0) return '0 ms';
   return `${offsetMs > 0 ? '+' : ''}${offsetMs} ms`;
+}
+
+export function formatKeyShift(semitones: number): string {
+  if (semitones === 0) return 'Original';
+  return `${semitones > 0 ? '+' : '−'}${Math.abs(semitones)}`;
+}
+
+function KeyControl(props: Pick<PlayerControlsProps, 'keyShift' | 'isChangingKey' | 'onChangeKey'>) {
+  const { keyShift, isChangingKey, onChangeKey } = props;
+  return (
+    <div className="flex items-center gap-1">
+      <span className="text-sm">Tom</span>
+      <button
+        type="button"
+        onClick={() => onChangeKey(keyShift - 1)}
+        disabled={keyShift <= -KEY_SHIFT_LIMIT}
+        aria-label="Baixar o tom"
+        className={clsx(ICON_BUTTON, 'disabled:opacity-40')}
+      >
+        <Minus aria-hidden="true" className="size-5" />
+      </button>
+      <span
+        aria-label="Tom da música"
+        aria-live="polite"
+        className="inline-flex w-20 items-center justify-center gap-1 text-center text-sm tabular-nums"
+      >
+        {isChangingKey && <Loader2 aria-hidden="true" className="size-4 animate-spin" />}
+        {formatKeyShift(keyShift)}
+        {isChangingKey && <span className="sr-only">Mudando o tom…</span>}
+      </span>
+      <button
+        type="button"
+        onClick={() => onChangeKey(keyShift + 1)}
+        disabled={keyShift >= KEY_SHIFT_LIMIT}
+        aria-label="Subir o tom"
+        className={clsx(ICON_BUTTON, 'disabled:opacity-40')}
+      >
+        <Plus aria-hidden="true" className="size-5" />
+      </button>
+      {keyShift !== 0 && (
+        <button
+          type="button"
+          onClick={() => onChangeKey(0)}
+          aria-label="Voltar ao tom original"
+          title="Voltar ao tom original"
+          className={ICON_BUTTON}
+        >
+          <RotateCcw aria-hidden="true" className="size-5" />
+        </button>
+      )}
+    </div>
+  );
 }
 
 export function PlayerControls(props: PlayerControlsProps) {
@@ -94,6 +150,8 @@ export function PlayerControls(props: PlayerControlsProps) {
           </button>
           {props.lyricsEffect}
         </div>
+
+        <KeyControl keyShift={props.keyShift} isChangingKey={props.isChangingKey} onChangeKey={props.onChangeKey} />
 
         <div className="flex items-center gap-2">
           <span className="hidden text-sm sm:inline">Atraso da letra</span>

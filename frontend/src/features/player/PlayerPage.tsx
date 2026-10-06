@@ -36,6 +36,7 @@ import { usePlayerShortcuts } from './usePlayerShortcuts';
 
 const CONTROLS_IDLE_MS = 3000;
 const LYRICS_SAVE_DELAY_MS = 1000;
+const KEY_SAVE_DELAY_MS = 1000;
 
 function Backdrop({ song }: { song: SongDTO }) {
   return (
@@ -142,6 +143,10 @@ function PlayerSession({ song }: { song: SongDTO }) {
     },
   );
 
+  useAutoSave(session.keyShift, (value) => updateSong.mutateAsync({ keyShift: value }), {
+    delayMs: KEY_SAVE_DELAY_MS,
+  });
+
   const leave = useCallback(() => {
     session.stop();
     const cameFromInsideTheApp = location.key !== 'default';
@@ -162,6 +167,7 @@ function PlayerSession({ song }: { song: SongDTO }) {
       seekBy: session.seekBy,
       changeVolumeBy: session.changeVolumeBy,
       adjustLyricsOffset: session.adjustLyricsOffset,
+      changeKeyBy: session.changeKeyBy,
       toggleFullscreen,
       requestExit,
     },
@@ -361,6 +367,8 @@ function PlayerSession({ song }: { song: SongDTO }) {
                 volume={session.volume}
                 duration={session.duration}
                 lyricsOffsetMs={effectiveOffsetMs}
+                keyShift={session.keyShift}
+                isChangingKey={session.isChangingKey}
                 isFullscreen={isFullscreen}
                 getTime={session.getTime}
                 onTogglePlay={session.togglePlay}
@@ -368,6 +376,7 @@ function PlayerSession({ song }: { song: SongDTO }) {
                 onToggleVoiceGuide={session.toggleVoiceGuide}
                 onVolumeChange={session.setVolume}
                 onAdjustLyricsOffset={session.adjustLyricsOffset}
+                onChangeKey={session.changeKey}
                 onToggleFullscreen={toggleFullscreen}
                 onExit={requestExit}
                 lyricsEffect={

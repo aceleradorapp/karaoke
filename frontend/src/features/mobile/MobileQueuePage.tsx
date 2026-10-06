@@ -1,4 +1,4 @@
-import type { SingRequestDTO } from '@caraoke/shared';
+import type { JobDTO, SingRequestDTO } from '@caraoke/shared';
 import clsx from 'clsx';
 import { Link } from 'react-router';
 import { useJobsQuery } from '../../api/jobs';
@@ -9,8 +9,11 @@ import { Spinner } from '../../components/Spinner';
 import { useMobileProfileStore } from '../../stores/useMobileProfileStore';
 import { toast } from '../../stores/useToastStore';
 import { JobRow } from '../processing/JobRow';
+import { useQueueEta } from '../processing/useQueueEta';
+import { describeEta, formatEta } from '../../lib/processingEstimate';
 
 const RECENT_LIMIT = 5;
+const EMPTY_JOBS: JobDTO[] = [];
 
 function SingQueueRow({
   request,
@@ -101,7 +104,8 @@ function SingQueueSection() {
 export function MobileQueuePage() {
   const active = useJobsQuery('active');
   const recent = useJobsQuery('recent');
-  const activeJobs = active.data ?? [];
+  const activeJobs = active.data ?? EMPTY_JOBS;
+  const eta = useQueueEta(activeJobs);
   const recentJobs = (recent.data ?? []).slice(0, RECENT_LIMIT);
 
   return (
@@ -112,6 +116,9 @@ export function MobileQueuePage() {
 
       <section aria-label="Preparando" className="flex flex-col gap-2">
         <h2 className="text-lg font-semibold">Preparando</h2>
+        {eta && eta.allReadyInSec > 0 && (
+          <p className="text-sm text-muted">Tudo pronto em {formatEta(eta.allReadyInSec)} (estimativa)</p>
+        )}
         {active.isLoading && <Spinner className="mx-auto size-6" />}
         {active.isError && (
           <p role="alert" className="text-danger">
@@ -128,11 +135,14 @@ export function MobileQueuePage() {
         )}
         {activeJobs.length > 0 && (
           <ul className="flex flex-col gap-2">
-            {activeJobs.map((job) => (
-              <li key={job.id} className="rounded-2xl bg-surface p-3">
-                <JobRow job={job} />
-              </li>
-            ))}
+            {activeJobs.map((job) => {
+              const jobEta = eta?.byJob.get(job.id);
+              return (
+                <li key={job.id} className="rounded-2xl bg-surface p-3">
+                  <JobRow job={job} eta={jobEta ? describeEta(jobEta) : undefined} />
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>

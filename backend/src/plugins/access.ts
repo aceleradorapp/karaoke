@@ -19,6 +19,7 @@ const MOBILE_ALLOWED_ROUTES: AllowedRoute[] = [
   ['POST', /^\/api\/youtube\/import$/],
   ['POST', /^\/api\/uploads$/],
   ['GET', /^\/api\/jobs$/],
+  ['GET', /^\/api\/jobs\/estimate$/],
   ['GET', /^\/api\/songs$/],
   ['GET', /^\/api\/profiles$/],
   ['POST', /^\/api\/profiles$/],

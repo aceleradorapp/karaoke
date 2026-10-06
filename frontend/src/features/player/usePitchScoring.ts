@@ -20,7 +20,7 @@ export interface PitchScoring {
   isActive: boolean;
   reading: PitchReading;
   prepare: () => Promise<void>;
-  begin: (getTime: () => number, isPlaying: () => boolean) => void;
+  begin: (getTime: () => number, isPlaying: () => boolean, getKeyShift?: () => number) => void;
   finish: () => number | null;
   release: () => void;
 }
@@ -85,7 +85,7 @@ export function usePitchScoring(song: SongDTO): PitchScoring {
   }, [song.melodyUrl, queryClient]);
 
   const begin = useCallback(
-    (getTime: () => number, isPlaying: () => boolean) => {
+    (getTime: () => number, isPlaying: () => boolean, getKeyShift: () => number = () => 0) => {
       stopTimers();
       const currentMicrophone = microphone.current;
       if (!currentMicrophone || !melody.current) return;
@@ -99,8 +99,9 @@ export function usePitchScoring(song: SongDTO): PitchScoring {
           if (!isPlaying()) return;
           const time = getTime();
           const sung = currentMicrophone.sample();
-          currentScorer.add(time, sung);
-          latest.current = { liveScore: currentScorer.live, target: currentScorer.referenceAt(time), sung };
+          const keyShift = getKeyShift();
+          currentScorer.add(time, sung, keyShift);
+          latest.current = { liveScore: currentScorer.live, target: currentScorer.referenceAt(time, keyShift), sung };
         }, SAMPLE_INTERVAL_MS),
         setInterval(() => setReading(latest.current), DISPLAY_INTERVAL_MS),
       );

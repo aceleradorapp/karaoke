@@ -23,6 +23,7 @@ function buildSong(overrides: Partial<Song> = {}): Song {
     lyricsNotice: null,
     lyricsOffsetMs: 0,
     fillPercent: 100,
+    keyShift: 0,
     playCount: 0,
     addedById: null,
     createdAt: new Date('2026-10-01T10:00:00.000Z'),
@@ -102,6 +103,7 @@ describe('toJobDTO', () => {
       title: 'Evidências',
       artist: 'Chitãozinho & Xororó',
       coverUrl: `/media/song1/capa.jpg?v=${UPDATED_AT.getTime()}`,
+      durationSec: null,
     });
   });
 });
