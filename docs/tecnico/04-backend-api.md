@@ -233,7 +233,20 @@ Toda mudança (criar, remover, reordenar, apresentação começou, perfil ou mú
 | POST | `/api/jobs/:id/retry` | FAILED/CANCELED → cria um job novo PENDING no fim da fila |
 | DELETE | `/api/jobs/:id` | Remove um job finalizado da lista (só DONE/FAILED/CANCELED) |
 
+### Máquinas de processamento (ADR-015)
+| Método | Rota | Descrição |
+|---|---|---|
+| GET | `/api/workers` | (palco) `{ items: [{ id, name, isLocal, online, device, gpuName, lastSeenAt, currentSongTitle }] }`; a primeira é sempre "Este PC" (`id: "local"`) |
+| POST / DELETE | `/api/workers/pairing` | (palco) gera `{ code (6 dígitos), expiresAt (+10 min), serverUrls, downloadPath }` / cancela. Um código por vez, em memória |
+| POST | `/api/workers/pair` | **Público** (sem código do celular): `{ code, name }` → `{ workerId, token, name }`. Código usado uma vez; 5 erros invalidam o código |
+| PATCH | `/api/workers/:id` | (palco) `{ name }` |
+| DELETE | `/api/workers/:id` | (palco) revoga: o token para de valer, o job RUNNING dela volta para a fila e os PENDING com `targetWorkerId` dela passam a "qualquer uma" |
+- Evento `workers:changed` `{ workerId }` (sala stage) quando uma máquina liga/desliga, é pareada, renomeada ou removida.
+- Watchdog: máquina sem heartbeat há **2 min** → os jobs RUNNING dela voltam para a fila (`recoverLostWorker`).
+
 ### Interno (worker) — header `X-Worker-Token`
+- O token pode ser o `WORKER_TOKEN` do `.env` (worker local, `req.workerId = "local"`) **ou** o token de uma máquina pareada e não revogada (`req.workerId = <id>`).
+- Claim: só pega jobs com `targetWorkerId` nulo ou igual ao seu e grava `workerId`. Heartbeat e recuperação após reinício valem **por máquina** (reiniciar o worker local não mexe no job de outra máquina).
 - `POST /api/internal/songs/:id/melody` → marca `hasMelody=true` e emite `song:updated` (usado por `npm run worker:melody`, Fase 7).
 | Método | Rota | Body | Resposta |
 |---|---|---|---|

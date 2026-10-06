@@ -43,6 +43,10 @@ const JOB: JobDTO = {
   message: 'Separando',
   position: 1,
   device: 'cpu',
+  workerId: null,
+  workerName: null,
+  targetWorkerId: null,
+  targetWorkerName: null,
   error: null,
   attempts: 1,
   createdAt: '2026-10-01T10:00:00.000Z',
@@ -76,7 +80,15 @@ describe('useRealtimeSync', () => {
     socket.emit('connect');
 
     const invalidatedKeys = invalidate.mock.calls.map(([filters]) => filters?.queryKey);
-    expect(invalidatedKeys).toEqual([['jobs'], ['songs'], ['home'], ['system'], ['singQueue'], ['profiles']]);
+    expect(invalidatedKeys).toEqual([
+      ['jobs'],
+      ['songs'],
+      ['home'],
+      ['system'],
+      ['singQueue'],
+      ['profiles'],
+      ['workers'],
+    ]);
   });
 
   it('refreshes the song lists when a song changes or is deleted', () => {
@@ -129,9 +141,18 @@ describe('useRealtimeSync', () => {
     expect(invalidate).toHaveBeenCalledWith({ queryKey: ['profiles'] });
   });
 
+  it('reloads the processing machines when one of them changes', () => {
+    const { socket, queryClient } = setup();
+    const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
+
+    socket.emit('workers:changed', { workerId: 'w1' });
+
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['workers'] });
+  });
+
   it('stops listening when the component goes away', () => {
     const { socket, unmount } = setup();
-    expect(socket.totalListeners()).toBe(10);
+    expect(socket.totalListeners()).toBe(11);
 
     unmount();
 

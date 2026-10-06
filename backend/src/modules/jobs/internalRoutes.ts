@@ -42,8 +42,8 @@ const failBodySchema = z.object({
 export async function jobsInternalRoutes(app: FastifyInstance): Promise<void> {
   const typedApp = app.withTypeProvider<ZodTypeProvider>();
 
-  typedApp.post('/internal/jobs/claim', async (_request, reply) => {
-    const claim = await claimNextJob();
+  typedApp.post('/internal/jobs/claim', async (request, reply) => {
+    const claim = await claimNextJob(request.workerId ?? undefined);
     if (!claim) return reply.status(NO_CONTENT).send();
     return claim;
   });

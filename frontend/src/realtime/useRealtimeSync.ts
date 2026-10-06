@@ -13,7 +13,7 @@ import {
 } from './cacheUpdates';
 import { getSocket, type RealtimeSocket } from './socket';
 
-const RESYNC_QUERY_KEYS = [['jobs'], ['songs'], ['home'], ['system'], ['singQueue'], ['profiles']] as const;
+const RESYNC_QUERY_KEYS = [['jobs'], ['songs'], ['home'], ['system'], ['singQueue'], ['profiles'], ['workers']] as const;
 
 export function useRealtimeSync(socket: RealtimeSocket = getSocket()): void {
   const queryClient = useQueryClient();
@@ -34,6 +34,7 @@ export function useRealtimeSync(socket: RealtimeSocket = getSocket()): void {
     const onProfilesChanged = () => void queryClient.invalidateQueries({ queryKey: PROFILES_QUERY_KEY });
     const onWorkerStatus = (status: Parameters<typeof applyWorkerStatus>[1]) =>
       applyWorkerStatus(queryClient, status);
+    const onWorkersChanged = () => void queryClient.invalidateQueries({ queryKey: ['workers'] });
     const onSettingsUpdated = (settings: unknown) => queryClient.setQueryData(SETTINGS_QUERY_KEY, settings);
 
     socket.on('connect', resync);
@@ -45,6 +46,7 @@ export function useRealtimeSync(socket: RealtimeSocket = getSocket()): void {
     socket.on('profiles:changed', onProfilesChanged);
     socket.on('competition:changed', onCompetitionChanged);
     socket.on('worker:status', onWorkerStatus);
+    socket.on('workers:changed', onWorkersChanged);
     socket.on('settings:updated', onSettingsUpdated);
 
     return () => {
@@ -57,6 +59,7 @@ export function useRealtimeSync(socket: RealtimeSocket = getSocket()): void {
       socket.off('profiles:changed', onProfilesChanged);
       socket.off('competition:changed', onCompetitionChanged);
       socket.off('worker:status', onWorkerStatus);
+      socket.off('workers:changed', onWorkersChanged);
       socket.off('settings:updated', onSettingsUpdated);
     };
   }, [queryClient, socket]);

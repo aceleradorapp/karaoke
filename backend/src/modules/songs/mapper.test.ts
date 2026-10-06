@@ -43,6 +43,8 @@ function buildJob(overrides: Partial<Job> = {}): Job {
     position: 1,
     sourcePath: null,
     device: null,
+    workerId: null,
+    targetWorkerId: null,
     error: null,
     attempts: 0,
     createdAt: new Date('2026-10-01T10:00:00.000Z'),

@@ -104,24 +104,37 @@ enum JobStep {
 }
 
 model Job {
-  id         String    @id @default(cuid())
-  songId     String
-  song       Song      @relation(fields: [songId], references: [id], onDelete: Cascade)
-  status     JobStatus @default(PENDING)
-  step       JobStep?
-  progress   Int       @default(0)
-  message    String?   @db.VarChar(255)
-  position   Int
-  sourcePath String?   @db.VarChar(500)
-  device     String?   @db.VarChar(40)
-  error      String?   @db.Text
-  attempts   Int       @default(0)
-  createdAt  DateTime  @default(now())
-  startedAt  DateTime?
-  finishedAt DateTime?
+  id             String    @id @default(cuid())
+  songId         String
+  song           Song      @relation(fields: [songId], references: [id], onDelete: Cascade)
+  status         JobStatus @default(PENDING)
+  step           JobStep?
+  progress       Int       @default(0)
+  message        String?   @db.VarChar(255)
+  position       Int
+  sourcePath     String?   @db.VarChar(500)
+  device         String?   @db.VarChar(40)
+  workerId       String?   @db.VarChar(40)
+  targetWorkerId String?   @db.VarChar(40)
+  error          String?   @db.Text
+  attempts       Int       @default(0)
+  createdAt      DateTime  @default(now())
+  startedAt      DateTime?
+  finishedAt     DateTime?
 
   @@index([status, position])
   @@map("jobs")
+}
+
+model Worker {
+  id         String    @id @default(cuid())
+  name       String    @db.VarChar(60)
+  tokenHash  String    @unique @db.VarChar(64)
+  createdAt  DateTime  @default(now())
+  lastSeenAt DateTime?
+  revokedAt  DateTime?
+
+  @@map("workers")
 }
 
 model Playlist {

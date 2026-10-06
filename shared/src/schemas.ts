@@ -75,6 +75,20 @@ export type ImportYoutubeInput = z.infer<typeof importYoutubeSchema>;
 export const LYRICS_OFFSET_LIMIT_MS = 60000;
 export const KEY_SHIFT_LIMIT = 6;
 
+export const WORKER_NAME_MAX_LENGTH = 60;
+export const PAIRING_CODE_PATTERN = /^\d{6}$/;
+
+export const pairWorkerSchema = z.object({
+  code: z.string().trim().regex(PAIRING_CODE_PATTERN, 'Código inválido'),
+  name: z.string().trim().min(1, 'Informe um nome').max(WORKER_NAME_MAX_LENGTH),
+});
+
+export const renameWorkerSchema = z.object({
+  name: z.string().trim().min(1, 'Informe um nome').max(WORKER_NAME_MAX_LENGTH),
+});
+
+export type PairWorkerInput = z.infer<typeof pairWorkerSchema>;
+
 export const updateSongSchema = z
   .object({
     title: z.string().trim().min(1, 'Informe o título').max(SONG_TEXT_MAX_LENGTH).optional(),

@@ -145,6 +145,8 @@ model Job {
   position    Int                               // ordem na fila (menor = primeiro)
   sourcePath  String?    @db.VarChar(500)      // caminho do arquivo de origem (upload/youtube)
   device      String?    @db.VarChar(40)       // "cpu" | "cuda:GeForce GT 1030"
+  workerId       String? @db.VarChar(40)       // quem pegou: "local" (Este PC) ou o id de uma máquina pareada (ADR-015)
+  targetWorkerId String? @db.VarChar(40)       // onde processar: null = qualquer uma, "local" ou id da máquina
   error       String?    @db.Text
   attempts    Int        @default(0)
   createdAt   DateTime   @default(now())
@@ -153,6 +155,17 @@ model Job {
 
   @@index([status, position])
   @@map("jobs")
+}
+
+// Máquinas de processamento pareadas (ADR-015). O worker local não tem linha: é "local".
+model Worker {
+  id         String    @id @default(cuid())
+  name       String    @db.VarChar(60)
+  tokenHash  String    @unique @db.VarChar(64)   // SHA-256 do token cw_… (o token só fica na outra máquina)
+  createdAt  DateTime  @default(now())
+  lastSeenAt DateTime?                          // salvo no máximo 1x por minuto
+  revokedAt  DateTime?
+  @@map("workers")
 }
 
 // ─────────────────────────────── PLAYLISTS ────────────────────────────

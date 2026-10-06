@@ -22,6 +22,7 @@ import { uploadRoutes } from './modules/uploads/routes.js';
 import { youtubeRoutes } from './modules/youtube/routes.js';
 import { lyricsCheckRoutes } from './modules/lyricsCheck/routes.js';
 import { aiKeyRoutes } from './modules/aiKey/routes.js';
+import { workerRoutes } from './modules/workers/routes.js';
 import { DEFAULT_DOWNLOAD_FILES, downloadRoutes, type DownloadFiles } from './modules/downloads/routes.js';
 import { systemRoutes } from './modules/system/routes.js';
 import { registerAccessControl } from './plugins/access.js';
@@ -90,6 +91,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   await app.register(youtubeRoutes, { prefix: '/api' });
   await app.register(lyricsCheckRoutes, { prefix: '/api' });
   await app.register(aiKeyRoutes, { prefix: '/api' });
+  await app.register(workerRoutes, { prefix: '/api' });
   await app.register(downloadRoutes, { files: options.downloadFiles ?? DEFAULT_DOWNLOAD_FILES });
   await app.register(systemInternalRoutes, { prefix: '/api' });
   await app.register(jobsInternalRoutes, { prefix: '/api' });

@@ -31,6 +31,10 @@ export interface JobDTO {
   message: string | null;
   position: number;
   device: string | null;
+  workerId: string | null;
+  workerName: string | null;
+  targetWorkerId: string | null;
+  targetWorkerName: string | null;
   error: string | null;
   attempts: number;
   createdAt: string;
@@ -136,6 +140,30 @@ export interface YoutubeSearchResult {
   thumbnailUrl: string;
   suggested: { artist: string; title: string };
   existingSongId: string | null;
+}
+
+export interface ProcessingWorkerDTO {
+  id: string;
+  name: string;
+  isLocal: boolean;
+  online: boolean;
+  device: string | null;
+  gpuName: string | null;
+  lastSeenAt: string | null;
+  currentSongTitle: string | null;
+}
+
+export interface PairingCodeDTO {
+  code: string;
+  expiresAt: string;
+  serverUrls: string[];
+  downloadPath: string;
+}
+
+export interface PairResultDTO {
+  workerId: string;
+  token: string;
+  name: string;
 }
 
 export interface AiKeyStatusDTO {

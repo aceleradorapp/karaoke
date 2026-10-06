@@ -209,7 +209,7 @@ Branch: `feature/f7b-fila-e-letra`.
 | F7G-01 | ✅ 2026-10-06 | Selo "tem letra / sem letra" na busca do YouTube (`/api/lyrics/check`) | 🟡 |
 | F7G-02 | ✅ 2026-10-06 | Chave para IA (gerar/trocar/revogar, Bearer só nas rotas do MCP) + seção "IA (MCP)" nas Configurações (ADR-014) | 🟡 |
 | F7G-03 | ✅ 2026-10-06 | Servidor MCP `mcp/` (stdio): buscar_youtube, verificar_letra, buscar_na_biblioteca, importar_musicas, fila_de_processamento, cancelar_processamento, reordenar_fila; arquivo único em `/downloads/caraoke-mcp.mjs` (ADR-014) | 🔴 |
-| F7G-04 | ⬜ | Máquinas pareadas: tabela `workers`, pareamento por código, token por máquina nas rotas internas, heartbeat por máquina, tela "Máquinas de processamento" (ADR-015) | 🔴 |
+| F7G-04 | ✅ 2026-10-06 | Máquinas pareadas: tabela `workers`, pareamento por código, token por máquina nas rotas internas, heartbeat por máquina, tela "Máquinas de processamento" (ADR-015) | 🔴 |
 | F7G-05 | ⬜ | Modo remoto do worker: baixa a origem, envia os arquivos prontos; escolher onde processar (`targetWorkerId`) na fila e no MCP (ADR-015) | 🔴 |
 | F7G-06 | ⬜ | App instalável: `remote-worker/` (Instalar.cmd, atalho, console em português) + `npm run processador:pacote` + download pelo karaokê (ADR-015) | 🔴 |
 | F7G-07 | ⬜ | Opcional: extensão do Chrome "Mandar para o karaokê" | 🟡 |

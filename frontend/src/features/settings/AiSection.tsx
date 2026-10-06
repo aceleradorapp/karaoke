@@ -128,8 +128,8 @@ export function AiSection() {
           Como ligar no Claude
         </summary>
         <ol className="flex list-decimal flex-col gap-4 pl-5 text-sm">
-          <li className="flex flex-col gap-2">
-            <span>
+          <li className="space-y-2">
+            <span className="block">
               No PC onde está o Claude, instale o Node.js e baixe o arquivo do MCP para{' '}
               <code className="rounded bg-bg px-1">{MCP_FILE_PATH}</code>:
             </span>
@@ -142,12 +142,12 @@ export function AiSection() {
               Baixar caraoke-mcp.mjs
             </a>
           </li>
-          <li className="flex min-w-0 flex-col gap-2">
-            <span>No Claude Code, rode no terminal:</span>
+          <li className="min-w-0 space-y-2">
+            <span className="block">No Claude Code, rode no terminal:</span>
             <CopyBlock label="Comando do Claude Code" text={claudeCodeCommand(serverUrl, key)} />
           </li>
-          <li className="flex min-w-0 flex-col gap-2">
-            <span>
+          <li className="min-w-0 space-y-2">
+            <span className="block">
               Ou, no Claude Desktop, acrescente em Configurações › Desenvolvedor › Editar configuração
               (claude_desktop_config.json) e reinicie o app:
             </span>

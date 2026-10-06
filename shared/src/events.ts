@@ -25,6 +25,7 @@ export const SOCKET_EVENTS = {
   settingsUpdated: 'settings:updated',
   accessChanged: 'access:changed',
   workerStatus: 'worker:status',
+  workersChanged: 'workers:changed',
 } as const;
 
 export const SOCKET_ACCESS_DENIED_MESSAGE = 'ACCESS_DENIED';
@@ -52,6 +53,7 @@ export interface ServerToClientEvents {
   'settings:updated': (settings: AppSettings) => void;
   'access:changed': () => void;
   'worker:status': (status: WorkerStatus) => void;
+  'workers:changed': (change: { workerId: string }) => void;
 }
 
 export type ClientToServerEvents = Record<string, never>;
