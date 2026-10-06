@@ -1,5 +1,6 @@
 import logging
 import time
+from pathlib import Path
 
 import requests
 
@@ -12,7 +13,7 @@ from .runner import run_job
 logger = logging.getLogger("caraoke_worker")
 
 
-def poll_forever(api: Api, hardware: dict, poll_interval_seconds: float) -> None:
+def poll_forever(api: Api, hardware: dict, poll_interval_seconds: float, work_dir: Path | None = None) -> None:
     while True:
         try:
             claim = api.claim()
@@ -26,7 +27,7 @@ def poll_forever(api: Api, hardware: dict, poll_interval_seconds: float) -> None
             continue
 
         try:
-            run_job(api, claim, hardware)
+            run_job(api, claim, hardware, work_dir)
         except Exception:
             logger.exception("Could not finish job handling; continuing with the queue")
 
@@ -47,7 +48,7 @@ def main() -> None:
         while not heartbeat.send_once():
             time.sleep(BACKEND_RETRY_SECONDS)
         heartbeat.start()
-        poll_forever(api, hardware, config.poll_interval_seconds)
+        poll_forever(api, hardware, config.poll_interval_seconds, config.work_dir)
     except KeyboardInterrupt:
         logger.info("Worker stopped")
     finally:

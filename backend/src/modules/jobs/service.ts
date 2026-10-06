@@ -87,7 +87,8 @@ export async function enqueueJob(
   transaction: Prisma.TransactionClient,
   songId: string,
   sourcePath: string | null,
+  targetWorkerId: string | null = null,
 ): Promise<Job> {
   const position = await nextQueuePosition(transaction);
-  return transaction.job.create({ data: { songId, position, sourcePath } });
+  return transaction.job.create({ data: { songId, position, sourcePath, targetWorkerId } });
 }

@@ -4,6 +4,7 @@ import {
   formatEta,
   type JobDTO,
   type LyricsAvailability,
+  type ProcessingWorkerDTO,
   type SongDTO,
 } from '@caraoke/shared';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -69,6 +70,19 @@ async function safely(run: () => Promise<ToolResult>): Promise<ToolResult> {
   }
 }
 
+function normalize(text: string): string {
+  return text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().trim();
+}
+
+export function findMachine(workers: ProcessingWorkerDTO[], wanted: string): ProcessingWorkerDTO | undefined {
+  const target = normalize(wanted);
+  return workers.find((worker) => worker.id === wanted || normalize(worker.name) === target);
+}
+
+function describeMachines(workers: ProcessingWorkerDTO[]): string {
+  return workers.map((worker) => `${worker.name} (${worker.online ? 'ligada' : 'desligada'})`).join(', ');
+}
+
 function describeJob(job: JobDTO, eta?: string): string {
   const status =
     job.status === 'RUNNING'
@@ -81,6 +95,8 @@ function describeJob(job: JobDTO, eta?: string): string {
             ? `falhou: ${job.error ?? 'erro desconhecido'}`
             : 'cancelada';
   const parts = [`${job.song.title} — ${job.song.artist}`, status];
+  if (job.status === 'RUNNING' && job.workerName) parts.push(`em ${job.workerName}`);
+  if (job.status === 'PENDING' && job.targetWorkerName) parts.push(`esperando ${job.targetWorkerName}`);
   if (eta) parts.push(eta.toLowerCase());
   parts.push(`job_id ${job.id}`);
   return parts.join(' · ');
@@ -186,7 +202,8 @@ export function registerKaraokeTools(server: McpServer, api: KaraokeApi): void {
       title: 'Importar músicas',
       description:
         'Importa uma ou várias músicas do YouTube para o karaokê. Elas entram na fila de processamento (separar ' +
-        'a voz, buscar a letra etc.). Use os dados de buscar_youtube. Confirme com a pessoa antes de importar muitas.',
+        'a voz, buscar a letra etc.). Use os dados de buscar_youtube. Confirme com a pessoa antes de importar muitas. ' +
+        'Opcional: "maquina" com o nome de uma máquina de processamento (veja fila_de_processamento).',
       inputSchema: {
         musicas: z
           .array(
@@ -199,10 +216,18 @@ export function registerKaraokeTools(server: McpServer, api: KaraokeApi): void {
           )
           .min(1)
           .max(25),
+        maquina: z.string().max(60).optional().describe('Nome da máquina que vai processar (padrão: qualquer uma)'),
       },
     },
-    async ({ musicas }) =>
+    async ({ musicas, maquina }) =>
       safely(async () => {
+        let targetWorkerId: string | undefined;
+        if (maquina) {
+          const workers = await api.listWorkers();
+          const machine = findMachine(workers, maquina);
+          if (!machine) return text([`Não achei a máquina "${maquina}". Máquinas: ${describeMachines(workers)}.`]);
+          targetWorkerId = machine.id;
+        }
         const lines: string[] = [];
         for (const song of musicas) {
           const label = `${song.titulo} — ${song.artista}`;
@@ -212,6 +237,7 @@ export function registerKaraokeTools(server: McpServer, api: KaraokeApi): void {
               artist: song.artista,
               title: song.titulo,
               ...(song.duracao_seg ? { durationSec: song.duracao_seg } : {}),
+              ...(targetWorkerId ? { targetWorkerId } : {}),
             });
             lines.push(result.alreadyExists ? `• ${label}: já estava na biblioteca` : `• ${label}: entrou na fila`);
           } catch (error) {
@@ -234,13 +260,15 @@ export function registerKaraokeTools(server: McpServer, api: KaraokeApi): void {
     },
     async () =>
       safely(async () => {
-        const [active, recent, estimate] = await Promise.all([
+        const [active, recent, estimate, workers] = await Promise.all([
           api.listJobs('active'),
           api.listJobs('recent'),
           api.estimate(),
+          api.listWorkers().catch(() => []),
         ]);
         const eta = estimateQueue(active, estimate, Date.now());
         const lines: string[] = [];
+        if (workers.length > 0) lines.push(`Máquinas: ${describeMachines(workers)}.`);
         if (active.length === 0) lines.push('Nada sendo processado agora.');
         else {
           lines.push(`Fila (tudo pronto em ${formatEta(eta.allReadyInSec)}, estimativa):`);

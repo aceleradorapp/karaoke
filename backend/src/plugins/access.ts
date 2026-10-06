@@ -49,6 +49,8 @@ const AI_ALLOWED_ROUTES: AllowedRoute[] = [
   ['GET', /^\/api\/jobs\/estimate$/],
   ['POST', /^\/api\/jobs\/[^/]+\/cancel$/],
   ['PATCH', /^\/api\/jobs\/reorder$/],
+  ['PATCH', /^\/api\/jobs\/[^/]+\/target$/],
+  ['GET', /^\/api\/workers$/],
 ];
 
 const PUBLIC_ROUTES: AllowedRoute[] = [['POST', /^\/api\/workers\/pair$/]];

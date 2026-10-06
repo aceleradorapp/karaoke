@@ -231,6 +231,7 @@ Toda mudança (criar, remover, reordenar, apresentação começou, perfil ou mú
 | PATCH | `/api/jobs/reorder` | `{ ids: string[] }` (só PENDING) |
 | POST | `/api/jobs/:id/cancel` | PENDING → CANCELED na hora; RUNNING → marca `cancelRequested` (em memória) e o worker aborta na próxima chamada de progresso. Música → ERROR com mensagem "Cancelado" |
 | POST | `/api/jobs/:id/retry` | FAILED/CANCELED → cria um job novo PENDING no fim da fila |
+| PATCH | `/api/jobs/:id/target` | `{ targetWorkerId: string \| null }` só para PENDING: onde processar (ADR-015). `POST /youtube/import` também aceita `targetWorkerId` |
 | DELETE | `/api/jobs/:id` | Remove um job finalizado da lista (só DONE/FAILED/CANCELED) |
 
 ### Máquinas de processamento (ADR-015)
@@ -246,6 +247,7 @@ Toda mudança (criar, remover, reordenar, apresentação começou, perfil ou mú
 
 ### Interno (worker) — header `X-Worker-Token`
 - O token pode ser o `WORKER_TOKEN` do `.env` (worker local, `req.workerId = "local"`) **ou** o token de uma máquina pareada e não revogada (`req.workerId = <id>`).
+- `GET /api/internal/jobs/:id/source` (só a máquina que pegou o job) entrega o arquivo de origem do upload; `POST /api/internal/songs/:id/files` (multipart) recebe os arquivos prontos — só nomes da lista (`instrumental.mp3`, `voz.mp3`, `letra.json`, `letra.original.json`, `letra.lrc`, `capa.jpg`, `melodia.json`), gravados como `.parte` e renomeados.
 - Claim: só pega jobs com `targetWorkerId` nulo ou igual ao seu e grava `workerId`. Heartbeat e recuperação após reinício valem **por máquina** (reiniciar o worker local não mexe no job de outra máquina).
 - `POST /api/internal/songs/:id/melody` → marca `hasMelody=true` e emite `song:updated` (usado por `npm run worker:melody`, Fase 7).
 | Método | Rota | Body | Resposta |

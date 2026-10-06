@@ -66,6 +66,13 @@ def run_job(api, claim, info):
 - `ctx.report()` faz no máximo 1 PATCH por segundo (exceto quando muda de etapa ou chega a 100%).
 - Se a resposta do PATCH trouxer `cancel: true`, levanta `JobCanceled` e **mata o subprocesso em execução** (guarde a referência em `ctx.proc`).
 
+### Modo remoto (ADR-015)
+Com `CARAOKE_REMOTE=1` (e `API_URL`, `WORKER_TOKEN` = token da máquina pareada, `CARAOKE_WORK_DIR`, padrão `%LOCALAPPDATA%\ProcessadorKaraoke	rabalho`), o mesmo código roda em outra máquina:
+- `remote.with_local_paths` troca os caminhos do claim pelos da pasta local;
+- upload: `fetch_source` baixa a origem por `GET /internal/jobs/:id/source` antes das etapas (YouTube baixa sozinho);
+- depois das etapas, `send_results` envia os arquivos da lista por `POST /internal/songs/:id/files` e só então chama `complete`; se o envio falhar, o job falha;
+- no fim (deu certo ou não) a pasta local da música é apagada.
+
 ## 5.4 Detecção de GPU (`device.py`)
 ```python
 MIN_VRAM_AUTO_MB = 3500   # htdemucs precisa de ~3 GB+ com o segment padrão

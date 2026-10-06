@@ -53,6 +53,15 @@ export function useDeleteJobMutation() {
   });
 }
 
+export function useSetJobTargetMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, targetWorkerId }: { id: string; targetWorkerId: string | null }) =>
+      apiSend<void>('PATCH', `/jobs/${id}/target`, { targetWorkerId }),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: JOBS_QUERY_KEY }),
+  });
+}
+
 export function useReorderJobsMutation() {
   const queryClient = useQueryClient();
   return useMutation({

@@ -68,6 +68,7 @@ export const importYoutubeSchema = z.object({
   artist: z.string().trim().min(1, 'Informe o artista').max(SONG_TEXT_MAX_LENGTH),
   durationSec: z.number().int().positive().optional(),
   profileId: z.string().min(1).optional(),
+  targetWorkerId: z.string().min(1).max(40).optional(),
 });
 
 export type ImportYoutubeInput = z.infer<typeof importYoutubeSchema>;

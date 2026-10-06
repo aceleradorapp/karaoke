@@ -9,7 +9,9 @@ import {
   useJobsQuery,
   useReorderJobsMutation,
   useRetryJobMutation,
+  useSetJobTargetMutation,
 } from '../../api/jobs';
+import { useWorkersQuery } from '../../api/workers';
 import { useSystemInfoQuery } from '../../api/system';
 import { Button } from '../../components/Button';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
@@ -62,6 +64,8 @@ export function QueuePage() {
   const retryJob = useRetryJobMutation();
   const deleteJob = useDeleteJobMutation();
   const reorderJobs = useReorderJobsMutation();
+  const setJobTarget = useSetJobTargetMutation();
+  const workers = useWorkersQuery();
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
   const eta = useQueueEta(active.data ?? EMPTY_JOBS);
   const etaOf = (job: JobDTO) => {
@@ -81,6 +85,13 @@ export function QueuePage() {
     reorderJobs.mutate(orderedIds, {
       onError: (error) => toast.error(errorMessage(error, 'Não foi possível reordenar a fila')),
     });
+  }
+
+  function handleTarget(job: JobDTO, targetWorkerId: string | null) {
+    setJobTarget.mutate(
+      { id: job.id, targetWorkerId },
+      { onError: (error) => toast.error(errorMessage(error, 'Não foi possível escolher a máquina')) },
+    );
   }
 
   function handleCancel(job: JobDTO) {
@@ -183,6 +194,8 @@ export function QueuePage() {
             onReorder={handleReorder}
             onCancel={(job) => setPendingAction({ kind: 'cancel', job })}
             etaOf={etaOf}
+            workers={workers.data ?? []}
+            onChangeTarget={handleTarget}
           />
         </Section>
       )}

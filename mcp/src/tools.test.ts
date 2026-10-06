@@ -145,6 +145,34 @@ describe('karaoke MCP', () => {
     ]);
   });
 
+  it('sends the songs to the machine asked for, by its name', async () => {
+    const machines = {
+      body: {
+        items: [
+          { id: 'local', name: 'Este PC', isLocal: true, online: true, device: 'cpu', gpuName: null, lastSeenAt: null, currentSongTitle: null },
+          { id: 'w1', name: 'Notebook GPU', isLocal: false, online: true, device: 'cuda', gpuName: 'RTX', lastSeenAt: null, currentSongTitle: null },
+        ],
+      },
+    };
+    const { fetcher, calls } = fakeKaraoke({
+      'GET /api/workers': machines,
+      'POST /api/youtube/import': { status: 201, body: { song: {}, alreadyExists: false } },
+    });
+    await connect(fetcher);
+
+    await call('importar_musicas', {
+      musicas: [{ youtube_id: 'abc12345678', artista: 'Titãs', titulo: 'Flores' }],
+      maquina: 'notebook gpu',
+    });
+    expect(calls.find((request) => request.method === 'POST')?.body).toMatchObject({ targetWorkerId: 'w1' });
+
+    const unknown = await call('importar_musicas', {
+      musicas: [{ youtube_id: 'abc12345678', artista: 'Titãs', titulo: 'Flores' }],
+      maquina: 'PC da cozinha',
+    });
+    expect(unknown.text).toBe('Não achei a máquina "PC da cozinha". Máquinas: Este PC (ligada), Notebook GPU (ligada).');
+  });
+
   it('shows the processing queue with the estimated times', async () => {
     const running = job({
       id: 'j1',

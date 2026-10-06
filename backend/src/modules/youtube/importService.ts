@@ -3,6 +3,7 @@ import { MAX_VIDEO_DURATION_SECONDS, type ImportResultDTO, type ImportYoutubeInp
 import { prisma } from '../../db.js';
 import { emitToAll } from '../../realtime.js';
 import { AppError, notFound } from '../../utils/errors.js';
+import { assertWorkerExists } from '../jobs/remoteService.js';
 import { enqueueJob } from '../jobs/service.js';
 import { toJobDTO, toSongDTO } from '../songs/mapper.js';
 
@@ -45,7 +46,7 @@ async function createSongAndJob(input: ImportYoutubeInput): Promise<ImportResult
         addedById: input.profileId ?? null,
       },
     });
-    const queued = await enqueueJob(transaction, created.id, null);
+    const queued = await enqueueJob(transaction, created.id, null, input.targetWorkerId ?? null);
     return { song: created, job: queued };
   });
 
@@ -62,6 +63,7 @@ export async function importFromYoutube(input: ImportYoutubeInput): Promise<Impo
   if (existing) return existing;
 
   await assertProfileExists(input.profileId);
+  if (input.targetWorkerId) await assertWorkerExists(input.targetWorkerId);
 
   try {
     return await createSongAndJob(input);

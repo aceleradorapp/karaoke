@@ -4,6 +4,7 @@ import type {
   LyricsAvailability,
   LyricsCheckDTO,
   ProcessingEstimate,
+  ProcessingWorkerDTO,
   SongListResponse,
   YoutubeSearchResult,
 } from '@caraoke/shared';
@@ -15,6 +16,7 @@ export interface ImportRequest {
   artist: string;
   title: string;
   durationSec?: number;
+  targetWorkerId?: string;
 }
 
 export type SongOrder = 'recent' | 'title' | 'artist' | 'popular';
@@ -72,6 +74,10 @@ export class KaraokeApi {
 
   cancelJob(jobId: string): Promise<void> {
     return this.request('POST', `/api/jobs/${encodeURIComponent(jobId)}/cancel`);
+  }
+
+  async listWorkers(): Promise<ProcessingWorkerDTO[]> {
+    return (await this.request<{ items: ProcessingWorkerDTO[] }>('GET', '/api/workers')).items;
   }
 
   reorderJobs(ids: string[]): Promise<{ ids: string[] }> {
