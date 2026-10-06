@@ -138,7 +138,7 @@ type SongDTO = {
   vocalsUrl: string | null,
   lyricsUrl: string | null,       // "/media/<id>/letra.json"
   melodyUrl: string | null,
-  lyricsSource, lyricsNeedsReview, lyricsOffsetMs, fillPercent, playCount, createdAt,
+  lyricsSource, lyricsNeedsReview, lyricsOffsetMs, fillPercent, keyShift, playCount, createdAt,
   job?: JobDTO | null             // job ativo, se QUEUED/PROCESSING/ERROR
   isFavorite?: boolean            // quando a request traz ?profileId=
 }
@@ -171,7 +171,7 @@ type SongDTO = {
 | GET | `/api/songs?q=&status=&artist=&sort=recent\|title\|artist\|popular&limit=&cursor=&profileId=` | Lista/busca. `q` busca em título e artista (sem diferenciar maiúsculas/acentos) |
 | GET | `/api/songs/home?profileId=` | Fileiras do Início (ver 06 §6.6): `{ hero: SongDTO \| null, rows: [{ id, title, items: SongDTO[] }] }` |
 | GET | `/api/songs/:id?profileId=` | `SongDTO` |
-| PATCH | `/api/songs/:id` | `{ title?, artist?, lyricsOffsetMs?, fillPercent? }` (`fillPercent` inteiro 20..150) |
+| PATCH | `/api/songs/:id` | `{ title?, artist?, lyricsOffsetMs?, fillPercent?, keyShift? }` (`fillPercent` inteiro 20..150; `keyShift` inteiro −6..+6) |
 | DELETE | `/api/songs/:id` | Apaga a música + arquivos |
 | PUT | `/api/songs/:id/lyrics` | Body `LyricsDoc` → grava `letra.json`, `lyricsSource=MANUAL`, `lyricsNeedsReview=false` |
 | POST | `/api/songs/:id/lyrics/search` | (Fase 6) Pede ao worker para buscar/alinhar de novo: cria um job só com LYRICS |
@@ -213,7 +213,8 @@ Toda mudança (criar, remover, reordenar, apresentação começou, perfil ou mú
 ### Fila de processamento (jobs)
 | Método | Rota | Descrição |
 |---|---|---|
-| GET | `/api/jobs?scope=active\|recent` | `active` = PENDING + RUNNING (por position); `recent` = DONE/FAILED/CANCELED das últimas 48 h. Inclui título, artista e capa da música |
+| GET | `/api/jobs?scope=active\|recent` | `active` = PENDING + RUNNING (por position); `recent` = DONE/FAILED/CANCELED das últimas 48 h. Inclui título, artista, capa e duração (`durationSec`) da música |
+| GET | `/api/jobs/estimate` | (palco e celular) `{ secondsPerSongSecond, basedOnJobs, unknownDurationSec }`: mediana de (tempo de processamento ÷ duração) dos últimos 15 jobs DONE do mesmo tipo de aparelho do worker (CPU × placa de vídeo). Com menos de 3, o padrão é CPU 1,2 e GPU 0,4 (`basedOnJobs: 0`). ADR-012 |
 | PATCH | `/api/jobs/reorder` | `{ ids: string[] }` (só PENDING) |
 | POST | `/api/jobs/:id/cancel` | PENDING → CANCELED na hora; RUNNING → marca `cancelRequested` (em memória) e o worker aborta na próxima chamada de progresso. Música → ERROR com mensagem "Cancelado" |
 | POST | `/api/jobs/:id/retry` | FAILED/CANCELED → cria um job novo PENDING no fim da fila |

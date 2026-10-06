@@ -2,6 +2,24 @@
 
 > Entradas mais recentes no topo. Use `/fim-sessao` para registrar.
 
+## 2026-10-06 (14) — Fase 7F concluída: mudar o tom e tempo estimado
+**Pedido:** mudar o tom da música e mostrar o tempo estimado na fila de processamento. Depois, seguir a "ordem sugerida" (Fase 7G), com um app para instalar na outra máquina.
+**Feito (ADR-012):**
+- **Tom:**
+  - controle "Tom" no player (−6..+6, ↺ original, teclas `-` e `=`), salvo por música (`songs.keyShift`);
+  - SoundTouch (`soundtouchjs`, LGPL) num Web Worker processa instrumental e voz, e o motor troca as faixas no mesmo ponto;
+  - a pontuação acompanha o tom.
+- **Fila:** `/api/jobs/estimate` (mediana do histórico por tipo de aparelho). A fila da TV e a do celular mostram "Faltam ~X", "Começa em ~X · pronta em ~Y" e "Tudo pronto em ~Z".
+- Plano da Fase 7G registrado no roadmap.
+**Verificado:**
+- 876 testes frontend, 423 backend.
+- No navegador:
+  - worker com 2 faixas de 4 min, tom exato (246,9 Hz);
+  - troca numa música real em ~2,4 s, retomando no mesmo ponto;
+  - tom salvo e restaurado no banco;
+  - fila com estimativa coerente com a taxa real (1,08 na CPU);
+  - sem rolagem lateral em 390 px.
+
 ## 2026-10-05 (13) — Avatares divertidos
 **Pedido:** umas 20 imagens legais e engraçadas para perfis ("ache em qualquer lugar, só faça").
 **Feito:** 20 avatares do DiceBear em estilos de licença livre (Custom Avatar/Ashley Seo CC BY, Bottts/Pablo Stanley livre, Fun Emoji/Davis Uche CC BY, Croodles/vijay verma CC BY), escolhidos numa folha de contato (os tristes ficaram de fora), guardados em `frontend/public/avatars/` com créditos. Aparecem no "Quem é você?", na criação de perfis e convidados e em todo lugar que mostra avatar.

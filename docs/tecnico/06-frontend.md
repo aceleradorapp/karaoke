@@ -4,7 +4,7 @@
 ```
 react@^19 react-dom@^19 react-router@^7 (modo biblioteca: import { ... } from "react-router")
 @tanstack/react-query@^5  zustand@^5  socket.io-client@^4
-qrcode.react  pitchy@^4  clsx  lucide-react (ícones)  @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities (arrastar a fila, ADR-009)
+qrcode.react  pitchy@^4  clsx  lucide-react (ícones)  @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities (arrastar a fila, ADR-009)  soundtouchjs@^0.3 (mudar o tom no navegador, LGPL-2.1, ADR-012)
 devDeps: vite  @vitejs/plugin-react  typescript  tailwindcss@^4  @tailwindcss/vite  vitest  @testing-library/react  jsdom
 ```
 
@@ -242,6 +242,11 @@ Concluídas recentemente
  ✓ Garçom — Reginaldo Rossi    pronta há 5 min
  ✗ Música X — erro: "Video unavailable"           [Tentar de novo] [Remover]
 ```
+- **Tempo estimado (ADR-012):** "Tudo pronto em ~Z min (estimativa)" abaixo do título.
+  - Em cada linha: "Faltam ~X min" na que está processando, "Começa em ~X · pronta em ~Y" nas que esperam.
+  - Cálculo em `lib/processingEstimate.ts` (`estimateQueue`) com o `/api/jobs/estimate`: estimado = duração × `secondsPerSongSecond` (sem duração: 4 min).
+  - Da que processa, desconta o tempo já gasto (mínimo de 30 s); as que esperam somam as de cima.
+  - Recalcula a cada 15 s e a cada mudança da fila (`useQueueEta`). O `/m/fila` (Preparando) mostra o mesmo.
 - Atualização em tempo real (`job:updated`). Reordenar com drag-and-drop nativo HTML5 (sem biblioteca), ou botões ↑/↓ como alternativa.
 - Rodapé: "Worker: online • CPU" / "Worker offline: verifique o terminal".
 

@@ -1,3 +1,5 @@
+import { createWorkerTransposer } from './workerTransposer';
+
 export interface AudioParamLike {
   value: number;
   setTargetAtTime(target: number, startTime: number, timeConstant: number): unknown;
@@ -31,14 +33,26 @@ export interface AudioContextLike {
   close(): Promise<void>;
 }
 
+export interface Transposer {
+  transpose(buffers: AudioBufferLike[], semitones: number): Promise<AudioBufferLike[]>;
+  dispose(): void;
+}
+
 export interface KaraokeEngineOptions {
   createContext?: () => AudioContextLike;
   fetchAudio?: (url: string) => Promise<ArrayBuffer>;
+  createTransposer?: (context: AudioContextLike) => Transposer;
+}
+
+interface Tracks {
+  instrumental: AudioBufferLike;
+  vocals: AudioBufferLike | null;
 }
 
 const START_DELAY_SECONDS = 0.05;
 const VOICE_GUIDE_SMOOTHING_SECONDS = 0.05;
 const END_GUARD_SECONDS = 0.1;
+const SHIFTED_KEYS_KEPT = 2;
 
 function createBrowserContext(): AudioContextLike {
   return new AudioContext({ latencyHint: 'interactive' }) as unknown as AudioContextLike;
@@ -61,8 +75,13 @@ export class KaraokeEngine {
   private readonly fetchAudio: (url: string) => Promise<ArrayBuffer>;
   private readonly master: GainNodeLike;
   private readonly vocalGain: GainNodeLike;
+  private readonly transposer: Transposer;
   private instrumental: AudioBufferLike | null = null;
   private vocals: AudioBufferLike | null = null;
+  private original: Tracks | null = null;
+  private readonly shiftedTracks = new Map<number, Tracks>();
+  private key = 0;
+  private keyRequest = 0;
   private sources: BufferSourceLike[] = [];
   private startedAt = 0;
   private pausedAt = 0;
@@ -72,6 +91,7 @@ export class KaraokeEngine {
   constructor(options: KaraokeEngineOptions = {}) {
     this.context = (options.createContext ?? createBrowserContext)();
     this.fetchAudio = options.fetchAudio ?? fetchBrowserAudio;
+    this.transposer = (options.createTransposer ?? createWorkerTransposer)(this.context);
 
     this.master = this.context.createGain();
     this.master.connect(this.context.destination);
@@ -88,7 +108,26 @@ export class KaraokeEngine {
     ]);
     this.instrumental = instrumental;
     this.vocals = vocals;
+    this.original = { instrumental, vocals };
+    this.shiftedTracks.clear();
+    this.key = 0;
+    this.keyRequest += 1;
     this.pausedAt = 0;
+  }
+
+  get keyShift(): number {
+    return this.key;
+  }
+
+  async setKeyShift(semitones: number): Promise<boolean> {
+    const original = this.original;
+    if (!original) return false;
+    const request = ++this.keyRequest;
+    const tracks = semitones === 0 ? original : await this.tracksInKey(original, semitones);
+    if (request !== this.keyRequest || this.original !== original) return false;
+    this.useTracks(tracks);
+    this.key = semitones;
+    return true;
   }
 
   get duration(): number {
@@ -161,8 +200,38 @@ export class KaraokeEngine {
   destroy(): void {
     this.onEnded = null;
     this.playing = false;
+    this.keyRequest += 1;
+    this.original = null;
+    this.shiftedTracks.clear();
+    this.transposer.dispose();
     this.stopSources();
     void this.context.close();
+  }
+
+  private async tracksInKey(original: Tracks, semitones: number): Promise<Tracks> {
+    const cached = this.shiftedTracks.get(semitones);
+    if (cached) return cached;
+    const sources = original.vocals ? [original.instrumental, original.vocals] : [original.instrumental];
+    const [instrumental, vocals = null] = await this.transposer.transpose(sources, semitones);
+    if (!instrumental) throw new Error('Falha ao mudar o tom');
+    const tracks = { instrumental, vocals };
+    if (this.original === original) this.remember(semitones, tracks);
+    return tracks;
+  }
+
+  private remember(semitones: number, tracks: Tracks): void {
+    this.shiftedTracks.set(semitones, tracks);
+    for (const oldest of this.shiftedTracks.keys()) {
+      if (this.shiftedTracks.size <= SHIFTED_KEYS_KEPT) break;
+      this.shiftedTracks.delete(oldest);
+    }
+  }
+
+  private useTracks(tracks: Tracks): void {
+    const position = this.currentTime;
+    this.instrumental = tracks.instrumental;
+    this.vocals = tracks.vocals;
+    if (this.playing) this.play(position);
   }
 
   private async decode(url: string): Promise<AudioBufferLike> {

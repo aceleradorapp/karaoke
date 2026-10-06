@@ -40,6 +40,7 @@ Overlay com o perfil atual pré-selecionado e os outros perfis em linha (o convi
 | ↑ / ↓ | Volume ±10% |
 | [ / ] | Atraso da letra −100 ms / +100 ms (salva em `lyricsOffsetMs` ao sair) |
 | E | Liga/desliga o efeito de pintar a letra |
+| - / = (ou +) | Tom −1 / +1 semitom (ADR-012) |
 | N | Próxima música (playlist) |
 | Esc | Sair (confirma se estiver no meio) |
 | F | Tela cheia (`document.documentElement.requestFullscreen()`) |
@@ -118,6 +119,19 @@ export class KaraokeEngine {
 - `AudioContext` só inicia após um gesto do usuário: o botão **Começar** do overlay resolve isso.
 - **Fim da música:** `onEnded` → fluxo de pontuação (7.6).
 - **Playlist:** ao terminar e após a tela de nota, vai para `?i=i+1` automaticamente (com 5 s de contagem e o botão "Cantar agora").
+
+### Mudar o tom (ADR-012)
+- **Controle:** "Tom" no player: − / valor ("Original", "+2", "−3") / + e ↺ voltar ao original. A faixa vai de −6 a +6 semitons (`KEY_SHIFT_LIMIT`).
+- **Salvo por música:** fica em `songs.keyShift`, com salvamento automático depois de 1 s, e a próxima vez a música já começa no tom escolhido. O tom é aplicado antes do play.
+- **Motor:** `KaraokeEngine.setKeyShift(n)` guarda as faixas originais.
+  - Pede ao `Transposer` (padrão: `lib/audio/workerTransposer.ts`) o instrumental e a voz no novo tom e troca as faixas **no mesmo ponto** (`play(currentTime)`). Pausado, só troca os buffers.
+  - Guarda os 2 últimos tons usados; voltar ao original não processa nada.
+  - Se dois pedidos se cruzam, só o último vale.
+- **Processamento:** `lib/audio/pitchShift.ts` (`shiftPitch`) roda no Web Worker `pitchShift.worker.ts` com o `soundtouchjs` (`SoundTouch` + `SimpleFilter`, tempo 1).
+  - A saída é completada até o comprimento original; o deslocamento é de ≤ 0,02 s.
+  - Medido no navegador: ~2,4 s para trocar o tom de uma música de 3:28 (instrumental + voz). Enquanto isso, ela continua tocando no tom anterior e o valor mostra um spinner ("Mudando o tom…").
+- **Sessão:** `changeKey`/`changeKeyBy` esperam 350 ms antes de processar (cliques seguidos em + viram um só processamento). Se falhar, o valor volta ao tom atual.
+- **Pontuação:** o `PitchScorer` recebe o `keyShift` atual a cada amostra (`referenceAt(time, keyShift)`), então a nota alvo acompanha o tom.
 
 ## 7.3 Letra (`lib/lyrics/` + `features/player/LyricsView.tsx`)
 

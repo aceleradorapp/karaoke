@@ -1,4 +1,4 @@
-import { LYRICS_OFFSET_LIMIT_MS, type FinalScore, type SongDTO } from '@caraoke/shared';
+import { KEY_SHIFT_LIMIT, LYRICS_OFFSET_LIMIT_MS, type FinalScore, type SongDTO } from '@caraoke/shared';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFinishPerformanceMutation, useStartPerformanceMutation } from '../../api/performances';
 import { KaraokeEngine } from '../../lib/audio/KaraokeEngine';
@@ -7,6 +7,7 @@ import type { PitchScoring } from './usePitchScoring';
 export type PlayerPhase = 'choosing' | 'loading' | 'playing' | 'finishing' | 'voting' | 'finished' | 'error';
 
 const COMPLETED_FRACTION = 0.9;
+const KEY_CHANGE_DELAY_MS = 350;
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
@@ -27,6 +28,8 @@ export interface PlayerSession {
   volume: number;
   duration: number;
   liveOffsetMs: number;
+  keyShift: number;
+  isChangingKey: boolean;
   voting: OpenVoting | null;
   result: FinalScore | null;
   getTime: () => number;
@@ -39,6 +42,8 @@ export interface PlayerSession {
   changeVolumeBy: (delta: number) => void;
   setVolume: (volume: number) => void;
   adjustLyricsOffset: (deltaMs: number) => void;
+  changeKey: (semitones: number) => void;
+  changeKeyBy: (delta: number) => void;
   hasSungForAWhile: () => boolean;
   updateVotes: (performanceId: string, votes: number) => void;
   showResult: (result: FinalScore) => void;
@@ -66,6 +71,10 @@ export function usePlayerSession(song: SongDTO, pitch?: PitchScoring): PlayerSes
   const [volume, setVolumeState] = useState(1);
   const [duration, setDuration] = useState(0);
   const [liveOffsetMs, setLiveOffsetMs] = useState(0);
+  const [keyShift, setKeyShift] = useState(() => clamp(song.keyShift, -KEY_SHIFT_LIMIT, KEY_SHIFT_LIMIT));
+  const [isChangingKey, setIsChangingKey] = useState(false);
+  const keyShiftRef = useRef(keyShift);
+  const keyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [voting, setVoting] = useState<OpenVoting | null>(null);
   const [result, setResult] = useState<FinalScore | null>(null);
 
@@ -93,6 +102,7 @@ export function usePlayerSession(song: SongDTO, pitch?: PitchScoring): PlayerSes
 
   useEffect(
     () => () => {
+      if (keyTimer.current) clearTimeout(keyTimer.current);
       void closePerformanceRef.current()?.request.catch(() => undefined);
       engine.current?.destroy();
       engine.current = null;
@@ -120,6 +130,7 @@ export function usePlayerSession(song: SongDTO, pitch?: PitchScoring): PlayerSes
       pitchRef.current?.begin(
         () => instance.currentTime,
         () => instance.isPlaying,
+        () => instance.keyShift,
       );
     },
     [song.id, startPerformance],
@@ -155,6 +166,36 @@ export function usePlayerSession(song: SongDTO, pitch?: PitchScoring): PlayerSes
       .catch(() => setPhase('finished'));
   }, []);
 
+  const applyKey = useCallback(async (instance: KaraokeEngine, semitones: number) => {
+    if (instance.keyShift === semitones) return;
+    setIsChangingKey(true);
+    try {
+      const applied = await instance.setKeyShift(semitones);
+      if (!applied) return;
+    } catch {
+      keyShiftRef.current = instance.keyShift;
+      setKeyShift(instance.keyShift);
+    }
+    if (engine.current === instance && keyShiftRef.current === instance.keyShift) setIsChangingKey(false);
+  }, []);
+
+  const changeKey = useCallback(
+    (semitones: number) => {
+      const next = clamp(Math.round(semitones), -KEY_SHIFT_LIMIT, KEY_SHIFT_LIMIT);
+      if (next === keyShiftRef.current) return;
+      keyShiftRef.current = next;
+      setKeyShift(next);
+      if (keyTimer.current) clearTimeout(keyTimer.current);
+      const instance = engine.current;
+      if (!instance) return;
+      setIsChangingKey(true);
+      keyTimer.current = setTimeout(() => void applyKey(instance, next), KEY_CHANGE_DELAY_MS);
+    },
+    [applyKey],
+  );
+
+  const changeKeyBy = useCallback((delta: number) => changeKey(keyShiftRef.current + delta), [changeKey]);
+
   const start = useCallback(
     async (profileId: string, requestId?: string | null) => {
       if (!song.instrumentalUrl) {
@@ -172,6 +213,7 @@ export function usePlayerSession(song: SongDTO, pitch?: PitchScoring): PlayerSes
 
       try {
         await Promise.all([instance.load(song.instrumentalUrl, song.vocalsUrl), pitchRef.current?.prepare()]);
+        await applyKey(instance, keyShiftRef.current);
         setDuration(instance.duration);
         setHasVocals(instance.hasVocals);
         await beginPerformance(instance, profileId, requestId);
@@ -182,7 +224,7 @@ export function usePlayerSession(song: SongDTO, pitch?: PitchScoring): PlayerSes
         setPhase('error');
       }
     },
-    [song.instrumentalUrl, song.vocalsUrl, handleEnded, beginPerformance],
+    [song.instrumentalUrl, song.vocalsUrl, handleEnded, beginPerformance, applyKey],
   );
 
   const restart = useCallback(async () => {
@@ -273,6 +315,8 @@ export function usePlayerSession(song: SongDTO, pitch?: PitchScoring): PlayerSes
     volume,
     duration,
     liveOffsetMs,
+    keyShift,
+    isChangingKey,
     voting,
     result,
     getTime,
@@ -285,6 +329,8 @@ export function usePlayerSession(song: SongDTO, pitch?: PitchScoring): PlayerSes
     changeVolumeBy,
     setVolume,
     adjustLyricsOffset,
+    changeKey,
+    changeKeyBy,
     hasSungForAWhile,
     updateVotes,
     showResult,

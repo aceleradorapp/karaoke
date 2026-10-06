@@ -10,6 +10,7 @@ function buildHandlers(): { [K in keyof PlayerShortcutHandlers]: ReturnType<type
     seekBy: vi.fn(),
     changeVolumeBy: vi.fn(),
     adjustLyricsOffset: vi.fn(),
+    changeKeyBy: vi.fn(),
     toggleFullscreen: vi.fn(),
     requestExit: vi.fn(),
   };
@@ -66,6 +67,13 @@ describe('usePlayerShortcuts', () => {
     press('[');
     press(']');
     expect(handlers.adjustLyricsOffset.mock.calls).toEqual([[-100], [100]]);
+  });
+
+  it('lowers and raises the key one semitone with minus and plus', () => {
+    press('-');
+    press('=');
+    press('+');
+    expect(handlers.changeKeyBy.mock.calls).toEqual([[-1], [1], [1]]);
   });
 
   it('toggles full screen with F and asks to leave with Escape', () => {

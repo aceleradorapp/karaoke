@@ -140,7 +140,7 @@ describe('phone pages', () => {
           'GET /api/songs?sort=title': {
             body: {
               items: [
-                buildSong({ title: 'Evidências', coverUrl: '/media/s1/capa.jpg?v=1' }),
+                buildSong({ title: 'Evidências', coverUrl: '/media/s1/capa.jpg?v=1', durationSec: null }),
                 buildProcessingSong({ title: 'Nova' }),
                 buildSong({ title: 'Quebrada', status: 'ERROR' }),
               ],
@@ -375,12 +375,12 @@ describe('phone pages', () => {
         status: 'RUNNING',
         step: 'SEPARATE',
         progress: 40,
-        song: { title: 'Evidências', artist: 'Chitãozinho & Xororó', coverUrl: '/media/s1/capa.jpg?v=1' },
+        song: { title: 'Evidências', artist: 'Chitãozinho & Xororó', coverUrl: '/media/s1/capa.jpg?v=1', durationSec: null },
       });
       const done = buildJob({
         status: 'DONE',
         finishedAt: '2026-10-02T10:00:00.000Z',
-        song: { title: 'Flores', artist: 'Titãs', coverUrl: null },
+        song: { title: 'Flores', artist: 'Titãs', coverUrl: null, durationSec: null },
       });
       renderOnPhone(
         <MobileQueuePage />,
@@ -399,6 +399,28 @@ describe('phone pages', () => {
         within(await screen.findByRole('region', { name: 'Terminadas há pouco' })).getByText('Flores'),
       ).toBeInTheDocument();
       expect(screen.queryByRole('button', { name: /Cancelar|Mover|Tentar/ })).not.toBeInTheDocument();
+    });
+
+    it('estimates when the songs being prepared will be ready', async () => {
+      const running = buildJob({
+        status: 'RUNNING',
+        startedAt: new Date(Date.now() - 20_000).toISOString(),
+        song: { title: 'Evidências', artist: 'Chitãozinho & Xororó', coverUrl: null, durationSec: 150 },
+      });
+      renderOnPhone(
+        <MobileQueuePage />,
+        {
+          'GET /api/jobs?scope=active': { body: { items: [running] } },
+          'GET /api/jobs?scope=recent': { body: { items: [] } },
+          'GET /api/jobs/estimate': { body: { secondsPerSongSecond: 2, basedOnJobs: 4, unknownDurationSec: 240 } },
+          'GET /api/sing-queue': { body: { items: [] } },
+        },
+        '/m/fila',
+      );
+
+      const preparing = screen.getByRole('region', { name: 'Preparando' });
+      expect(await within(preparing).findByText('Faltam ~5 min')).toBeInTheDocument();
+      expect(within(preparing).getByText('Tudo pronto em ~5 min (estimativa)')).toBeInTheDocument();
     });
 
     it('invites to search when nothing is being prepared', async () => {

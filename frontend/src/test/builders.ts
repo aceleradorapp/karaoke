@@ -18,7 +18,7 @@ export function buildJob(overrides: Partial<JobDTO> = {}): JobDTO {
     createdAt: '2026-10-01T10:00:00.000Z',
     startedAt: null,
     finishedAt: null,
-    song: { title: `Música ${jobCounter}`, artist: 'Artista', coverUrl: null },
+    song: { title: `Música ${jobCounter}`, artist: 'Artista', coverUrl: null, durationSec: null },
     ...overrides,
   };
 }

@@ -9,9 +9,10 @@ interface PendingListProps {
   jobs: JobDTO[];
   onReorder: (orderedIds: string[]) => void;
   onCancel: (job: JobDTO) => void;
+  etaOf?: (job: JobDTO) => string | undefined;
 }
 
-export function PendingList({ jobs, onReorder, onCancel }: PendingListProps) {
+export function PendingList({ jobs, onReorder, onCancel, etaOf }: PendingListProps) {
   const [draggedId, setDraggedId] = useState<string | null>(null);
 
   function moveTo(jobId: string, targetIndex: number) {
@@ -43,6 +44,7 @@ export function PendingList({ jobs, onReorder, onCancel }: PendingListProps) {
         >
           <JobRow
             job={job}
+            eta={etaOf?.(job)}
             leading={
               <GripVertical
                 aria-hidden="true"

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { JobDTO } from '@caraoke/shared';
+import type { JobDTO, ProcessingEstimate } from '@caraoke/shared';
 import { apiGet, apiSend } from './client';
 
 export type JobScope = 'active' | 'recent';
@@ -15,6 +15,17 @@ export function useJobsQuery(scope: JobScope) {
   return useQuery({
     queryKey: jobsQueryKey(scope),
     queryFn: async () => (await apiGet<JobListResponse>(`/jobs?scope=${scope}`)).items,
+  });
+}
+
+const ESTIMATE_STALE_MS = 60_000;
+
+export function useProcessingEstimateQuery(isEnabled: boolean) {
+  return useQuery({
+    queryKey: [...JOBS_QUERY_KEY, 'estimate'],
+    queryFn: () => apiGet<ProcessingEstimate>('/jobs/estimate'),
+    staleTime: ESTIMATE_STALE_MS,
+    enabled: isEnabled,
   });
 }
 
