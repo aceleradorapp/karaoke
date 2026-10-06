@@ -203,13 +203,17 @@ Branch: `feature/f7b-fila-e-letra`.
 | F7F-03 | ✅ 2026-10-06 | Tempo estimado: `/api/jobs/estimate` (mediana do histórico), "faltam/começa em/pronta em" na fila (TV e celular) e "Tudo pronto em ~X" + testes | 🟡 |
 | F7F-04 | ✅ 2026-10-06 | ✔ Verificação no navegador (tom ouvido/medido e fila com estimativa) | 🟡 |
 
-## Fase 7G — IA e processamento em outras máquinas (ADR-013 para o selo; os outros ADRs ainda serão escritos)
+## Fase 7G — IA e processamento em outras máquinas (ADR-013, ADR-014, ADR-015)
 | ID | Status | Tarefa | Modelo |
 |---|---|---|---|
 | F7G-01 | ✅ 2026-10-06 | Selo "tem letra / sem letra" na busca do YouTube (`/api/lyrics/check`) | 🟡 |
-| F7G-02 | ⬜ | MCP local para o app Claude (Desktop/Code) + "Chave para IA" nas configurações (buscar, verificar letra, importar várias, fila) | 🔴 |
-| F7G-03 | ⬜ | Processador remoto: worker em modo remoto (baixa origem, envia arquivos), pareamento por código, várias máquinas com nome, escolher onde processar + **app para instalar** na outra máquina | 🔴 |
-| F7G-04 | ⬜ | Opcional: extensão do Chrome "Mandar para o karaokê" | 🟡 |
+| F7G-02 | ⬜ | Chave para IA (gerar/trocar/revogar, Bearer só nas rotas do MCP) + seção "IA (MCP)" nas Configurações (ADR-014) | 🟡 |
+| F7G-03 | ⬜ | Servidor MCP `mcp/` (stdio): buscar_youtube, verificar_letra, buscar_na_biblioteca, importar_musicas, fila_de_processamento, cancelar_processamento, reordenar_fila; arquivo único em `/downloads/caraoke-mcp.mjs` (ADR-014) | 🔴 |
+| F7G-04 | ⬜ | Máquinas pareadas: tabela `workers`, pareamento por código, token por máquina nas rotas internas, heartbeat por máquina, tela "Máquinas de processamento" (ADR-015) | 🔴 |
+| F7G-05 | ⬜ | Modo remoto do worker: baixa a origem, envia os arquivos prontos; escolher onde processar (`targetWorkerId`) na fila e no MCP (ADR-015) | 🔴 |
+| F7G-06 | ⬜ | App instalável: `remote-worker/` (Instalar.cmd, atalho, console em português) + `npm run processador:pacote` + download pelo karaokê (ADR-015) | 🔴 |
+| F7G-07 | ⬜ | Opcional: extensão do Chrome "Mandar para o karaokê" | 🟡 |
+| F7G-08 | ⬜ | ✔ Verificação: MCP de verdade no Claude Code; worker remoto simulado nesta máquina (outra pasta + token pareado) | 🟡 |
 
 ## Fase 8 — Publicação (futuro)
 | ID | Status | Tarefa | Modelo |
