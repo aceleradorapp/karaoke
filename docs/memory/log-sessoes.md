@@ -25,7 +25,9 @@
 - MCP de verdade por stdio, como se fosse outro PC: busca com selos, "já estava na biblioteca", fila, chave errada explicada.
 - Pareamento pela rede.
 - Worker remoto simulado processou uma música de 39 s direcionada a ele e enviou instrumental, voz, capa e melodia ao karaokê (a música de teste foi apagada).
-- Instalador rodado de verdade numa pasta isolada.
+- Instalador rodado de verdade numa pasta isolada: instalou, pareou, processou uma música e a enviou, e o desinstalador removeu tudo.
+- Testes: backend 461, frontend 880, shared 30, mcp 8, worker 219.
+- F7G-07 (extensão do Chrome, opcional) ficou adiada.
 
 ## 2026-10-06 (14) — Fase 7F concluída: mudar o tom e tempo estimado
 **Pedido:** mudar o tom da música e mostrar o tempo estimado na fila de processamento. Depois, seguir a "ordem sugerida" (Fase 7G), com um app para instalar na outra máquina.

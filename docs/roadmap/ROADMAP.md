@@ -213,7 +213,7 @@ Branch: `feature/f7b-fila-e-letra`.
 | F7G-05 | ✅ 2026-10-06 | Modo remoto do worker: baixa a origem, envia os arquivos prontos; escolher onde processar (`targetWorkerId`) na fila e no MCP (ADR-015) | 🔴 |
 | F7G-06 | ✅ 2026-10-06 | App instalável: `remote-worker/` (Instalar.cmd, atalho, console em português) + `npm run processador:pacote` + download pelo karaokê (ADR-015) | 🔴 |
 | F7G-07 | ⏭ adiada | Opcional: extensão do Chrome "Mandar para o karaokê" | 🟡 |
-| F7G-08 | ⬜ | ✔ Verificação: MCP de verdade no Claude Code; worker remoto simulado nesta máquina (outra pasta + token pareado) | 🟡 |
+| F7G-08 | ✅ 2026-10-06 | ✔ Verificação: MCP de verdade no Claude Code; worker remoto simulado nesta máquina (outra pasta + token pareado) | 🟡 |
 
 ## Fase 8 — Publicação (futuro)
 | ID | Status | Tarefa | Modelo |
