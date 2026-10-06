@@ -36,6 +36,11 @@ O Michael quer pedir pelo chat do Claude (Desktop ou Code), por exemplo: "liste 
   - o trecho do `claude_desktop_config.json`;
   - o endereço do karaokê na rede.
 
+## Atualização (2026-10-06)
+- **Versões originais:** a primeira versão da ferramenta sugeria buscar "karaoke", e o Claude importou versões já sem voz (sem voz guia nem pontuação). Agora as instruções mandam importar só a versão **original**, e `buscar_youtube` marca com ⚠ os títulos que parecem karaokê ou instrumental (`mcp/src/versionKind.ts`).
+- **Claude Desktop da Microsoft Store:** o arquivo lido é `%LOCALAPPDATA%\Packages\Claude_<id>\LocalCache\Roaming\Claude\claude_desktop_config.json`. O app regrava esse arquivo ao sair, então só se edita com ele **fechado**.
+- `GET /api/ai-key` traz `localSetup` (`nodePath`, `mcpPath`, `url` 127.0.0.1): no próprio PC do karaokê não precisa de chave nem de download.
+
 ## Consequências
 - Nova dependência: `@modelcontextprotocol/sdk`, só no workspace `mcp` (registrada no T-06/T-01).
 - Fora de casa (claude.ai/celular) só depois da Fase 8: precisa de HTTPS e transporte HTTP.

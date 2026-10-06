@@ -10,7 +10,9 @@ export function createKaraokeServer(api: KaraokeApi): McpServer {
   const server = new McpServer(SERVER_INFO, {
     instructions:
       'Ferramentas do karaokê da família: buscar músicas no YouTube, ver se têm letra, importar e acompanhar a ' +
-      'fila de processamento. Responda em português. Antes de importar, prefira versões com letra sincronizada.',
+      'fila de processamento. Responda em português. O karaokê tira a voz sozinho: sempre importe a versão ' +
+      'ORIGINAL da música (com o cantor), nunca versões karaokê, instrumental ou playback. Entre as originais, ' +
+      'prefira as que têm letra sincronizada e duração parecida com a da música de estúdio.',
   });
   registerKaraokeTools(server, api);
   return server;

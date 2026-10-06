@@ -152,6 +152,10 @@ export function SongDetailPage() {
                 Sincronizar a letra
               </Link>
             )}
+            <Button variant="ghost" size="lg" onClick={() => setIsConfirmingDelete(true)} className="text-danger">
+              <Trash2 aria-hidden="true" className="size-5" />
+              Excluir música
+            </Button>
           </div>
         </div>
       </div>
@@ -163,13 +167,6 @@ export function SongDetailPage() {
 
       <section aria-label="Editar música" className="rounded-2xl bg-surface p-4 sm:p-6">
         <SongEditor key={song.id} song={song} />
-      </section>
-
-      <section aria-label="Zona de risco" className="flex flex-col items-start gap-3">
-        <Button variant="danger" onClick={() => setIsConfirmingDelete(true)}>
-          <Trash2 aria-hidden="true" className="size-5" />
-          Excluir música
-        </Button>
       </section>
 
       <AddRequestModal isOpen={isQueueing} presetSong={song} onClose={() => setIsQueueing(false)} />
