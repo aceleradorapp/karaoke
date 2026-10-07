@@ -204,6 +204,12 @@ Adicionar "Evidências" a…
 - Lista via `GET /profiles/:pid/playlists?songId=` (`containsSong` marca o check).
 - Marcar/desmarcar adiciona/remove na hora (atualização otimista + toast "Adicionada a X").
 
+### Ícone do app
+`frontend/public/favicon.svg` é um microfone branco num quadrado vermelho `#e50914`, ligado no `index.html`:
+- `favicon-32.png` para navegadores sem SVG;
+- `apple-touch-icon.png` (180 px) para o atalho na tela inicial do celular;
+- `meta theme-color` com o mesmo vermelho.
+
 ### `/convidados` — Gerenciar convidados (ADR-016)
 - Lista com busca: avatar, nome e "cantou há 2 dias · 4 vezes" ou "ainda não cantou · chegou há…". No menu do perfil, o item é "Convidados"; no Gerenciar perfis, há um link para cá.
 - Tocar num convidado abre o `GuestEditorModal`: nome e avatar com salvamento automático, "Tornar da casa" (`isGuest: false`) e "Excluir convidado".
