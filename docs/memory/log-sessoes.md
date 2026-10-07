@@ -2,6 +2,29 @@
 
 > Entradas mais recentes no topo. Use `/fim-sessao` para registrar.
 
+## 2026-10-07 (17) — Fase 7I: perfis da casa × convidados (ADR-016)
+**Pedido:** o perfil é só para as pessoas da casa (com playlists). Convidado só canta: é escolhido na hora ou entra pelo próprio celular. Precisa de uma área para gerenciar os convidados e o player não pode ficar poluído.
+**Decidido com o Michael:**
+- no player aparece só o perfil da TV + "Convidado ▾";
+- excluir um convidado apaga tudo dele;
+- "Limpar antigos" exclui quem não canta há 30 dias;
+- no celular, casa e convidados como antes.
+
+**Feito:**
+- "Quem está usando?" e Gerenciar perfis só com os da casa; a TV deixada num convidado volta para a escolha de perfil.
+- `SingerChooser` no player e no "Pôr na fila": busca, Novo convidado, Convidados (mais recentes) e Da casa.
+- Página `/convidados`:
+  - editar com salvamento automático;
+  - tornar da casa;
+  - selecionar e excluir vários;
+  - limpar antigos.
+- Backend: `/profiles/guests`, `/profiles/guests/stale` e `/profiles/guests/delete-many`.
+- Busca de convidados no celular quando passam de 8.
+
+**Verificado:**
+- Testes: backend 468, frontend 890.
+- No navegador, na TV (1366 e 390) e no celular, sem rolagem lateral.
+
 ## 2026-10-06 (16) — Ajustes: MCP no Claude Desktop, Ollama, excluir músicas
 - **MCP no Claude Desktop (Microsoft Store):** o app lê `%LOCALAPPDATA%\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Roaming\Claude\claude_desktop_config.json` e regrava o arquivo ao sair. A configuração só "pega" se for gravada com o app fechado (Node pelo caminho completo e `mcp/dist/caraoke-mcp.mjs` do próprio projeto, URL 127.0.0.1, sem chave).
 - **Limpeza da máquina, a pedido:**
