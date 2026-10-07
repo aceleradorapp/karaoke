@@ -221,6 +221,7 @@ function PlayerSession({ song }: { song: SongDTO }) {
               profiles={profiles.data ?? []}
               isLoading={profiles.isLoading}
               selectedId={singerId}
+              defaultProfileId={currentProfile?.id ?? null}
               songTitle={song.title}
               songArtist={song.artist}
               title={request ? `Vez de ${request.profile.name}! 🎤` : undefined}
