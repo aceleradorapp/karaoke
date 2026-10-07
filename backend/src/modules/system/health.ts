@@ -25,6 +25,7 @@ const STEP_LABELS: Record<string, string> = {
   COVER: 'buscar a capa',
   MELODY: 'extrair a melodia',
   FINALIZE: 'finalizar',
+  RESYNC: 'refazer a sincronização',
 };
 
 export interface HealthProbes {

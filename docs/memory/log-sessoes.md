@@ -2,6 +2,13 @@
 
 > Entradas mais recentes no topo. Use `/fim-sessao` para registrar.
 
+## 2026-10-07 (18) — Sincronia: "Vou Deixar", "Flores" e o botão de refazer
+- **"Vou Deixar":** o `fit_shift` desistia em músicas com poucas pausas na voz e o plano B empurrava a letra 3,5 s. Agora a exigência conta sobre `min(linhas, pausas)`, no worker e no navegador.
+- **Página de sincronizar:** `scrollIntoView` rolava a página a cada "Marcar". Agora só a lista rola.
+- **"Flores":** o ímã puxava linhas para a respiração do verso anterior (~1,7 s cedo). Depois de um experimento com 4 músicas, a linha passou a começar na 1ª palavra e a janela de palavras considera a posição antes do ímã (guia, seção 16).
+- **Botão "Refazer a sincronização automática" (ADR-017):** job `RESYNC` (coluna `jobs.kind`) para o worker local, com andamento por linha, e a música continua pronta. "Flores" foi refeita pelo botão no navegador (72 s) e "Vou Deixar" pela API.
+- **Testes:** backend 472, frontend 895, worker 229.
+
 ## 2026-10-07 (17) — Fase 7I: perfis da casa × convidados (ADR-016)
 **Pedido:** o perfil é só para as pessoas da casa (com playlists). Convidado só canta: é escolhido na hora ou entra pelo próprio celular. Precisa de uma área para gerenciar os convidados e o player não pode ficar poluído.
 **Decidido com o Michael:**

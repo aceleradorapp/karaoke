@@ -7,6 +7,7 @@ export const STEP_LABELS: Record<JobStep, string> = {
   COVER: 'Buscando a capa',
   MELODY: 'Analisando a melodia',
   FINALIZE: 'Finalizando',
+  RESYNC: 'Refazendo a sincronização da letra',
 };
 
 const MAX_RAW_ERROR_LENGTH = 140;

@@ -131,6 +131,7 @@ def build_result(match: LyricsMatch | None) -> tuple[dict[str, Any] | None, str,
 
 
 def write_documents(context: JobContext, document: dict[str, Any], original: dict[str, Any] | None = None) -> None:
+    document = build_document(document["source"], document["synced"], document["lines"])
     context.song_dir.mkdir(parents=True, exist_ok=True)
     (context.song_dir / "letra.json").write_text(json.dumps(document, ensure_ascii=False), encoding="utf-8")
     if original is not None:
@@ -150,7 +151,7 @@ def align_with_vocals(context: JobContext, document: dict[str, Any]) -> dict[str
     except Exception:
         logger.warning("Aligning the lyrics with the vocals failed", exc_info=True)
         return None
-    return build_document("ALIGNED", True, lines) if lines else None
+    return {"version": 1, "source": "ALIGNED", "synced": True, "lines": lines} if lines else None
 
 
 def add_word_timings(context: JobContext, document: dict[str, Any]) -> dict[str, Any] | None:

@@ -37,6 +37,7 @@ function setup() {
 const JOB: JobDTO = {
   id: 'job1',
   songId: 'song1',
+  kind: 'PROCESS',
   status: 'RUNNING',
   step: 'SEPARATE',
   progress: 42,

@@ -7,6 +7,7 @@ export function buildJob(overrides: Partial<JobDTO> = {}): JobDTO {
   return {
     id: `job${jobCounter}`,
     songId: `song${jobCounter}`,
+    kind: 'PROCESS',
     status: 'PENDING',
     step: null,
     progress: 0,

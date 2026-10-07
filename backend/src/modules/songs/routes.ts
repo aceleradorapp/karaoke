@@ -4,6 +4,7 @@ import { deleteManySongsSchema, saveLyricsSchema, updateSongSchema } from '@cara
 import { z } from 'zod';
 import { buildHome } from './home.js';
 import { getOriginalLyrics, restoreOriginalLyrics, saveLyrics } from './lyrics.js';
+import { enqueueResync } from '../jobs/resync.js';
 import { deleteManySongs, deleteSong, getSong, listSongs, updateSong } from './service.js';
 
 const NO_CONTENT = 204;
@@ -59,6 +60,10 @@ export async function songRoutes(app: FastifyInstance): Promise<void> {
 
   typedApp.post('/songs/:id/lyrics/restore', { schema: { params: idParamsSchema } }, async (request) =>
     restoreOriginalLyrics(request.params.id),
+  );
+
+  typedApp.post('/songs/:id/lyrics/resync', { schema: { params: idParamsSchema } }, async (request, reply) =>
+    reply.status(201).send(await enqueueResync(request.params.id)),
   );
 
   typedApp.post('/songs/delete-many', { schema: { body: deleteManySongsSchema } }, async (request) =>

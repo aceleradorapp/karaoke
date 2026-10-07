@@ -1,8 +1,10 @@
+import type { Job } from '@prisma/client';
 import type { JobStep, LyricsSource } from '@caraoke/shared';
 import { prisma } from '../../db.js';
 import { deleteOriginFile, deleteSongDir, moveToError } from '../../services/storage.js';
 import { notFound } from '../../utils/errors.js';
 import { publishJob } from './publish.js';
+import { RESYNC_KIND } from './service.js';
 import { publishSingQueue } from '../singQueue/service.js';
 
 const PROGRESS_PUBLISH_INTERVAL_MS = 500;
@@ -83,9 +85,35 @@ async function discardResultsOfCanceledJob(songId: string, sourcePath: string | 
   if (moved) await prisma.job.updateMany({ where: { songId, sourcePath }, data: { sourcePath: moved } });
 }
 
+async function completeResync(job: Job, input: CompleteInput): Promise<void> {
+  if (job.status !== 'RUNNING') return;
+  await prisma.$transaction([
+    prisma.job.update({
+      where: { id: job.id },
+      data: { status: 'DONE', step: 'RESYNC', progress: MAX_PROGRESS, message: null, finishedAt: new Date() },
+    }),
+    prisma.song.update({
+      where: { id: job.songId },
+      data: {
+        lyricsSource: input.lyricsSource,
+        lyricsNeedsReview: input.lyricsNeedsReview,
+        lyricsNotice: null,
+        lyricsOffsetMs: 0,
+      },
+    }),
+  ]);
+  lastPublished.delete(job.id);
+  await publishJob(job.id, { includeSong: true });
+}
+
 export async function completeJob(id: string, input: CompleteInput): Promise<void> {
   const job = await prisma.job.findUnique({ where: { id } });
   if (!job) throw jobNotFound();
+
+  if (job.kind === RESYNC_KIND) {
+    await completeResync(job, input);
+    return;
+  }
 
   if (job.status !== 'RUNNING') {
     await discardResultsOfCanceledJob(job.songId, job.sourcePath);
@@ -154,7 +182,7 @@ export async function failJob(id: string, input: FailInput): Promise<void> {
         ...sourceUpdate,
       },
     }),
-    prisma.song.update({ where: { id: job.songId }, data: { status: 'ERROR' } }),
+    ...(job.kind === RESYNC_KIND ? [] : [prisma.song.update({ where: { id: job.songId }, data: { status: 'ERROR' } })]),
   ]);
 
   lastPublished.delete(id);

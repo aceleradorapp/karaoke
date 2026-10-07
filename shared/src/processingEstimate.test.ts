@@ -15,6 +15,7 @@ function job(
   return {
     id,
     songId: `song-${id}`,
+    kind: 'PROCESS',
     status,
     step: null,
     progress: 0,

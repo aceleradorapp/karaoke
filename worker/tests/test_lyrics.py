@@ -268,6 +268,7 @@ def test_aligns_every_line_with_the_voice_and_keeps_the_original_lyrics(make_con
     document = stored_document(context)
     assert document["source"] == "ALIGNED"
     assert [round(line["start"]) for line in document["lines"]] == [25, 33, 42, 55]
+    assert all("anchor" not in line for line in document["lines"])
     original = json.loads((context.song_dir / "letra.original.json").read_text(encoding="utf-8"))
     assert original["source"] == "LRCLIB"
     assert [line["start"] for line in original["lines"]] == [10.0, 18.0, 27.0, 40.0]

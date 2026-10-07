@@ -101,12 +101,14 @@ enum JobStep {
   COVER
   MELODY
   FINALIZE
+  RESYNC
 }
 
 model Job {
   id             String    @id @default(cuid())
   songId         String
   song           Song      @relation(fields: [songId], references: [id], onDelete: Cascade)
+  kind           String    @default("PROCESS") @db.VarChar(20)
   status         JobStatus @default(PENDING)
   step           JobStep?
   progress       Int       @default(0)

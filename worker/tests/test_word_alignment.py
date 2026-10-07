@@ -169,6 +169,35 @@ class TestAddWordTimings:
 
         assert timed[1]["start"] == pytest.approx(9.6)
 
+    def test_moves_the_line_start_forward_when_the_first_word_comes_later(self):
+        lines = [line(5.0, 8.0, "Olhei"), line(10.0, 14.0, "De ver")]
+        late = FakeAligner()
+        late.align = lambda samples, words: [WordSpan(2.2 + i * 0.4, 2.5 + i * 0.4, 0.9) for i in range(len(words))]
+
+        timed, _ = add_word_timings(lines, silence(30), None, late)
+
+        assert timed[1]["start"] == pytest.approx(11.6)
+        assert timed[1]["words"][0]["start"] == pytest.approx(11.6)
+
+    def test_also_searches_where_the_line_was_before_the_magnet(self):
+        snapped_late = {**line(12.0, 14.0, "Há flores"), "anchor": 10.5}
+        aligner = FakeAligner()
+
+        timed, _ = add_word_timings([snapped_late], silence(30), None, aligner)
+
+        assert aligner.calls[0][0] / RATE == pytest.approx(12.0 + 12.0 - 9.9, abs=0.01)
+        assert "anchor" not in timed[0]
+
+    def test_never_keeps_the_anchor_on_a_line_without_words(self):
+        unsure = {**line(12.0, 14.0, "Há flores"), "anchor": 10.5}
+        timed, _ = add_word_timings([unsure], silence(30), None, FakeAligner(score=0.0))
+        assert "anchor" not in timed[0]
+
+    def test_tells_which_line_it_is_working_on(self):
+        seen = []
+        add_word_timings([line(10.0, 14.0, "Eu"), line(20.0, 24.0, "vou")], silence(60), None, FakeAligner(), on_line=lambda i, n: seen.append((i, n)))
+        assert seen == [(0, 2), (1, 2)]
+
     def test_never_moves_a_line_start_before_the_previous_line(self):
         lines = [line(9.5, 9.8, "A"), line(10.0, 14.0, "Eu sei")]
         early = FakeAligner()

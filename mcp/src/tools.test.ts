@@ -41,6 +41,7 @@ function job(overrides: Partial<JobDTO>): JobDTO {
   return {
     id: 'j1',
     songId: 's1',
+    kind: 'PROCESS',
     status: 'PENDING',
     step: null,
     progress: 0,

@@ -145,6 +145,7 @@ model Job {
   position    Int                               // ordem na fila (menor = primeiro)
   sourcePath  String?    @db.VarChar(500)      // caminho do arquivo de origem (upload/youtube)
   device      String?    @db.VarChar(40)       // "cpu" | "cuda:GeForce GT 1030"
+  kind           String  @default("PROCESS") @db.VarChar(20) // PROCESS (importação) | RESYNC (refazer a sincronização, ADR-017)
   workerId       String? @db.VarChar(40)       // quem pegou: "local" (Este PC) ou o id de uma máquina pareada (ADR-015)
   targetWorkerId String? @db.VarChar(40)       // onde processar: null = qualquer uma, "local" ou id da máquina
   error       String?    @db.Text
