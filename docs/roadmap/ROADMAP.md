@@ -230,7 +230,7 @@ Branch: `feature/f7b-fila-e-letra`.
 | F7I-03 | ✅ 2026-10-07 | "Quem está usando?" e Gerenciar perfis só com os da casa (+ link Gerenciar convidados) | 🟢 |
 | F7I-04 | ✅ 2026-10-07 | `SingerChooser`: perfil da TV + "Convidado ▾" (busca, Da casa, Convidados, + Novo) no player e no "Pôr na fila" | 🔴 |
 | F7I-05 | ✅ 2026-10-07 | Página Gerenciar convidados: busca, editar, selecionar e excluir, limpar antigos (30 dias), tornar da casa | 🟡 |
-| F7I-06 | ⬜ | Celular: busca na lista de convidados quando passa de 8 | 🟢 |
+| F7I-06 | ✅ 2026-10-07 | Celular: busca na lista de convidados quando passa de 8 | 🟢 |
 | F7I-07 | ⬜ | ✔ Verificação no navegador (TV e celular) | 🟡 |
 
 ## Fase 8 — Publicação (futuro)
