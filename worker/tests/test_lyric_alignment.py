@@ -54,6 +54,12 @@ class TestFitShift:
         assert fit_shift(np.array([10.0, 20.0]), ONSETS) is None
         assert fit_shift(ONSETS, np.zeros(0)) is None
 
+    def test_accepts_a_fit_when_the_voice_has_fewer_pauses_than_the_lyrics_has_lines(self):
+        starts = 10.0 + 4.0 * np.arange(20)
+        onsets = np.array([14.0, 30.0, 46.0, 62.0, 78.0])
+
+        assert fit_shift(starts, onsets) == pytest.approx(0.0, abs=0.06)
+
     def test_gives_up_when_almost_no_line_matches_a_phrase(self):
         starts = np.array([1.0, 3.7, 6.1, 9.3, 12.9, 15.3, 18.7, 21.1, 24.9, 27.7])
         onsets = np.array([100.0, 150.0, 200.0])

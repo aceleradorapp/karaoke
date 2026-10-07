@@ -60,15 +60,27 @@ function TextCell({
   );
 }
 
+export function keepRowVisible(list: HTMLElement, row: HTMLElement): void {
+  const listBox = list.getBoundingClientRect();
+  const rowBox = row.getBoundingClientRect();
+  if (rowBox.top < listBox.top) list.scrollTop -= listBox.top - rowBox.top;
+  else if (rowBox.bottom > listBox.bottom) list.scrollTop += rowBox.bottom - listBox.bottom;
+}
+
 export function LineList(props: LineListProps) {
+  const listRef = useRef<HTMLOListElement>(null);
   const selectedRow = useRef<HTMLLIElement>(null);
 
   useEffect(() => {
-    selectedRow.current?.scrollIntoView?.({ block: 'nearest' });
+    if (listRef.current && selectedRow.current) keepRowVisible(listRef.current, selectedRow.current);
   }, [props.selectedIndex]);
 
   return (
-    <ol aria-label="Linhas da letra" className="flex max-h-[28rem] flex-col gap-2 overflow-y-auto pr-1">
+    <ol
+      ref={listRef}
+      aria-label="Linhas da letra"
+      className="flex max-h-[28rem] flex-col gap-2 overflow-y-auto pr-1"
+    >
       {props.lines.map((line, index) => {
         const isSelected = index === props.selectedIndex;
         const isCurrent = index === props.currentIndex;

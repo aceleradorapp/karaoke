@@ -62,6 +62,11 @@ describe('fitShift', () => {
     expect(fitShift([10, 20, 30, 40, 50, 60], [10, 20, 30, 40, 50, 60])).toBeCloseTo(0, 1);
   });
 
+  it('accepts a fit when the voice has fewer pauses than the lyrics has lines', () => {
+    const starts = Array.from({ length: 20 }, (_, index) => 10 + 4 * index);
+    expect(fitShift(starts, [14, 30, 46, 62, 78])).toBeCloseTo(0, 1);
+  });
+
   it('gives up with too few lines, no voice, or lines that match nothing', () => {
     expect(fitShift([10, 20], ONSETS)).toBeNull();
     expect(fitShift(ONSETS, [])).toBeNull();

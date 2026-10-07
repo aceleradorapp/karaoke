@@ -36,7 +36,8 @@ def fit_shift(starts: np.ndarray, onsets: np.ndarray) -> float | None:
     best = int(tied[np.argmin(np.abs(shifts[tied]))])
 
     matched = int((distances[best] <= MATCH_TOLERANCE_SECONDS).sum())
-    if matched < max(2, MIN_MATCHED_FRACTION * len(starts)):
+    matchable = min(len(starts), len(onsets))
+    if matched < max(2, MIN_MATCHED_FRACTION * matchable):
         return None
     return float(shifts[best])
 
