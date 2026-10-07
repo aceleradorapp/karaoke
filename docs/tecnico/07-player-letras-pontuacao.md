@@ -23,7 +23,11 @@
 ```
 
 ### Antes de começar: "Quem vai cantar esta?"
-Overlay com o perfil atual pré-selecionado e os outros perfis em linha (o convidado também pode ser escolhido). Botão **Começar** (Enter). Isso cria a `Performance` (`POST /performances`) com o perfil escolhido.
+**Seletor de quem canta** (`SingerChooser`, ADR-016):
+- Aparece só **um cartão**: o perfil da casa que está na TV, já selecionado, ou quem foi escolhido.
+- Ao lado fica o botão **"Convidado ▾"**, que abre uma lista com busca, "Novo convidado" e as seções "Convidados" (quem cantou mais recentemente primeiro, com "cantou há…") e "Da casa".
+- Escolher alguém troca o cartão por essa pessoa. O mesmo componente é usado no "Pôr na fila" (`size="sm"`).
+- Botão **Começar** (Enter): cria a `Performance` (`POST /performances`) com o perfil escolhido.
 
 **Vindo da fila de cantores** (`?pedido=<requestId>`, ADR-008): o título vira **"Vez de Ana! 🎤"** e quem pediu já vem selecionado (dá para trocar). O `POST /performances` leva o `requestId`, e o pedido sai da fila. Se o pedido não existir mais (removido em outro lugar), o player funciona como uma música avulsa.
 

@@ -225,8 +225,14 @@ function renderPlayer(routes: MockRoutes = baseRoutes(), entries = ['/musica/s1'
 const bodyOf = (fetchMock: ReturnType<typeof mockApi>, method: string, url: string, index = 0) =>
   JSON.parse(String(requestsTo(fetchMock, method, url)[index]?.[1]?.body));
 
+async function chooseSinger(name: string) {
+  fireEvent.click(await screen.findByRole('button', { name: 'Convidado' }));
+  const panel = await screen.findByRole('region', { name: 'Escolher quem vai cantar' });
+  fireEvent.click(within(panel).getByRole('button', { name: new RegExp(`^${name}`) }));
+}
+
 async function startSinging(singerName?: string) {
-  if (singerName) fireEvent.click(await screen.findByRole('radio', { name: singerName }));
+  if (singerName) await chooseSinger(singerName);
   fireEvent.click(await screen.findByRole('button', { name: 'Começar' }));
   await screen.findByRole('button', { name: 'Pausar' });
 }
@@ -251,13 +257,28 @@ describe('PlayerPage', () => {
   });
 
   describe('choosing who sings', () => {
-    it('shows the song and the profiles, with the current profile already selected', async () => {
-      renderPlayer();
+    it('shows only the profile on the TV, with the others behind the guest button', async () => {
+      const tioBeto = { ...ANA, id: 'g1', name: 'Tio Beto', avatar: 'cat', isGuest: true };
+      renderPlayer(baseRoutes(readySong(), { 'GET /api/profiles': { body: { items: [ANA, BIA, tioBeto] } } }));
 
       expect(await screen.findByRole('heading', { name: 'Evidências' })).toBeInTheDocument();
       expect(screen.getByText('Quem vai cantar esta?')).toBeInTheDocument();
       expect(await screen.findByRole('radio', { name: 'Ana' })).toBeChecked();
-      expect(screen.getByRole('radio', { name: 'Bia' })).not.toBeChecked();
+      expect(screen.getAllByRole('radio')).toHaveLength(1);
+      expect(screen.queryByText('Tio Beto')).not.toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Convidado' }));
+      const panel = await screen.findByRole('region', { name: 'Escolher quem vai cantar' });
+      expect(within(within(panel).getByRole('region', { name: 'Convidados' })).getByText('Tio Beto')).toBeInTheDocument();
+      expect(within(within(panel).getByRole('region', { name: 'Da casa' })).getByText('Bia')).toBeInTheDocument();
+
+      fireEvent.change(within(panel).getByRole('searchbox', { name: 'Buscar pessoa' }), { target: { value: 'tio' } });
+      expect(within(panel).queryByText('Bia')).not.toBeInTheDocument();
+      fireEvent.click(within(panel).getByRole('button', { name: /^Tio Beto/ }));
+
+      expect(screen.getByRole('radio', { name: 'Tio Beto' })).toBeChecked();
+      expect(screen.queryByRole('radio', { name: 'Ana' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('region', { name: 'Escolher quem vai cantar' })).not.toBeInTheDocument();
     });
 
     it('creates a guest right there and selects them to sing', async () => {
@@ -273,7 +294,8 @@ describe('PlayerPage', () => {
         }),
       );
 
-      fireEvent.click(await screen.findByRole('button', { name: '+ Convidado' }));
+      fireEvent.click(await screen.findByRole('button', { name: 'Convidado' }));
+      fireEvent.click(await screen.findByRole('button', { name: 'Novo convidado' }));
       const dialog = await screen.findByRole('dialog', { name: 'Novo convidado' });
       fireEvent.change(within(dialog).getByLabelText('Nome'), { target: { value: 'Duda' } });
       fireEvent.click(within(dialog).getByRole('button', { name: /Adicionar|Criar|Salvar/ }));
@@ -289,7 +311,8 @@ describe('PlayerPage', () => {
 
     it('does not leave the song when Escape closes the new guest window', async () => {
       renderPlayer();
-      fireEvent.click(await screen.findByRole('button', { name: '+ Convidado' }));
+      fireEvent.click(await screen.findByRole('button', { name: 'Convidado' }));
+      fireEvent.click(await screen.findByRole('button', { name: 'Novo convidado' }));
       await screen.findByRole('dialog', { name: 'Novo convidado' });
 
       fireEvent.keyDown(document.body, { key: 'Escape' });

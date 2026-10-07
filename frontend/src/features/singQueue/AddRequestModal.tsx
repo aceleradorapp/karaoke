@@ -1,17 +1,18 @@
 import { AVATARS, createProfileSchema, type SongDTO } from '@caraoke/shared';
 import clsx from 'clsx';
-import { Search, UserPlus } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useCreateProfileMutation, useProfilesQuery } from '../../api/profiles';
 import { useAddSingRequestMutation } from '../../api/singQueue';
 import { useSongsInfiniteQuery } from '../../api/songs';
-import { Avatar } from '../../components/Avatar';
 import { Button } from '../../components/Button';
 import { Modal } from '../../components/Modal';
 import { Spinner } from '../../components/Spinner';
 import { useDebouncedValue } from '../../lib/useDebouncedValue';
+import { useProfileStore } from '../../stores/useProfileStore';
 import { toast } from '../../stores/useToastStore';
 import { AvatarPicker } from '../profiles/AvatarPicker';
+import { SingerChooser } from '../profiles/SingerChooser';
 
 const SEARCH_DEBOUNCE_MS = 300;
 const FIRST_AVATAR = AVATARS[0]?.id ?? '';
@@ -78,7 +79,8 @@ function NewGuestFields({ onCreated }: { onCreated: (profileId: string) => void 
 function AddRequestDialog({ onClose, presetSong = null }: Omit<AddRequestModalProps, 'isOpen'>) {
   const profiles = useProfilesQuery();
   const addRequest = useAddSingRequestMutation();
-  const [singerId, setSingerId] = useState<string | null>(null);
+  const currentProfileId = useProfileStore((state) => state.currentProfile?.id ?? null);
+  const [singerId, setSingerId] = useState<string | null>(currentProfileId);
   const [isCreatingGuest, setIsCreatingGuest] = useState(false);
   const [songId, setSongId] = useState<string | null>(presetSong?.id ?? null);
   const [draft, setDraft] = useState('');
@@ -131,37 +133,16 @@ function AddRequestDialog({ onClose, presetSong = null }: Omit<AddRequestModalPr
         <section aria-label="Quem vai cantar" className="flex flex-col gap-2">
           <h3 className="text-base font-semibold">Quem vai cantar?</h3>
           {profiles.isLoading && <Spinner className="size-6" />}
-          <div role="radiogroup" aria-label="Cantor" className="flex flex-wrap gap-2">
-            {(profiles.data ?? []).map((profile) => (
-              <button
-                key={profile.id}
-                type="button"
-                role="radio"
-                aria-checked={profile.id === singerId}
-                onClick={() => setSingerId(profile.id)}
-                className={clsx(
-                  'flex w-20 flex-col items-center gap-1 rounded-xl p-2 text-sm',
-                  profile.id === singerId
-                    ? 'bg-surface-2 ring-2 ring-primary'
-                    : 'opacity-80 hover:opacity-100',
-                )}
-              >
-                <Avatar avatarId={profile.avatar} size="sm" />
-                <span className="w-full truncate">{profile.name}</span>
-              </button>
-            ))}
-            <button
-              type="button"
-              aria-expanded={isCreatingGuest}
-              onClick={() => setIsCreatingGuest((open) => !open)}
-              className="flex w-20 flex-col items-center gap-1 rounded-xl p-2 text-sm opacity-80 hover:opacity-100"
-            >
-              <span className="inline-flex size-10 items-center justify-center rounded-lg border-2 border-dashed border-muted">
-                <UserPlus aria-hidden="true" className="size-5" />
-              </span>
-              + Convidado
-            </button>
-          </div>
+          {profiles.data && (
+            <SingerChooser
+              profiles={profiles.data}
+              defaultProfileId={currentProfileId}
+              selectedId={singerId}
+              onSelect={setSingerId}
+              onCreateGuest={() => setIsCreatingGuest(true)}
+              size="sm"
+            />
+          )}
           {isCreatingGuest && (
             <NewGuestFields
               onCreated={(id) => {

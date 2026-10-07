@@ -172,6 +172,9 @@ type SongDTO = {
 | GET | `/api/profiles` | — | `{ items: Profile[] }` (família primeiro, por `createdAt`; depois convidados, por `lastUsedAt desc`) |
 | POST | `/api/profiles` | `{ name, avatar, theme?, isGuest? }` | `Profile` (nome 1..40, avatar válido em `AVATARS`). Vindo do celular: `isGuest` forçado a `true` e `theme` ignorado (ADR-008) |
 | PATCH | `/api/profiles/:id` | `{ name?, avatar?, theme? }` | `Profile` |
+| GET | `/api/profiles/guests` | (palco, ADR-016) `{ items: [{ ...ProfileDTO, lastSungAt, timesSung }] }`, quem cantou mais recentemente primeiro (quem nunca cantou conta pela criação) |
+| GET | `/api/profiles/guests/stale?days=30` | (palco) prévia dos convidados que não cantam há N dias |
+| POST | `/api/profiles/guests/delete-many` | (palco) `{ ids }` → `{ deleted }`; exclui só convidados, com tudo deles (cascata); perfis da casa são ignorados. `PATCH /profiles/:id` aceita `isGuest` ("Tornar da casa") |
 | POST | `/api/profiles/:id/touch` | — | atualiza `lastUsedAt` (ao selecionar o perfil) |
 | DELETE | `/api/profiles/:id` | — | 204 (cascata em playlists/favoritos/histórico; pedir confirmação na UI) |
 

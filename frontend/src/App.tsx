@@ -5,6 +5,7 @@ import { HomePage } from './features/home/HomePage';
 import { NotFoundPage } from './features/home/NotFoundPage';
 import { LibraryPage } from './features/library/LibraryPage';
 import { ManageProfilesPage } from './features/profiles/ManageProfilesPage';
+import { GuestsPage } from './features/profiles/GuestsPage';
 import { StageLayout } from './features/layout/StageLayout';
 import { SettingsPage } from './features/settings/SettingsPage';
 import { QueuePage } from './features/processing/QueuePage';
@@ -66,6 +67,7 @@ export function App() {
             <Route path="/disputas/:id" element={<CompetitionPage />} />
             <Route path="/saude" element={<HealthPage />} />
             <Route path="/perfis/gerenciar" element={<ManageProfilesPage />} />
+            <Route path="/convidados" element={<GuestsPage />} />
             <Route path="/" element={<HomePage />} />
             <Route path="/biblioteca" element={<LibraryPage />} />
             <Route path="/favoritas" element={<FavoritesPage />} />

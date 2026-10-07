@@ -22,3 +22,4 @@ Architecture Decision Records — uma decisão por arquivo. Crie com `/nova-deci
 | ADR-013 | [Selo "tem letra" na busca do YouTube](ADR-013-selo-de-letra-na-busca.md) | aceita |
 | ADR-014 | [MCP do karaokê com "Chave para IA"](ADR-014-mcp-do-karaoke.md) | aceita |
 | ADR-015 | [Processar músicas em outra máquina](ADR-015-processador-remoto.md) | aceita |
+| ADR-016 | [Perfis da casa × convidados](ADR-016-perfis-da-casa-e-convidados.md) | aceita |

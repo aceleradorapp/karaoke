@@ -28,8 +28,13 @@ export const updateProfileSchema = z
     name: profileNameSchema.optional(),
     avatar: avatarSchema.optional(),
     theme: themeSchema.optional(),
+    isGuest: z.boolean().optional(),
   })
   .refine((changes) => Object.keys(changes).length > 0, 'Nenhuma alteração informada');
+
+export const STALE_GUEST_DEFAULT_DAYS = 30;
+
+export const deleteGuestsSchema = z.object({ ids: z.array(z.string().min(1)).min(1).max(500) });
 
 export type CreateProfileInput = z.infer<typeof createProfileSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;

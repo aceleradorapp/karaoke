@@ -204,6 +204,12 @@ Adicionar "Evidências" a…
 - Lista via `GET /profiles/:pid/playlists?songId=` (`containsSong` marca o check).
 - Marcar/desmarcar adiciona/remove na hora (atualização otimista + toast "Adicionada a X").
 
+### `/convidados` — Gerenciar convidados (ADR-016)
+- Lista com busca: avatar, nome e "cantou há 2 dias · 4 vezes" ou "ainda não cantou · chegou há…". No menu do perfil, o item é "Convidados"; no Gerenciar perfis, há um link para cá.
+- Tocar num convidado abre o `GuestEditorModal`: nome e avatar com salvamento automático, "Tornar da casa" (`isGuest: false`) e "Excluir convidado".
+- "Novo convidado", "Selecionar" (marca vários e exclui pela barra fixa embaixo) e "Limpar antigos": mostra quem não canta há mais de 30 dias (`/profiles/guests/stale`) e pede confirmação com os nomes.
+- Excluir apaga tudo do convidado, que sai do ranking.
+
 ### `/biblioteca`
 Campo de busca grande (debounce de 300 ms), filtros: artista, status (prontas, processando, com erro), ordenação. Grade de `SongCard`s com rolagem infinita.
 

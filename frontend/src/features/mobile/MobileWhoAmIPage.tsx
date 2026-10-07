@@ -1,5 +1,6 @@
 import { AVATARS, createProfileSchema, type ProfileDTO } from '@caraoke/shared';
-import { useState, type FormEvent } from 'react';
+import { Search } from 'lucide-react';
+import { useMemo, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router';
 import { useCreateProfileMutation, useProfilesQuery } from '../../api/profiles';
 import { Avatar } from '../../components/Avatar';
@@ -10,6 +11,14 @@ import { toast } from '../../stores/useToastStore';
 import { AvatarPicker } from '../profiles/AvatarPicker';
 
 export const MOBILE_SONGS_TAB = '/m/musicas';
+export const GUEST_SEARCH_THRESHOLD = 8;
+
+function normalize(text: string): string {
+  return text
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .toLowerCase();
+}
 
 function ProfileChoices({
   title,
@@ -111,6 +120,12 @@ export function MobileWhoAmIPage() {
   }
 
   const all = profiles.data ?? [];
+  const guests = all.filter((profile) => profile.isGuest);
+  const [guestSearch, setGuestSearch] = useState('');
+  const visibleGuests = useMemo(() => {
+    const term = normalize(guestSearch.trim());
+    return term ? guests.filter((guest) => normalize(guest.name).includes(term)) : guests;
+  }, [guests, guestSearch]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -127,15 +142,27 @@ export function MobileWhoAmIPage() {
       )}
 
       <ProfileChoices
-        title="Família"
+        title="Da casa"
         profiles={all.filter((profile) => !profile.isGuest)}
         onChoose={choose}
       />
-      <ProfileChoices
-        title="Convidados"
-        profiles={all.filter((profile) => profile.isGuest)}
-        onChoose={choose}
-      />
+      {guests.length > GUEST_SEARCH_THRESHOLD && (
+        <label className="flex min-h-11 items-center gap-2 rounded-xl bg-surface-2 px-3">
+          <Search aria-hidden="true" className="size-5 text-muted" />
+          <input
+            type="search"
+            value={guestSearch}
+            onChange={(event) => setGuestSearch(event.target.value)}
+            aria-label="Buscar seu nome entre os convidados"
+            placeholder="Procure o seu nome…"
+            className="min-h-11 w-full bg-transparent text-base text-text outline-none"
+          />
+        </label>
+      )}
+      <ProfileChoices title="Convidados" profiles={visibleGuests} onChoose={choose} />
+      {guestSearch.trim() && visibleGuests.length === 0 && (
+        <p className="text-base text-muted">Não achei esse nome. Crie o seu abaixo.</p>
+      )}
       <NewGuestForm onCreated={choose} />
     </div>
   );

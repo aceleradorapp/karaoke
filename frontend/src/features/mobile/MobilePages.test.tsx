@@ -81,11 +81,31 @@ describe('phone pages', () => {
     it('lists the family and the guests to choose from', async () => {
       renderOnPhone(<MobileWhoAmIPage />, PROFILES, '/m/quem-sou');
 
-      const family = await screen.findByRole('region', { name: 'Família' });
+      const family = await screen.findByRole('region', { name: 'Da casa' });
       expect(within(family).getByRole('button', { name: /Ana/ })).toBeInTheDocument();
       expect(
         within(screen.getByRole('region', { name: 'Convidados' })).getByRole('button', { name: /Tio Beto/ }),
       ).toBeInTheDocument();
+    });
+
+    it('lets a guest find their name when the list is long', async () => {
+      const many = Array.from({ length: 9 }, (_, index) => ({ ...TIO, id: `g${index + 10}`, name: `Convidado ${index + 1}` }));
+      renderOnPhone(<MobileWhoAmIPage />, { 'GET /api/profiles': { body: { items: [ANA, TIO, ...many] } } }, '/m/quem-sou');
+
+      const searchBox = await screen.findByRole('searchbox', { name: 'Buscar seu nome entre os convidados' });
+      fireEvent.change(searchBox, { target: { value: 'beto' } });
+      const guests = screen.getByRole('region', { name: 'Convidados' });
+      expect(within(guests).getAllByRole('button')).toHaveLength(1);
+      expect(within(guests).getByRole('button', { name: /Tio Beto/ })).toBeInTheDocument();
+
+      fireEvent.change(searchBox, { target: { value: 'ninguém' } });
+      expect(screen.getByText('Não achei esse nome. Crie o seu abaixo.')).toBeInTheDocument();
+    });
+
+    it('does not show the search with few guests', async () => {
+      renderOnPhone(<MobileWhoAmIPage />, PROFILES, '/m/quem-sou');
+      await screen.findByRole('region', { name: 'Convidados' });
+      expect(screen.queryByRole('searchbox')).not.toBeInTheDocument();
     });
 
     it('remembers the chosen profile and opens the songs', async () => {
