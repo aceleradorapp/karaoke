@@ -138,7 +138,8 @@ def add_word_timings(
     for index, line in enumerate(lines):
         if on_line:
             on_line(index, len(lines))
-        next_start = lines[index + 1]["start"] if index + 1 < len(lines) else None
+        next_line = lines[index + 1] if index + 1 < len(lines) else None
+        next_start = max(next_line["start"], next_line.get("anchor", next_line["start"])) if next_line else None
         earliest = min(line["start"], line.get("anchor", line["start"]))
         window_start = max(0.0, earliest - WINDOW_BEFORE_SECONDS)
         window_end = min(

@@ -261,6 +261,19 @@ describe('LyricsSyncPage', () => {
     useToastStore.setState({ toasts: [] });
   });
 
+  it('explains every button of a line when the mouse is over it', async () => {
+    await renderReady();
+    const row = lineRow(1);
+    for (const button of within(row).getAllByRole('button')) {
+      if (button.getAttribute('aria-label')?.startsWith('Escolher')) continue;
+      expect(button).toHaveAttribute('title');
+    }
+    expect(within(row).getByRole('button', { name: 'Imantar a linha 1 ao começo da voz' })).toHaveAttribute(
+      'title',
+      'Ímã: puxa o começo desta linha para o início de voz mais próximo',
+    );
+  });
+
   describe('redoing the automatic sync', () => {
     it('confirms, shows the progress and reopens the editor with the new lyrics', async () => {
       const newUrl = '/media/s1/letra.json?v=2';

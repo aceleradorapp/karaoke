@@ -195,3 +195,25 @@ Na página de sincronizar (Ferramentas):
 - "Flores": 72 s na CPU, 28 de 37 linhas com palavras. Conferida tocando: aos 17,5 s ainda está "Olhei até ficar cansado" toda pintada; aos 19,6 s, "De ver os…".
 - "Vou Deixar" também foi refeita pelo botão, com as regras novas.
 - A letra antiga da "Flores" (com as edições de 10-02) ficou guardada no scratchpad desta sessão (`flores-letra-antes.json`), caso o Michael queira comparar.
+
+## 18. "Anna Júlia": o ímã adiantou a linha seguinte e espremeu o fim da atual (2026-10-07)
+
+**Sintoma:** na linha "Ter que ver você, assim, sempre tão linda", depois da vírgula a pintura se perdia.
+- A voz faz uma pausa em 17,7–18,2 s e canta "sempre tão linda" em 18,36–19,78 s.
+- O ímã puxou a linha **seguinte** ("Contemplar…") de 20,13 para 18,40 s (a volta da voz depois da pausa).
+- Com isso, a janela de palavras da linha 3 terminou em 18,70 s, e o MMS espremeu "sempre" (17,26) e "tão" (18,06, em plena pausa) antes do fim.
+
+**Correção** (`word_alignment.add_word_timings`): o fim da janela, e o limite do fim das palavras, usam o **maior** entre o começo da próxima linha e o `anchor` dela (onde ela estava antes do ímã). É o espelho da seção 16.
+
+**Experimento** (5 músicas, comparando palavra por palavra com a letra atual):
+- "À Sua Maneira": 0 de 109 palavras mudaram mais de 0,3 s;
+- "Ela É Demais": 0 de 199;
+- "Vou Deixar": 0 de 204;
+- "Flores": 1 de 164, e passou de 28 para 31 linhas com palavras;
+- "Anna Júlia": só as 3 palavras erradas mudaram (sempre 18,36, tão 18,95, linda 19,27).
+
+"Anna Júlia" e "Flores" foram refeitas pelo botão. Conferido tocando: em 17,9 s a pintura espera em "assim,"; "sempre" entra em 18,6 s; "Contemplar" em 20,4 s.
+
+**Dicas na página de sincronizar:** todos os botões de linha e das ferramentas ganharam `title` explicando o que fazem (pedido do Michael: "tem que ter tooltips para eu saber usar").
+
+**Limite atual:** não dá para arrastar uma palavra sozinha na linha do tempo. Quando só um pedaço da linha está fora, o caminho é o botão "Refazer a sincronização automática".

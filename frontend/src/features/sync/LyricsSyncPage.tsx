@@ -310,6 +310,7 @@ function SyncWorkbench({ song, doc, onResync, isResyncStarting }: SyncWorkbenchP
             variant="secondary"
             size="icon"
             aria-label="Desfazer"
+            title="Desfazer a última mudança (Ctrl+Z)"
             onClick={editor.undo}
             disabled={!editor.canUndo}
           >
@@ -319,6 +320,7 @@ function SyncWorkbench({ song, doc, onResync, isResyncStarting }: SyncWorkbenchP
             variant="secondary"
             size="icon"
             aria-label="Refazer"
+            title="Refazer o que foi desfeito (Ctrl+Y)"
             onClick={editor.redo}
             disabled={!editor.canRedo}
           >
@@ -368,19 +370,36 @@ function SyncWorkbench({ song, doc, onResync, isResyncStarting }: SyncWorkbenchP
         <>
           <Panel title="Ferramentas">
             <div className="flex flex-wrap items-center gap-3">
-              <Button onClick={alignWithVoice}>
+              <Button
+                onClick={alignWithVoice}
+                title="Acha o atraso da letra inteira pela voz e puxa cada linha para o começo da frase cantada"
+              >
                 <Wand2 aria-hidden="true" className="size-5" />
                 Alinhar tudo com a voz
               </Button>
-              <Button variant="secondary" onClick={() => snapLine(selectedIndex)}>
+              <Button
+                variant="secondary"
+                onClick={() => snapLine(selectedIndex)}
+                title="Puxa só a linha escolhida para o início de voz mais próximo"
+              >
                 <Magnet aria-hidden="true" className="size-5" />
                 Imantar a linha escolhida
               </Button>
-              <Button variant="secondary" onClick={restoreOriginal} disabled={!originalDoc}>
+              <Button
+                variant="secondary"
+                onClick={restoreOriginal}
+                disabled={!originalDoc}
+                title="Volta para a letra como veio do site de letras (dá para desfazer)"
+              >
                 <History aria-hidden="true" className="size-5" />
                 Voltar ao original
               </Button>
-              <Button variant="secondary" onClick={() => setIsConfirmingResync(true)} isLoading={isResyncStarting}>
+              <Button
+                variant="secondary"
+                onClick={() => setIsConfirmingResync(true)}
+                isLoading={isResyncStarting}
+                title="Começa de novo da letra original e alinha cada linha e cada palavra com a voz (cerca de 1 min)"
+              >
                 <RefreshCw aria-hidden="true" className="size-5" />
                 Refazer a sincronização automática
               </Button>
@@ -417,7 +436,12 @@ function SyncWorkbench({ song, doc, onResync, isResyncStarting }: SyncWorkbenchP
                 )}
                 {preview.isPlaying ? 'Pausar' : 'Tocar'}
               </button>
-              <button type="button" onClick={() => playLine(selectedIndex)} className={TOOLBAR_BUTTON}>
+              <button
+                type="button"
+                onClick={() => playLine(selectedIndex)}
+                title="Tocar a partir do começo da linha escolhida"
+                className={TOOLBAR_BUTTON}
+              >
                 <SkipBack aria-hidden="true" className="size-5" />
                 Da linha escolhida
               </button>
@@ -425,6 +449,7 @@ function SyncWorkbench({ song, doc, onResync, isResyncStarting }: SyncWorkbenchP
                 type="button"
                 onClick={preview.toggleVoice}
                 aria-pressed={preview.voiceOn}
+                title="Ouvir ou não a voz original junto, para conferir"
                 className={clsx(TOOLBAR_BUTTON, preview.voiceOn && 'ring-2 ring-primary')}
               >
                 {preview.voiceOn ? (
@@ -558,6 +583,7 @@ function SyncWorkbench({ song, doc, onResync, isResyncStarting }: SyncWorkbenchP
                       variant="secondary"
                       onClick={() => editor.nudgeAll(delta)}
                       aria-label={`${delta > 0 ? 'Atrasar' : 'Adiantar'} a letra inteira ${amount} s`}
+                      title={`${delta > 0 ? 'Atrasar' : 'Adiantar'} todas as linhas ${amount} s de uma vez`}
                     >
                       {delta > 0 ? '+' : '−'} {amount} s
                     </Button>

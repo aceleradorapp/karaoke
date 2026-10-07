@@ -244,6 +244,11 @@ Branch: `feature/f7b-fila-e-letra`.
 | F7K-01 | ✅ 2026-10-07 | Job `RESYNC` (coluna `jobs.kind`), `POST /songs/:id/lyrics/resync`, passo no worker, botão e andamento na página de sincronizar | 🔴 |
 | F7K-02 | ✅ 2026-10-07 | Alinhamento: linha começa na 1ª palavra e janela considera a posição antes do ímã (experimento em 4 músicas); "Flores" e "Vou Deixar" refeitas | 🔴 |
 
+## Fase 7L — Sincronia: palavras e dicas
+| ID | Status | Tarefa | Modelo |
+|---|---|---|---|
+| F7L-01 | ✅ 2026-10-07 | Janela de palavras vai até onde a próxima linha estava antes do ímã ("Anna Júlia"); dicas (tooltips) em todos os botões da página de sincronizar; "Anna Júlia" e "Flores" refeitas | 🔴 |
+
 ## Fase 8 — Publicação (futuro)
 | ID | Status | Tarefa | Modelo |
 |---|---|---|---|
