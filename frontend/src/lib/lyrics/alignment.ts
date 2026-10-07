@@ -67,7 +67,8 @@ export function fitShift(starts: readonly number[], onsets: readonly number[]): 
   const matched = starts.filter(
     (start) => distanceToNearest(onsets, start + bestShift) <= MATCH_TOLERANCE_SECONDS,
   ).length;
-  return matched < Math.max(2, MIN_MATCHED_FRACTION * starts.length) ? null : bestShift;
+  const matchable = Math.min(starts.length, onsets.length);
+  return matched < Math.max(2, MIN_MATCHED_FRACTION * matchable) ? null : bestShift;
 }
 
 export function snapStarts(starts: readonly number[], onsets: readonly number[]): number[] {

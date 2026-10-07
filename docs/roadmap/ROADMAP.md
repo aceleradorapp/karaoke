@@ -233,6 +233,11 @@ Branch: `feature/f7b-fila-e-letra`.
 | F7I-06 | ✅ 2026-10-07 | Celular: busca na lista de convidados quando passa de 8 | 🟢 |
 | F7I-07 | ✅ 2026-10-07 | ✔ Verificação no navegador (TV e celular) | 🟡 |
 
+## Fase 7J — Sincronia (ajustes)
+| ID | Status | Tarefa | Modelo |
+|---|---|---|---|
+| F7J-01 | ✅ 2026-10-07 | Alinhamento: exigência de casamento sobre min(linhas, pausas da voz); "Vou Deixar" ressincronizada; página de sincronizar não rola mais a página ao marcar | 🔴 |
+
 ## Fase 8 — Publicação (futuro)
 | ID | Status | Tarefa | Modelo |
 |---|---|---|---|
