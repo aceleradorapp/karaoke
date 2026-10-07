@@ -222,6 +222,17 @@ Branch: `feature/f7b-fila-e-letra`.
 | F7H-03 | ✅ 2026-10-06 | Excluir várias músicas de uma vez: "Selecionar" na biblioteca + `POST /api/songs/delete-many`. Usado para apagar as 6 versões karaokê importadas pelo Claude | 🟡 |
 | F7H-02 | ✅ 2026-10-06 | MCP: importar só versões ORIGINAIS (o karaokê tira a voz sozinho); resultados que parecem karaokê/instrumental vêm marcados com ⚠; Configurações › IA mostra a configuração pronta para o Claude deste PC (sem chave) e avisa para fechar o Claude Desktop antes de editar | 🟡 |
 
+## Fase 7I — Perfis da casa × convidados (ADR-016)
+| ID | Status | Tarefa | Modelo |
+|---|---|---|---|
+| F7I-01 | ✅ 2026-10-07 | ADR-016 + roadmap | 🟡 |
+| F7I-02 | ⬜ | Backend: `GET /profiles/guests` (última vez/vezes), `POST /profiles/guests/delete-many`, `GET /profiles/guests/stale?days=30` + testes | 🟡 |
+| F7I-03 | ⬜ | "Quem está usando?" e Gerenciar perfis só com os da casa (+ link Gerenciar convidados) | 🟢 |
+| F7I-04 | ⬜ | `SingerChooser`: perfil da TV + "Convidado ▾" (busca, Da casa, Convidados, + Novo) no player e no "Pôr na fila" | 🔴 |
+| F7I-05 | ⬜ | Página Gerenciar convidados: busca, editar, selecionar e excluir, limpar antigos (30 dias), tornar da casa | 🟡 |
+| F7I-06 | ⬜ | Celular: busca na lista de convidados quando passa de 8 | 🟢 |
+| F7I-07 | ⬜ | ✔ Verificação no navegador (TV e celular) | 🟡 |
+
 ## Fase 8 — Publicação (futuro)
 | ID | Status | Tarefa | Modelo |
 |---|---|---|---|
