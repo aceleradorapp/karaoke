@@ -20,6 +20,7 @@ export const PROFILE_MENU_ITEMS: NavItem[] = [
   { to: '/favoritas', label: 'Favoritas' },
   { to: '/historico', label: 'Histórico' },
   { to: '/perfis/gerenciar', label: 'Gerenciar perfis' },
+  { to: '/convidados', label: 'Convidados' },
   { to: '/configuracoes', label: 'Configurações' },
   { to: '/saude', label: 'Saúde do sistema' },
   { to: '/perfis', label: 'Trocar perfil' },
