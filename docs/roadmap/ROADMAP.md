@@ -226,7 +226,7 @@ Branch: `feature/f7b-fila-e-letra`.
 | ID | Status | Tarefa | Modelo |
 |---|---|---|---|
 | F7I-01 | ✅ 2026-10-07 | ADR-016 + roadmap | 🟡 |
-| F7I-02 | ⬜ | Backend: `GET /profiles/guests` (última vez/vezes), `POST /profiles/guests/delete-many`, `GET /profiles/guests/stale?days=30` + testes | 🟡 |
+| F7I-02 | ✅ 2026-10-07 | Backend: `GET /profiles/guests` (última vez/vezes), `POST /profiles/guests/delete-many`, `GET /profiles/guests/stale?days=30` + testes | 🟡 |
 | F7I-03 | ⬜ | "Quem está usando?" e Gerenciar perfis só com os da casa (+ link Gerenciar convidados) | 🟢 |
 | F7I-04 | ⬜ | `SingerChooser`: perfil da TV + "Convidado ▾" (busca, Da casa, Convidados, + Novo) no player e no "Pôr na fila" | 🔴 |
 | F7I-05 | ⬜ | Página Gerenciar convidados: busca, editar, selecionar e excluir, limpar antigos (30 dias), tornar da casa | 🟡 |

@@ -142,6 +142,11 @@ export interface YoutubeSearchResult {
   existingSongId: string | null;
 }
 
+export interface GuestDTO extends ProfileDTO {
+  lastSungAt: string | null;
+  timesSung: number;
+}
+
 export interface ProcessingWorkerDTO {
   id: string;
   name: string;
