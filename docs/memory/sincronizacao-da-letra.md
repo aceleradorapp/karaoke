@@ -144,3 +144,18 @@ Música de teste, voz separada:
 **Próximos passos possíveis:** transcrever músicas sem letra (Whisper, ainda precisaria do job só de letra); arrastar palavras individualmente na linha do tempo; um modelo de efeito novo, se o Michael pedir.
 
 **Teste com músicas novas (2026-10-02, depois de reiniciar o sistema):** "Ela É Demais" (Rick & Renner) saiu com 39/39 linhas com palavras; "Flores" (Titãs) com 27/37 (foi editada na página de sincronizar; editar o texto de uma linha descarta as palavras dela). O Michael aprovou de ouvido ("ficou muito bom"). "Anna Júlia" foi baixada antes do reinício e ficou sem palavras (pode ser corrigida com o comando `realign`). **Atenção:** o worker não recarrega o código sozinho; depois de mudar o worker é preciso reiniciar o `npm run dev`.
+
+## 15. Correção: música com poucas pausas na voz (2026-10-07)
+
+**Caso:** "Vou Deixar" (Skank, clipe oficial, id `cmux5x6xt0009u06o8onhfo62`). A letra do LRCLIB já estava quase certa para o vídeo (melhor atraso +0,05 s), mas ficou **3,47 s atrasada**.
+- O canto é quase contínuo: só **17 inícios de frase** para **38 linhas**.
+- No melhor atraso, 11 linhas batiam a ≤ 0,5 s com as pausas, mas a regra exigia 30% das **linhas** (11,4).
+- Então o `fit_shift` desistiu e o plano B (primeiro som da voz, 12,2 s, porque o "Vou deixar" do começo é baixo) empurrou a letra inteira.
+
+**Correção** (worker e navegador, mantendo a paridade): a exigência passa a ser 30% de `min(linhas, inícios de frase)`, porque não dá para casar mais linhas do que pausas existem. Testes novos dos dois lados ("accepts a fit when the voice has fewer pauses than the lyrics has lines").
+
+**A música** foi ressincronizada a partir do `letra.original.json`: linhas pela voz e depois palavras (MMS). Ficaram 37 de 38 linhas com palavras, fonte `ALIGNED`, `lyricsOffsetMs` 0. A edição manual que o Michael tinha feito foi substituída, por pedido dele ("tentar sincronizar novamente"). No player, cada palavra pinta no tempo certo (conferido tocando).
+
+**Varredura da biblioteca:** só mais uma música caía no plano B por esse motivo, "Evidências" (plano B −22,87 s × correto −22,25 s). A diferença é pequena e ela não foi mexida.
+
+**Página de sincronizar:** a lista de linhas usava `scrollIntoView`, que rola **todos** os ancestrais, inclusive a página. A cada "Marcar", a página pulava e tirava o botão e a linha do tempo do lugar. Agora `keepRowVisible` (em `LineList.tsx`) rola só a própria lista. Conferido no navegador em 1366 e 390 px: a página fica parada em todos os cliques.
