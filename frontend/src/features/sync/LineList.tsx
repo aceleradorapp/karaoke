@@ -116,6 +116,7 @@ export function LineList(props: LineListProps) {
                 variant="secondary"
                 size="icon"
                 aria-label={`Tocar a linha ${number}`}
+                title="Tocar esta linha: ouve só o trecho dela"
                 onClick={() => props.onPlay(index)}
               >
                 <Play aria-hidden="true" className="size-5 fill-current" />
@@ -124,6 +125,7 @@ export function LineList(props: LineListProps) {
                 variant="secondary"
                 size="icon"
                 aria-label={`Marcar o começo da linha ${number} agora`}
+                title="Marcar agora: com a música tocando, aperte no instante em que esta linha começa a ser cantada"
                 onClick={() => props.onMark(index)}
               >
                 <Target aria-hidden="true" className="size-5" />
@@ -132,6 +134,7 @@ export function LineList(props: LineListProps) {
                 variant="ghost"
                 size="icon"
                 aria-label={`Adiantar a linha ${number} em 0,1 s`}
+                title="Adiantar 0,1 s: a linha aparece um pouco antes"
                 onClick={() => props.onNudge(index, -NUDGE_SECONDS)}
               >
                 <Minus aria-hidden="true" className="size-5" />
@@ -140,6 +143,7 @@ export function LineList(props: LineListProps) {
                 variant="ghost"
                 size="icon"
                 aria-label={`Atrasar a linha ${number} em 0,1 s`}
+                title="Atrasar 0,1 s: a linha aparece um pouco depois"
                 onClick={() => props.onNudge(index, NUDGE_SECONDS)}
               >
                 <Plus aria-hidden="true" className="size-5" />
@@ -148,6 +152,7 @@ export function LineList(props: LineListProps) {
                 variant="ghost"
                 size="icon"
                 aria-label={`Imantar a linha ${number} ao começo da voz`}
+                title="Ímã: puxa o começo desta linha para o início de voz mais próximo"
                 onClick={() => props.onSnap(index)}
               >
                 <Magnet aria-hidden="true" className="size-5" />
@@ -156,6 +161,7 @@ export function LineList(props: LineListProps) {
                 variant="ghost"
                 size="icon"
                 aria-label={`Inserir uma linha depois da ${number}`}
+                title="Inserir uma linha nova depois desta"
                 onClick={() => props.onInsertAfter(index)}
               >
                 <ListPlus aria-hidden="true" className="size-5" />
@@ -164,6 +170,7 @@ export function LineList(props: LineListProps) {
                 variant="ghost"
                 size="icon"
                 aria-label={`Apagar a linha ${number}`}
+                title="Apagar esta linha"
                 onClick={() => props.onRemove(index)}
               >
                 <Trash2 aria-hidden="true" className="size-5" />
