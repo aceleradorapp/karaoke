@@ -2,6 +2,11 @@
 
 > Entradas mais recentes no topo. Use `/fim-sessao` para registrar.
 
+## 2026-10-07 (19) — "Anna Júlia" e dicas na sincronização
+- A frase "Ter que ver você, assim, sempre tão linda" se perdia depois da vírgula. O ímã adiantou a linha seguinte para a volta da voz depois de uma pausa e cortou a janela de palavras da linha atual. Agora a janela vai até onde a próxima linha estava antes do ímã (guia, seção 18).
+- No experimento com 5 músicas, só mudaram as palavras erradas. "Anna Júlia" e "Flores" foram refeitas e conferidas tocando.
+- Tooltips em todos os botões da página de sincronizar.
+
 ## 2026-10-07 (18) — Sincronia: "Vou Deixar", "Flores" e o botão de refazer
 - **"Vou Deixar":** o `fit_shift` desistia em músicas com poucas pausas na voz e o plano B empurrava a letra 3,5 s. Agora a exigência conta sobre `min(linhas, pausas)`, no worker e no navegador.
 - **Página de sincronizar:** `scrollIntoView` rolava a página a cada "Marcar". Agora só a lista rola.

@@ -188,6 +188,15 @@ class TestAddWordTimings:
         assert aligner.calls[0][0] / RATE == pytest.approx(12.0 + 12.0 - 9.9, abs=0.01)
         assert "anchor" not in timed[0]
 
+    def test_reaches_until_where_the_next_line_was_before_the_magnet(self):
+        current = line(14.0, 18.0, "sempre tão linda")
+        pulled_early = {**line(18.4, 26.0, "Contemplar"), "anchor": 20.1}
+        aligner = FakeAligner()
+
+        add_word_timings([current, pulled_early], silence(40), None, aligner)
+
+        assert aligner.calls[0][0] / RATE == pytest.approx(20.1 + 0.3 - 13.4, abs=0.01)
+
     def test_never_keeps_the_anchor_on_a_line_without_words(self):
         unsure = {**line(12.0, 14.0, "Há flores"), "anchor": 10.5}
         timed, _ = add_word_timings([unsure], silence(30), None, FakeAligner(score=0.0))
