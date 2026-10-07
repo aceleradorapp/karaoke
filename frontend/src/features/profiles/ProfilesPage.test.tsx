@@ -82,16 +82,14 @@ describe('ProfilesPage', () => {
     );
   });
 
-  it('lists family profiles and guests in their own sections', async () => {
+  it('lists only the profiles of the house, never the guests', async () => {
     mockApi({ 'GET /api/profiles': { body: { items: [ANA, TIO_BETO] } } });
     renderPage();
 
-    const family = await screen.findByRole('region', { name: 'Perfis da família' });
-    expect(within(family).getByText('Ana')).toBeInTheDocument();
-    expect(within(family).queryByText('Tio Beto')).not.toBeInTheDocument();
-
-    const guests = screen.getByRole('region', { name: 'Convidados' });
-    expect(within(guests).getByText('Tio Beto')).toBeInTheDocument();
+    const house = await screen.findByRole('region', { name: 'Perfis da casa' });
+    expect(within(house).getByText('Ana')).toBeInTheDocument();
+    expect(screen.queryByText('Tio Beto')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Convidado/ })).not.toBeInTheDocument();
   });
 
   it('selects a profile: touches it, stores it and goes home', async () => {
@@ -169,22 +167,5 @@ describe('ProfilesPage', () => {
     const body = JSON.parse(String(requestsTo(fetchMock, 'POST', '/api/profiles')[0]?.[1]?.body));
     expect(body).toEqual({ name: 'Bia', avatar: 'cat', theme: 'retro', isGuest: false });
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-  });
-
-  it('creates a guest without asking for a theme', async () => {
-    const fetchMock = mockApi({
-      'GET /api/profiles': { body: { items: [] } },
-      'POST /api/profiles': { status: 201, body: buildProfile({ isGuest: true }) },
-    });
-    renderPage();
-
-    fireEvent.click(await screen.findByRole('button', { name: /Convidado/ }));
-    expect(screen.queryByRole('radiogroup', { name: 'Tema' })).not.toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText('Nome'), { target: { value: 'Carla' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Criar' }));
-
-    await waitFor(() => expect(requestsTo(fetchMock, 'POST', '/api/profiles')).toHaveLength(1));
-    const body = JSON.parse(String(requestsTo(fetchMock, 'POST', '/api/profiles')[0]?.[1]?.body));
-    expect(body).toMatchObject({ name: 'Carla', isGuest: true });
   });
 });

@@ -1,15 +1,17 @@
 import type { ProfileDTO } from '@caraoke/shared';
+import { Users } from 'lucide-react';
 import { useState } from 'react';
+import { Link } from 'react-router';
 import { useProfilesQuery } from '../../api/profiles';
 import { Spinner } from '../../components/Spinner';
 import { CreateProfileModal } from './CreateProfileModal';
 import { ProfileEditorModal } from './ProfileEditorModal';
-import { ProfileSections, type NewProfileKind } from './ProfileSections';
+import { HouseProfiles } from './HouseProfiles';
 
 export function ManageProfilesPage() {
   const profiles = useProfilesQuery();
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [creating, setCreating] = useState<NewProfileKind | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
 
   const editingProfile: ProfileDTO | null =
     profiles.data?.find((profile) => profile.id === editingId) ?? null;
@@ -19,9 +21,18 @@ export function ManageProfilesPage() {
       <div>
         <h1 className="font-display text-4xl sm:text-5xl">Gerenciar perfis</h1>
         <p className="text-base text-muted">
-          Toque num perfil para mudar o nome, o avatar ou o tema, ou para excluir.
+          Perfis das pessoas da casa (cada um com o seu tema, playlists e favoritas). Toque num perfil para mudar o
+          nome, o avatar ou o tema, ou para excluir.
         </p>
       </div>
+
+      <Link
+        to="/convidados"
+        className="inline-flex min-h-11 items-center gap-2 self-start rounded-lg bg-surface-2 px-4 font-semibold"
+      >
+        <Users aria-hidden="true" className="size-5" />
+        Gerenciar convidados
+      </Link>
 
       {profiles.isLoading && <Spinner className="mx-auto size-10" />}
 
@@ -32,19 +43,15 @@ export function ManageProfilesPage() {
       )}
 
       {profiles.isSuccess && (
-        <ProfileSections
+        <HouseProfiles
           profiles={profiles.data}
           onSelect={(profile) => setEditingId(profile.id)}
-          onAdd={setCreating}
+          onAdd={() => setIsCreating(true)}
         />
       )}
 
       <ProfileEditorModal profile={editingProfile} onClose={() => setEditingId(null)} />
-      <CreateProfileModal
-        isOpen={creating !== null}
-        isGuest={creating === 'guest'}
-        onClose={() => setCreating(null)}
-      />
+      <CreateProfileModal isOpen={isCreating} isGuest={false} onClose={() => setIsCreating(false)} />
     </div>
   );
 }
