@@ -62,5 +62,9 @@ def plain_text_lines(text: str) -> list[dict[str, Any]]:
     return [{"start": 0, "end": 0, "text": line} for line in stripped if line]
 
 
+INTERNAL_LINE_KEYS = {"anchor"}
+
+
 def build_document(source: str, synced: bool, lines: list[dict[str, Any]]) -> dict[str, Any]:
-    return {"version": 1, "source": source, "synced": synced, "lines": lines}
+    clean = [{key: value for key, value in line.items() if key not in INTERNAL_LINE_KEYS} for line in lines]
+    return {"version": 1, "source": source, "synced": synced, "lines": clean}

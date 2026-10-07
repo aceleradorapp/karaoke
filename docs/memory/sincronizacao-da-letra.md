@@ -159,3 +159,39 @@ Música de teste, voz separada:
 **Varredura da biblioteca:** só mais uma música caía no plano B por esse motivo, "Evidências" (plano B −22,87 s × correto −22,25 s). A diferença é pequena e ela não foi mexida.
 
 **Página de sincronizar:** a lista de linhas usava `scrollIntoView`, que rola **todos** os ancestrais, inclusive a página. A cada "Marcar", a página pulava e tirava o botão e a linha do tempo do lugar. Agora `keepRowVisible` (em `LineList.tsx`) rola só a própria lista. Conferido no navegador em 1366 e 390 px: a página fica parada em todos os cliques.
+
+## 16. "Flores": o ímã puxava linhas para a respiração do verso anterior (2026-10-07)
+
+**Sintoma:** em "Flores" (Titãs), várias linhas entravam ~1,7 s cedo e cortavam a anterior. O cantor respira no meio de cada verso ("Olhei | até ficar cansado"), e essas respirações viram "inícios de frase". O `snap_starts` (tolerância 1,8 s) puxava a linha seguinte para a respiração da anterior.
+- 19,59 → 17,55: "De ver os meus olhos";
+- 32,47 → 30,75: "E o resto do meu corpo";
+- e outras.
+
+O alinhamento por palavra (MMS) **achava o começo certo** (19,13 e 32,48), mas só podia **adiantar** a linha.
+
+**Experimento** (`scratchpad`, 4 músicas: duas aprovadas pelo Michael, "À Sua Maneira" e "Ela É Demais", mais "Flores" e "Vou Deixar"):
+
+| Variante | Músicas aprovadas | Flores e Vou Deixar | Decisão |
+|---|---|---|---|
+| A: a linha começa na 1ª palavra (para frente ou para trás) | mudam no máximo 0,43 s (exatamente para a 1ª palavra) | some o erro de "linha × 1ª palavra > 0,5 s" (5 e 6 casos) | entrou |
+| B: janela fixa de 2 s antes | uma linha de "Ela É Demais" pulou 4,3 s | | descartada |
+| C: a janela começa no menor entre a posição com ímã e a sem ímã (`anchor`) | sem regressão | "Há flores cobrindo o telhado" ganhou palavras (103,08 s, em vez dos 104,80 errados do ímã) | entrou |
+
+**Implementado:**
+- `lyric_alignment.rebuild_lines` guarda `anchor` (o começo antes do ímã) quando o ímã mexeu na linha;
+- `word_alignment.add_word_timings` busca a partir de `min(start, anchor) − 0,6 s` e põe o começo da linha na 1ª palavra (no mínimo 0,3 s depois da anterior);
+- `anchor` nunca vai para o arquivo: `build_document` e `write_documents` limpam, e `add_word_timings` também;
+- o navegador ("Alinhar tudo com a voz") continua igual: não tem alinhamento por palavra.
+
+## 17. Botão "Refazer a sincronização automática" (ADR-017)
+
+Na página de sincronizar (Ferramentas):
+- O botão pede confirmação e chama `POST /api/songs/:id/lyrics/resync`, que cria um job `kind = RESYNC` para "Este PC".
+- O worker (passo `RESYNC`, `steps/resync.py`) parte do `letra.original.json`, alinha linhas e palavras e grava.
+- A tela mostra o andamento ("Alinhando as palavras com a voz… linha 12 de 37") e reabre o editor com a letra nova quando termina.
+- A música continua pronta para cantar o tempo todo; se der errado, ela não vira "com erro".
+
+**Medido:**
+- "Flores": 72 s na CPU, 28 de 37 linhas com palavras. Conferida tocando: aos 17,5 s ainda está "Olhei até ficar cansado" toda pintada; aos 19,6 s, "De ver os…".
+- "Vou Deixar" também foi refeita pelo botão, com as regras novas.
+- A letra antiga da "Flores" (com as edições de 10-02) ficou guardada no scratchpad desta sessão (`flores-letra-antes.json`), caso o Michael queira comparar.

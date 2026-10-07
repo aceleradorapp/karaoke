@@ -1,5 +1,5 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { LyricsCheckDTO, LyricsDoc, SaveLyricsInput, SongDTO } from '@caraoke/shared';
+import type { JobDTO, LyricsCheckDTO, LyricsDoc, SaveLyricsInput, SongDTO } from '@caraoke/shared';
 import { ApiError, apiGet, apiSend } from './client';
 
 const LYRICS_STALE_TIME_MS = 5 * 60 * 1000;
@@ -67,5 +67,11 @@ export function useSaveLyricsMutation(songId: string) {
       void queryClient.invalidateQueries({ queryKey: ['songs'] });
       void queryClient.invalidateQueries({ queryKey: ['home'] });
     },
+  });
+}
+
+export function useResyncLyricsMutation() {
+  return useMutation({
+    mutationFn: (songId: string) => apiSend<JobDTO>('POST', `/songs/${songId}/lyrics/resync`),
   });
 }

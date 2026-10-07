@@ -36,6 +36,7 @@ function buildJob(overrides: Partial<Job> = {}): Job {
   return {
     id: 'job1',
     songId: 'song1',
+    kind: 'PROCESS',
     status: 'PENDING',
     step: null,
     progress: 0,

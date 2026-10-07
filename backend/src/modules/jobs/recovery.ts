@@ -16,10 +16,12 @@ function runningOn(workerId: string | undefined): Prisma.JobWhereInput {
   return { status: 'RUNNING', workerId };
 }
 
+const isProcessing = (job: { kind: string }) => job.kind !== 'RESYNC';
+
 export async function recoverInterruptedJobs(workerId?: string): Promise<RecoveryResult> {
   const interrupted = await prisma.job.findMany({
     where: runningOn(workerId),
-    select: { id: true, songId: true, attempts: true },
+    select: { id: true, songId: true, attempts: true, kind: true },
   });
 
   const toRequeue = interrupted.filter((job) => job.attempts < MAX_JOB_ATTEMPTS);
@@ -31,7 +33,7 @@ export async function recoverInterruptedJobs(workerId?: string): Promise<Recover
       data: { status: 'PENDING', step: null, progress: 0, message: null, device: null, workerId: null, startedAt: null },
     }),
     prisma.song.updateMany({
-      where: { id: { in: toRequeue.map((job) => job.songId) } },
+      where: { id: { in: toRequeue.filter(isProcessing).map((job) => job.songId) } },
       data: { status: 'QUEUED' },
     }),
     prisma.job.updateMany({
@@ -39,7 +41,7 @@ export async function recoverInterruptedJobs(workerId?: string): Promise<Recover
       data: { status: 'FAILED', error: GAVE_UP_MESSAGE, finishedAt: new Date() },
     }),
     prisma.song.updateMany({
-      where: { id: { in: toGiveUp.map((job) => job.songId) } },
+      where: { id: { in: toGiveUp.filter(isProcessing).map((job) => job.songId) } },
       data: { status: 'ERROR' },
     }),
   ]);

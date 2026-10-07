@@ -13,6 +13,7 @@ MIN_LINES_FOR_FIT = 3
 SNAP_TOLERANCE_SECONDS = 1.8
 MIN_LINE_GAP_SECONDS = 0.3
 MIN_SHIFT_SECONDS = 1.0
+ANCHOR_KEY = "anchor"
 
 
 def nearest_distance(points: np.ndarray, onsets: np.ndarray) -> np.ndarray:
@@ -71,7 +72,9 @@ def first_onset_shift(first_start: float, envelope: np.ndarray) -> float | None:
     return shift if abs(shift) >= MIN_SHIFT_SECONDS and abs(shift) <= SHIFT_LIMIT_SECONDS else None
 
 
-def rebuild_lines(lines: list[dict[str, Any]], starts: np.ndarray) -> list[dict[str, Any]]:
+def rebuild_lines(
+    lines: list[dict[str, Any]], starts: np.ndarray, anchors: np.ndarray | None = None
+) -> list[dict[str, Any]]:
     rebuilt: list[dict[str, Any]] = []
     for index, line in enumerate(lines):
         start = float(starts[index])
@@ -80,7 +83,10 @@ def rebuild_lines(lines: list[dict[str, Any]], starts: np.ndarray) -> list[dict[
         end = start + duration
         if next_start is not None:
             end = min(end, next_start)
-        rebuilt.append({"start": round(start, 2), "end": round(max(end, start), 2), "text": line["text"]})
+        entry: dict[str, Any] = {"start": round(start, 2), "end": round(max(end, start), 2), "text": line["text"]}
+        if anchors is not None and abs(float(anchors[index]) - start) > 1e-6:
+            entry[ANCHOR_KEY] = round(float(anchors[index]), 2)
+        rebuilt.append(entry)
     return rebuilt
 
 
@@ -99,4 +105,4 @@ def align_lines_with_vocals(lines: list[dict[str, Any]], envelope: np.ndarray) -
         return rebuild_lines(lines, np.maximum(starts + shift, 0.0))
 
     shifted = np.maximum(starts + shift, 0.0)
-    return rebuild_lines(lines, snap_starts(shifted, onsets))
+    return rebuild_lines(lines, snap_starts(shifted, onsets), shifted)

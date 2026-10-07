@@ -4,6 +4,7 @@ import { MemoryRouter, Route, Routes } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { LyricsDoc, SongDTO } from '@caraoke/shared';
 import { useToastStore } from '../../stores/useToastStore';
+import { buildJob } from '../../test/builders';
 import { mockApi, requestsTo, type MockRoutes } from '../../test/mockApi';
 import { buildProcessingSong, buildSong } from '../../test/songBuilder';
 import { LyricsSyncPage } from './LyricsSyncPage';
@@ -226,7 +227,7 @@ function renderPage(routes: MockRoutes = baseRoutes()) {
       </MemoryRouter>
     </QueryClientProvider>,
   );
-  return { fetchMock };
+  return { fetchMock, queryClient };
 }
 
 type SavedLine = { start: number; end: number; text: string };
@@ -258,6 +259,62 @@ describe('LyricsSyncPage', () => {
     audioMock.state.failLoad = false;
     audioMock.state.analysisFails = false;
     useToastStore.setState({ toasts: [] });
+  });
+
+  describe('redoing the automatic sync', () => {
+    it('confirms, shows the progress and reopens the editor with the new lyrics', async () => {
+      const newUrl = '/media/s1/letra.json?v=2';
+      const resynced: LyricsDoc = {
+        version: 1,
+        source: 'ALIGNED',
+        synced: true,
+        lines: [
+          { start: 12.25, end: 13, text: 'Vou deixar' },
+          { start: 15.55, end: 22, text: 'A vida me levar' },
+        ],
+      };
+      let phase: 'queued' | 'running' | 'done' = 'queued';
+      const job = buildJob({ id: 'j9', songId: 's1', kind: 'RESYNC', status: 'PENDING' });
+      const { fetchMock, queryClient } = await renderReady(
+        baseRoutes(readySong(), LYRICS, {
+          'GET /api/songs/s1': () => ({ body: phase === 'done' ? readySong({ lyricsUrl: newUrl, lyricsSource: 'ALIGNED' }) : readySong() }),
+          [`GET ${newUrl}`]: { body: resynced },
+          'POST /api/songs/s1/lyrics/resync': { status: 201, body: job },
+          'GET /api/jobs?scope=active': () => ({
+            body: {
+              items:
+                phase === 'running'
+                  ? [{ ...job, status: 'RUNNING', progress: 40, message: 'Alinhando as palavras com a voz…' }]
+                  : phase === 'queued'
+                    ? [job]
+                    : [],
+            },
+          }),
+          'GET /api/jobs?scope=recent': () => ({ body: { items: phase === 'done' ? [{ ...job, status: 'DONE' }] : [] } }),
+        }),
+      );
+
+      fireEvent.click(await screen.findByRole('button', { name: 'Refazer a sincronização automática' }));
+      const dialog = screen.getByRole('dialog');
+      expect(dialog).toHaveTextContent('As mudanças feitas à mão nesta letra serão substituídas');
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Refazer' }));
+
+      expect(await screen.findByRole('heading', { name: 'Refazendo a sincronização' })).toBeInTheDocument();
+      expect(requestsTo(fetchMock, 'POST', '/api/songs/s1/lyrics/resync')).toHaveLength(1);
+      expect(screen.queryByRole('list', { name: 'Linhas da letra' })).not.toBeInTheDocument();
+
+      phase = 'running';
+      await queryClient.invalidateQueries({ queryKey: ['jobs'] });
+      expect(await screen.findByText('Alinhando as palavras com a voz…')).toBeInTheDocument();
+
+      phase = 'done';
+      await queryClient.invalidateQueries({ queryKey: ['jobs'] });
+
+      expect(await screen.findByDisplayValue('Vou deixar')).toBeInTheDocument();
+      expect(screen.getByDisplayValue('A vida me levar')).toBeInTheDocument();
+      expect(toastMessages()).toContain('Sincronização refeita com a voz');
+      expect(savedBodies(fetchMock)).toHaveLength(0);
+    });
   });
 
   afterEach(() => {

@@ -8,7 +8,7 @@ from .api import Api
 from .context import JobContext
 from .errors import JobCanceled
 from .remote import discard_local_files, fetch_source, send_results, with_local_paths
-from .steps import cover, download, lyrics, melody, separate
+from .steps import cover, download, lyrics, melody, resync, separate
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +31,7 @@ STEP_HANDLERS: dict[str, StepHandler] = {
     "COVER": cover.run,
     "MELODY": melody.run,
     "FINALIZE": finalize,
+    "RESYNC": resync.run,
 }
 
 

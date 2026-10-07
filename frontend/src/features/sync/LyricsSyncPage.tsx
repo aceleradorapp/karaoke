@@ -1,4 +1,4 @@
-import type { LyricsDoc, SongDTO } from '@caraoke/shared';
+import type { JobDTO, LyricsDoc, SongDTO } from '@caraoke/shared';
 import clsx from 'clsx';
 import {
   ArrowLeft,
@@ -10,6 +10,7 @@ import {
   Pause,
   Play,
   Redo2,
+  RefreshCw,
   SkipBack,
   Target,
   Undo2,
@@ -20,6 +21,7 @@ import { Link, useParams } from 'react-router';
 import { useLyricsQuery, useOriginalLyricsQuery } from '../../api/lyrics';
 import { useSongQuery } from '../../api/songs';
 import { Button } from '../../components/Button';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { SaveIndicator } from '../../components/SaveIndicator';
 import { Spinner } from '../../components/Spinner';
 import { formatOffsetSeconds } from '../../lib/format';
@@ -36,6 +38,7 @@ import { DEFAULT_ZOOM_SECONDS, ZOOM_LEVELS } from './timelineMath';
 import { useLyricsEditor } from './useLyricsEditor';
 import { useSyncPreview } from './useSyncPreview';
 import { useSyncShortcuts } from './useSyncShortcuts';
+import { useLyricsResync } from './useLyricsResync';
 
 const REACTION_COMPENSATION_SECONDS = 0.15;
 const LEAD_IN_SECONDS = 2;
@@ -102,7 +105,49 @@ function describeAlignment(shiftSeconds: number, snapped: number, total: number)
   return `Alinhada com a voz: deslocamento de ${shift} e ${snapped} de ${total} linhas ajustadas ao começo da voz. Dá para desfazer.`;
 }
 
-function SyncWorkbench({ song, doc }: { song: SongDTO; doc: LyricsDoc }) {
+interface SyncWorkbenchProps {
+  song: SongDTO;
+  doc: LyricsDoc;
+  onResync: () => void;
+  isResyncStarting: boolean;
+}
+
+function ResyncProgress({ songId, job }: { songId: string; job: JobDTO | null }) {
+  const text =
+    job?.status === 'RUNNING'
+      ? (job.message ?? 'Refazendo a sincronização…')
+      : job?.status === 'PENDING'
+        ? 'Na fila de processamento: começa assim que terminar o que está na frente.'
+        : 'Carregando a letra nova…';
+  return (
+    <div className="mx-auto flex w-full max-w-3xl flex-col items-start gap-4 py-8">
+      <BackToSong songId={songId} />
+      <h1 className="font-display text-4xl">Refazendo a sincronização</h1>
+      <div role="status" className="flex w-full items-center gap-3 rounded-2xl bg-surface p-4 text-base">
+        <Spinner className="size-6 shrink-0" />
+        <span>{text}</span>
+      </div>
+      {job?.status === 'RUNNING' && (
+        <div
+          role="progressbar"
+          aria-label="Andamento da sincronização"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={job.progress}
+          className="h-2 w-full overflow-hidden rounded-full bg-surface-2"
+        >
+          <div className="h-full bg-primary transition-[width]" style={{ width: `${job.progress}%` }} />
+        </div>
+      )}
+      <p className="text-sm text-muted">
+        O karaokê está alinhando a letra original com a voz, linha por linha e palavra por palavra. Leva cerca de um
+        minuto. A música continua disponível para cantar.
+      </p>
+    </div>
+  );
+}
+
+function SyncWorkbench({ song, doc, onResync, isResyncStarting }: SyncWorkbenchProps) {
   const preview = useSyncPreview(song);
   const editor = useLyricsEditor(song, doc);
   const original = useOriginalLyricsQuery(song.id);
@@ -120,6 +165,7 @@ function SyncWorkbench({ song, doc }: { song: SongDTO; doc: LyricsDoc }) {
   const [ripple, setRipple] = useState(false);
   const [isTapping, setIsTapping] = useState(false);
   const [tapIndex, setTapIndex] = useState(0);
+  const [isConfirmingResync, setIsConfirmingResync] = useState(false);
 
   const { lines } = editor;
   const isReady = preview.status === 'ready';
@@ -334,6 +380,10 @@ function SyncWorkbench({ song, doc }: { song: SongDTO; doc: LyricsDoc }) {
                 <History aria-hidden="true" className="size-5" />
                 Voltar ao original
               </Button>
+              <Button variant="secondary" onClick={() => setIsConfirmingResync(true)} isLoading={isResyncStarting}>
+                <RefreshCw aria-hidden="true" className="size-5" />
+                Refazer a sincronização automática
+              </Button>
               <label className="inline-flex min-h-11 items-center gap-2 text-base">
                 <input
                   type="checkbox"
@@ -347,6 +397,8 @@ function SyncWorkbench({ song, doc }: { song: SongDTO; doc: LyricsDoc }) {
             <p className="text-sm text-muted">
               “Alinhar tudo com a voz” usa todas as linhas para achar o melhor deslocamento e puxa cada linha
               para o começo da frase cantada. Se uma linha ainda ficar torta, arraste-a ou use o ímã nela.
+              “Refazer a sincronização automática” começa de novo da letra original, alinhando cada linha e cada
+              palavra com a voz (leva cerca de um minuto).
             </p>
           </Panel>
 
@@ -520,6 +572,18 @@ function SyncWorkbench({ song, doc }: { song: SongDTO; doc: LyricsDoc }) {
           </Panel>
         </>
       )}
+      <ConfirmDialog
+        isOpen={isConfirmingResync}
+        title="Refazer a sincronização automática"
+        message="O karaokê vai alinhar de novo a letra original com a voz. As mudanças feitas à mão nesta letra serão substituídas (a letra original continua guardada)."
+        confirmLabel="Refazer"
+        dismissLabel="Voltar"
+        onConfirm={() => {
+          setIsConfirmingResync(false);
+          onResync();
+        }}
+        onCancel={() => setIsConfirmingResync(false)}
+      />
     </div>
   );
 }
@@ -528,7 +592,6 @@ export function LyricsSyncPage() {
   const { id } = useParams();
   const songQuery = useSongQuery(id);
   const song = songQuery.data;
-  const lyrics = useLyricsQuery(song?.lyricsUrl ?? null);
 
   if (songQuery.isLoading) return <Spinner className="mx-auto mt-10 size-10" />;
   if (songQuery.isError || !song) {
@@ -550,6 +613,14 @@ export function LyricsSyncPage() {
       />
     );
   }
+  return <SongLyricsSync song={song} />;
+}
+
+function SongLyricsSync({ song }: { song: SongDTO }) {
+  const lyrics = useLyricsQuery(song.lyricsUrl);
+  const resync = useLyricsResync(song, Boolean(lyrics.data) && !lyrics.isPlaceholderData);
+
+  if (resync.isRunning || resync.isWaitingForLyrics) return <ResyncProgress songId={song.id} job={resync.job} />;
   if (!song.lyricsUrl || lyrics.isError) {
     return (
       <Message
@@ -564,5 +635,13 @@ export function LyricsSyncPage() {
     return <Message songId={song.id} title="A letra está vazia" text="Não há linhas para sincronizar." />;
   }
 
-  return <SyncWorkbench key={song.id} song={song} doc={lyrics.data} />;
+  return (
+    <SyncWorkbench
+      key={`${song.id}:${resync.generation}`}
+      song={song}
+      doc={lyrics.data}
+      onResync={resync.start}
+      isResyncStarting={resync.isStarting}
+    />
+  );
 }

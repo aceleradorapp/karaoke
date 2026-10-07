@@ -2,6 +2,7 @@ import logging
 import unicodedata
 from dataclasses import dataclass
 from pathlib import Path
+from collections.abc import Callable
 from typing import Any, Protocol
 
 import numpy as np
@@ -128,14 +129,18 @@ def add_word_timings(
     loud: np.ndarray | None,
     aligner: Aligner,
     sample_rate: int = ALIGN_SAMPLE_RATE,
+    on_line: Callable[[int, int], None] | None = None,
 ) -> tuple[list[dict[str, Any]], int]:
     duration = len(audio) / sample_rate
     result: list[dict[str, Any]] = []
     aligned_count = 0
 
     for index, line in enumerate(lines):
+        if on_line:
+            on_line(index, len(lines))
         next_start = lines[index + 1]["start"] if index + 1 < len(lines) else None
-        window_start = max(0.0, line["start"] - WINDOW_BEFORE_SECONDS)
+        earliest = min(line["start"], line.get("anchor", line["start"]))
+        window_start = max(0.0, earliest - WINDOW_BEFORE_SECONDS)
         window_end = min(
             duration,
             next_start + WINDOW_AFTER_SECONDS if next_start is not None else line["start"] + LAST_LINE_WINDOW_SECONDS,
@@ -146,7 +151,7 @@ def add_word_timings(
         spans = align_line_words(aligner, chunk, texts) if len(chunk) and texts else []
         filled = fill_missing(spans) if spans and mean_score(spans) >= MIN_LINE_SCORE else None
         if filled is None:
-            result.append({key: value for key, value in line.items() if key != "words"})
+            result.append({key: value for key, value in line.items() if key not in ("words", "anchor")})
             continue
 
         previous_start = result[-1]["start"] if result else None
@@ -159,7 +164,7 @@ def add_word_timings(
             words.append({"start": round(start, 2), "end": round(max(end, start), 2), "text": text})
 
         lower_bound = previous_start + MIN_LINE_GAP_SECONDS if previous_start is not None else 0.0
-        line_start = max(min(line["start"], words[0]["start"]), lower_bound)
+        line_start = max(words[0]["start"], lower_bound)
         line_end = words[-1]["end"] if next_start is None else min(words[-1]["end"], next_start)
         result.append(
             {"start": round(line_start, 2), "end": round(max(line_end, line_start), 2), "text": line["text"], "words": words}
@@ -169,12 +174,17 @@ def add_word_timings(
     return result, aligned_count
 
 
-def align_song_words(vocals: Path, lines: list[dict[str, Any]], aligner: Aligner | None = None) -> list[dict[str, Any]] | None:
+def align_song_words(
+    vocals: Path,
+    lines: list[dict[str, Any]],
+    aligner: Aligner | None = None,
+    on_line: Callable[[int, int], None] | None = None,
+) -> list[dict[str, Any]] | None:
     audio = decode_samples(vocals, sample_rate=ALIGN_SAMPLE_RATE, max_seconds=MAX_SONG_SECONDS)
     if audio is None or len(audio) == 0:
         return None
 
     loud = loud_mask(compute_envelope(audio, ALIGN_SAMPLE_RATE))
-    timed, aligned_count = add_word_timings(lines, audio, loud, aligner or MmsAligner())
+    timed, aligned_count = add_word_timings(lines, audio, loud, aligner or MmsAligner(), on_line=on_line)
     logger.info("Word timings found for %d of %d lines", aligned_count, len(lines))
     return timed if aligned_count > 0 else None

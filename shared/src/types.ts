@@ -10,7 +10,8 @@ export type LyricsSource = 'NONE' | 'LRCLIB' | 'PLAIN' | 'ALIGNED' | 'TRANSCRIBE
 
 export type JobStatus = 'PENDING' | 'RUNNING' | 'DONE' | 'FAILED' | 'CANCELED';
 
-export type JobStep = 'DOWNLOAD' | 'SEPARATE' | 'LYRICS' | 'COVER' | 'MELODY' | 'FINALIZE';
+export type JobStep = 'DOWNLOAD' | 'SEPARATE' | 'LYRICS' | 'COVER' | 'MELODY' | 'FINALIZE' | 'RESYNC';
+export type JobKind = 'PROCESS' | 'RESYNC';
 
 export interface ProfileDTO {
   id: string;
@@ -25,6 +26,7 @@ export interface ProfileDTO {
 export interface JobDTO {
   id: string;
   songId: string;
+  kind: JobKind;
   status: JobStatus;
   step: JobStep | null;
   progress: number;
