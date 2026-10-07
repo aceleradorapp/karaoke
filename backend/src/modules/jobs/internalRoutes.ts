@@ -16,7 +16,7 @@ const MAX_MESSAGE_LENGTH = 255;
 const MAX_ERROR_LENGTH = 2000;
 const MAX_DEVICE_LENGTH = 40;
 
-const jobStepSchema = z.enum(['DOWNLOAD', 'SEPARATE', 'LYRICS', 'COVER', 'MELODY', 'FINALIZE']);
+const jobStepSchema = z.enum(['DOWNLOAD', 'SEPARATE', 'LYRICS', 'COVER', 'MELODY', 'FINALIZE', 'RESYNC']);
 const idParamsSchema = z.object({ id: z.string().min(1) });
 
 const progressBodySchema = z.object({

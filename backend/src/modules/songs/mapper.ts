@@ -19,6 +19,7 @@ export function toJobDTO(job: Job, song: SongSummary): JobDTO {
   return {
     id: job.id,
     songId: job.songId,
+    kind: job.kind === 'RESYNC' ? 'RESYNC' : 'PROCESS',
     status: job.status,
     step: job.step,
     progress: job.progress,

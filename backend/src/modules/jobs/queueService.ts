@@ -6,7 +6,8 @@ import { emitToAll } from '../../realtime.js';
 import { moveToError } from '../../services/storage.js';
 import { conflict, notFound } from '../../utils/errors.js';
 import { toJobDTO } from '../songs/mapper.js';
-import { enqueueJob } from './service.js';
+import { RESYNC_KIND, enqueueJob } from './service.js';
+import { enqueueResync } from './resync.js';
 import { publishJob } from './publish.js';
 
 export type JobScope = 'active' | 'recent';
@@ -87,7 +88,7 @@ export async function cancelJob(id: string): Promise<void> {
         ...(movedSource ? { sourcePath: movedSource } : {}),
       },
     }),
-    prisma.song.update({ where: { id: job.songId }, data: { status: 'ERROR' } }),
+    ...(job.kind === RESYNC_KIND ? [] : [prisma.song.update({ where: { id: job.songId }, data: { status: 'ERROR' } })]),
   ]);
   await publishJob(id, { includeSong: true });
 }
@@ -111,6 +112,8 @@ export async function retryJob(id: string): Promise<JobDTO> {
     where: { songId: job.songId, status: { in: ACTIVE_STATUSES } },
   });
   if (activeJob) throw conflict('JOB_ALREADY_ACTIVE', 'Esta música já está na fila');
+
+  if (job.kind === RESYNC_KIND) return enqueueResync(job.songId);
 
   const isUpload = job.song.source === 'UPLOAD';
   const hasOriginal = Boolean(job.sourcePath) && (await fileExists(job.sourcePath as string));

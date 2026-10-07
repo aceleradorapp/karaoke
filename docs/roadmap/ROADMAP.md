@@ -238,6 +238,12 @@ Branch: `feature/f7b-fila-e-letra`.
 |---|---|---|---|
 | F7J-01 | ✅ 2026-10-07 | Alinhamento: exigência de casamento sobre min(linhas, pausas da voz); "Vou Deixar" ressincronizada; página de sincronizar não rola mais a página ao marcar | 🔴 |
 
+## Fase 7K — Refazer a sincronização (ADR-017)
+| ID | Status | Tarefa | Modelo |
+|---|---|---|---|
+| F7K-01 | ✅ 2026-10-07 | Job `RESYNC` (coluna `jobs.kind`), `POST /songs/:id/lyrics/resync`, passo no worker, botão e andamento na página de sincronizar | 🔴 |
+| F7K-02 | ✅ 2026-10-07 | Alinhamento: linha começa na 1ª palavra e janela considera a posição antes do ímã (experimento em 4 músicas); "Flores" e "Vou Deixar" refeitas | 🔴 |
+
 ## Fase 8 — Publicação (futuro)
 | ID | Status | Tarefa | Modelo |
 |---|---|---|---|

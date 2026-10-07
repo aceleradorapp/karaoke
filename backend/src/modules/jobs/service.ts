@@ -6,6 +6,7 @@ import { LOCAL_WORKER_ID } from '../../services/workerStatus.js';
 import { stepsForSource } from './steps.js';
 
 const MAX_CLAIM_ATTEMPTS = 5;
+export const RESYNC_KIND = 'RESYNC';
 
 export interface ClaimedJob {
   job: {
@@ -42,13 +43,16 @@ async function tryClaimNextJob(workerId: string): Promise<ClaimedJob | null | 'r
     });
     if (claimed.count === 0) return 'retry';
 
-    await transaction.song.update({ where: { id: candidate.songId }, data: { status: 'PROCESSING' } });
+    const isResync = candidate.kind === RESYNC_KIND;
+    if (!isResync) {
+      await transaction.song.update({ where: { id: candidate.songId }, data: { status: 'PROCESSING' } });
+    }
 
     const { song } = candidate;
     return {
       job: {
         id: candidate.id,
-        steps: stepsForSource(song.source),
+        steps: isResync ? ['RESYNC'] : stepsForSource(song.source),
         sourcePath: candidate.sourcePath,
         song: {
           id: song.id,

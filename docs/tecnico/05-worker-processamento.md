@@ -66,6 +66,11 @@ def run_job(api, claim, info):
 - `ctx.report()` faz no máximo 1 PATCH por segundo (exceto quando muda de etapa ou chega a 100%).
 - Se a resposta do PATCH trouxer `cancel: true`, levanta `JobCanceled` e **mata o subprocesso em execução** (guarde a referência em `ctx.proc`).
 
+### Passo RESYNC (ADR-017)
+- Job `kind = RESYNC`: o claim manda `steps: ["RESYNC"]` e não muda o status da música.
+- `steps/resync.py` lê `letra.original.json` (ou a `letra.json`, guardando-a como original) e chama `align_lines_with_vocals` e depois `align_song_words`, que avisa "linha X de Y".
+- Grava a letra com fonte `ALIGNED`. O `complete` só atualiza os campos da letra.
+
 ### Modo remoto (ADR-015)
 Com `CARAOKE_REMOTE=1` (e `API_URL`, `WORKER_TOKEN` = token da máquina pareada, `CARAOKE_WORK_DIR`, padrão `%LOCALAPPDATA%\ProcessadorKaraoke	rabalho`), o mesmo código roda em outra máquina:
 - `remote.with_local_paths` troca os caminhos do claim pelos da pasta local;

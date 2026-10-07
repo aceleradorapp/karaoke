@@ -94,6 +94,16 @@ class TestSnapStarts:
 
 
 class TestAlignLines:
+    def test_remembers_where_a_line_was_before_the_magnet(self):
+        envelope = voice_envelope([(30, 36), (38, 44), (47, 53), (60, 66), (68, 74), (80, 86)], 100)
+        lines = lyric_lines([15.0, 23.0, 32.2, 45.0, 52.0, 65.0])
+
+        aligned = align_lines_with_vocals(lines, envelope)
+
+        snapped = [entry for entry in aligned if "anchor" in entry]
+        assert snapped
+        assert all(abs(entry["anchor"] - entry["start"]) > 0 for entry in snapped)
+
     def test_shifts_and_snaps_the_lines_to_the_voice(self):
         envelope = voice_envelope([(30, 36), (38, 44), (47, 53), (60, 66), (68, 74), (80, 86)], 100)
         lines = lyric_lines([15.0, 23.0, 32.2, 45.0, 52.0, 65.0])
