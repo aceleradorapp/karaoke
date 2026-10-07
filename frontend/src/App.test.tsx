@@ -27,9 +27,9 @@ describe('App routing', () => {
     vi.unstubAllGlobals();
   });
 
-  it('sends visitors without a selected profile to "Quem vai cantar?"', async () => {
+  it('sends visitors without a selected profile to "Quem está usando?"', async () => {
     renderApp('/');
-    expect(await screen.findByRole('heading', { name: 'Quem vai cantar?' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Quem está usando?' })).toBeInTheDocument();
   });
 
   it('shows the profile management screen inside the stage layout, with the top bar', async () => {
@@ -50,8 +50,8 @@ describe('App routing', () => {
     expect(screen.getByRole('navigation', { name: 'Navegação principal' })).toBeInTheDocument();
   });
 
-  it('asks who is singing before managing profiles', async () => {
+  it('asks who is using the TV before managing profiles', async () => {
     renderApp('/perfis/gerenciar');
-    expect(await screen.findByRole('heading', { name: 'Quem vai cantar?' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Quem está usando?' })).toBeInTheDocument();
   });
 });

@@ -50,6 +50,16 @@ describe('RequireProfile', () => {
     expect(await screen.findByText('Escolha o perfil')).toBeInTheDocument();
   });
 
+  it('sends the TV back to the profile choice when it was left on a guest', async () => {
+    const guest = { ...ANA, id: 'g1', name: 'Tio Beto', isGuest: true };
+    useProfileStore.setState({ currentProfile: guest });
+    mockApi({ 'GET /api/profiles': { body: { items: [ANA, guest] } } });
+
+    renderAt('/');
+
+    expect(await screen.findByText('Escolha o perfil')).toBeInTheDocument();
+  });
+
   it('renders the page when a profile is selected', async () => {
     useProfileStore.setState({ currentProfile: ANA });
     mockApi({ 'GET /api/profiles': { body: { items: [ANA] } } });

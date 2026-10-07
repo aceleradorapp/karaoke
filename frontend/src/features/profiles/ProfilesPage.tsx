@@ -6,7 +6,7 @@ import { Spinner } from '../../components/Spinner';
 import { useProfileStore } from '../../stores/useProfileStore';
 import { toast } from '../../stores/useToastStore';
 import { CreateProfileModal } from './CreateProfileModal';
-import { ProfileSections, type NewProfileKind } from './ProfileSections';
+import { HouseProfiles } from './HouseProfiles';
 
 export function ProfilesPage() {
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ export function ProfilesPage() {
   const touchProfile = useTouchProfileMutation();
   const setProfile = useProfileStore((state) => state.setProfile);
   const hasCurrentProfile = useProfileStore((state) => state.currentProfile !== null);
-  const [creating, setCreating] = useState<NewProfileKind | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
 
   async function selectProfile(profile: ProfileDTO) {
     try {
@@ -29,7 +29,7 @@ export function ProfilesPage() {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-5xl flex-col items-center gap-10 px-4 py-10">
       <h1 className="text-center font-display text-4xl text-text sm:text-5xl lg:text-6xl">
-        Quem vai cantar?
+        Quem está usando?
       </h1>
 
       {profiles.isLoading && <Spinner className="size-10" />}
@@ -41,10 +41,10 @@ export function ProfilesPage() {
       )}
 
       {profiles.isSuccess && (
-        <ProfileSections
+        <HouseProfiles
           profiles={profiles.data}
           onSelect={selectProfile}
-          onAdd={setCreating}
+          onAdd={() => setIsCreating(true)}
           isDisabled={touchProfile.isPending}
         />
       )}
@@ -58,11 +58,7 @@ export function ProfilesPage() {
         </Link>
       )}
 
-      <CreateProfileModal
-        isOpen={creating !== null}
-        isGuest={creating === 'guest'}
-        onClose={() => setCreating(null)}
-      />
+      <CreateProfileModal isOpen={isCreating} isGuest={false} onClose={() => setIsCreating(false)} />
     </main>
   );
 }

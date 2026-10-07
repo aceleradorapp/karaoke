@@ -13,13 +13,13 @@ export function RequireProfile() {
     if (!profiles.data || !currentProfile) return;
 
     const serverProfile = profiles.data.find((profile) => profile.id === currentProfile.id);
-    if (!serverProfile) {
+    if (!serverProfile || serverProfile.isGuest) {
       clearProfile();
       return;
     }
     if (JSON.stringify(serverProfile) !== JSON.stringify(currentProfile)) setProfile(serverProfile);
   }, [profiles.data, currentProfile, setProfile, clearProfile]);
 
-  if (!currentProfile) return <Navigate to="/perfis" replace />;
+  if (!currentProfile || currentProfile.isGuest) return <Navigate to="/perfis" replace />;
   return <Outlet />;
 }

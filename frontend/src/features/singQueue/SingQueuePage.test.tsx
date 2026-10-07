@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import type { ReactElement } from 'react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { useProfileStore } from '../../stores/useProfileStore';
 import { mockApi, requestsTo, type MockRoutes } from '../../test/mockApi';
 import { buildProcessingSong, buildSingRequest, buildSong } from '../../test/songBuilder';
 import { AddRequestModal } from './AddRequestModal';
@@ -202,7 +203,10 @@ describe('SingQueuePage v2', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Adicionar' }));
     const dialog = await screen.findByRole('dialog', { name: 'Pôr na fila de cantores' });
     expect(within(dialog).getByRole('button', { name: 'Pôr na fila' })).toBeDisabled();
-    fireEvent.click(await within(dialog).findByRole('radio', { name: 'Ana' }));
+    fireEvent.click(await within(dialog).findByRole('button', { name: 'Convidado' }));
+    const people = within(dialog).getByRole('region', { name: 'Escolher quem vai cantar' });
+    fireEvent.click(within(people).getByRole('button', { name: /^Ana/ }));
+    expect(within(dialog).getByRole('radio', { name: 'Ana' })).toBeChecked();
     fireEvent.click(await within(dialog).findByRole('radio', { name: /Flores/ }));
     expect(within(dialog).queryByText('Quebrada')).not.toBeInTheDocument();
     fireEvent.click(within(dialog).getByRole('button', { name: 'Pôr na fila' }));
@@ -210,6 +214,22 @@ describe('SingQueuePage v2', () => {
     await waitFor(() => expect(requestsTo(fetchMock, 'POST', '/api/sing-queue')).toHaveLength(1));
     expect(bodyOf(fetchMock, 'POST', '/api/sing-queue')).toEqual({ profileId: 'p1', songId: 's9' });
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
+  it('starts with the profile that is on the TV as the singer', async () => {
+    const tvProfile = { ...ANA, theme: 'cinema', createdAt: '', lastUsedAt: '' };
+    useProfileStore.setState({ currentProfile: tvProfile });
+    renderAt(
+      <AddRequestModal isOpen presetSong={buildSong({ id: 's1', title: 'Evidências' })} onClose={() => undefined} />,
+      {
+        'GET /api/profiles': { body: { items: [tvProfile] } },
+        'GET /api/songs?sort=title': { body: { items: [], nextCursor: null } },
+      },
+    );
+
+    expect(await screen.findByRole('radio', { name: 'Ana' })).toBeChecked();
+    expect(screen.getByRole('button', { name: 'Pôr na fila' })).toBeEnabled();
+    useProfileStore.setState({ currentProfile: null });
   });
 
   it('creates a guest inside the window and selects them', async () => {
@@ -240,7 +260,8 @@ describe('SingQueuePage v2', () => {
     );
 
     expect(await screen.findByText('Evidências')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /\+ Convidado/ }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Convidado' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Novo convidado' }));
     fireEvent.change(screen.getByLabelText('Nome do convidado'), { target: { value: 'Edu' } });
     fireEvent.click(screen.getByRole('button', { name: 'Criar convidado' }));
 

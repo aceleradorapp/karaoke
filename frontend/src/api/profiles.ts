@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { CreateProfileInput, ProfileDTO, UpdateProfileInput } from '@caraoke/shared';
+import type { CreateProfileInput, GuestDTO, ProfileDTO, UpdateProfileInput } from '@caraoke/shared';
 import { apiGet, apiSend } from './client';
 
 export const PROFILES_QUERY_KEY = ['profiles'] as const;
@@ -12,6 +12,31 @@ export function useProfilesQuery() {
   return useQuery({
     queryKey: PROFILES_QUERY_KEY,
     queryFn: async () => (await apiGet<ProfileListResponse>('/profiles')).items,
+  });
+}
+
+export const GUESTS_QUERY_KEY = [...PROFILES_QUERY_KEY, 'guests'] as const;
+
+export function useGuestsQuery() {
+  return useQuery({
+    queryKey: GUESTS_QUERY_KEY,
+    queryFn: async () => (await apiGet<{ items: GuestDTO[] }>('/profiles/guests')).items,
+  });
+}
+
+export function useDeleteGuestsMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (ids: string[]) => apiSend<{ deleted: string[] }>('POST', '/profiles/guests/delete-many', { ids }),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: PROFILES_QUERY_KEY }),
+  });
+}
+
+export function useStaleGuestsQuery(days: number, isEnabled: boolean) {
+  return useQuery({
+    queryKey: [...GUESTS_QUERY_KEY, 'stale', days],
+    queryFn: async () => (await apiGet<{ items: GuestDTO[] }>(`/profiles/guests/stale?days=${days}`)).items,
+    enabled: isEnabled,
   });
 }
 
