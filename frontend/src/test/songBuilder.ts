@@ -23,7 +23,6 @@ export function buildSong(overrides: Partial<SongDTO> = {}): SongDTO {
     lyricsNotice: null,
     lyricsOffsetMs: 0,
     fillPercent: 100,
-    keyShift: 0,
     playCount: 0,
     createdAt: '2026-10-01T10:00:00.000Z',
     ...overrides,

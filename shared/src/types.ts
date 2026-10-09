@@ -74,7 +74,6 @@ export interface SongDTO {
   lyricsNotice: LyricsNotice | null;
   lyricsOffsetMs: number;
   fillPercent: number;
-  keyShift: number;
   playCount: number;
   createdAt: string;
   job?: JobDTO | null;

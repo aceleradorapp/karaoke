@@ -249,6 +249,11 @@ Branch: `feature/f7b-fila-e-letra`.
 |---|---|---|---|
 | F7L-01 | ✅ 2026-10-07 | Janela de palavras vai até onde a próxima linha estava antes do ímã ("Anna Júlia"); dicas (tooltips) em todos os botões da página de sincronizar; "Anna Júlia" e "Flores" refeitas | 🔴 |
 
+## Fase 7N — Tom por pessoa
+| ID | Status | Tarefa | Modelo |
+|---|---|---|---|
+| F7N-01 | ✅ 2026-10-09 | Tom guardado por pessoa e por música (`singer_song_keys`, `GET/PUT /songs/:id/key`), em vez de só por música | 🟡 |
+
 ## Fase 8 — Publicação (futuro)
 | ID | Status | Tarefa | Modelo |
 |---|---|---|---|

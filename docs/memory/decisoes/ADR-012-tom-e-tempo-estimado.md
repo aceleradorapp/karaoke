@@ -19,7 +19,10 @@ O Michael pediu duas coisas das ideias guardadas: mudar o tom da música (para q
   - Ao mudar o tom, processa os dois num **Web Worker** (a tela não trava), guarda o resultado dos 2 últimos tons usados e troca as faixas no **mesmo ponto** da música.
   - Enquanto processa, mostra "Mudando o tom…".
 - **Faixa:** de −6 a +6 semitons. Controle "Tom" no player (− / valor / + / voltar ao original), com as teclas `-` e `=`.
-- **Fica salvo por música** (`songs.keyShift`, com salvamento automático), como o tempo de preenchimento da letra. A próxima vez já começa no tom escolhido.
+- ~~Fica salvo por música~~ → **atualizado em 2026-10-09: fica salvo por pessoa e por música.** Salvar só por música não fazia sentido, porque outra pessoa cantando começaria no tom de quem cantou antes.
+  - Tabela `singer_song_keys` (`profileId`, `songId`, `keyShift`); a coluna `songs.keyShift` saiu (estava zerada em todas).
+  - O player busca o tom de quem foi escolhido em "Quem vai cantar esta?" e salva quando essa pessoa muda.
+  - Voltar ao original apaga o registro. Vale para convidados também.
 - **Pontuação:** a nota alvo da melodia é deslocada pelo mesmo número de semitons.
 
 **Tempo estimado na fila de processamento**
