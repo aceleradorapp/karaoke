@@ -238,17 +238,6 @@ describe('song routes', () => {
       expect((await prisma.song.findUniqueOrThrow({ where: { id: song.id } })).fillPercent).toBe(65);
     });
 
-    it('starts every song in the original key and saves a new one', async () => {
-      const song = await createSong();
-      expect((await get(`/api/songs/${song.id}`)).json().keyShift).toBe(0);
-
-      const response = await patch(song.id, { keyShift: -3 });
-
-      expect(response.statusCode).toBe(200);
-      expect(response.json().keyShift).toBe(-3);
-      expect((await prisma.song.findUniqueOrThrow({ where: { id: song.id } })).keyShift).toBe(-3);
-    });
-
     it('rejects invalid changes', async () => {
       const song = await createSong();
 
@@ -261,9 +250,6 @@ describe('song routes', () => {
         { fillPercent: 19 },
         { fillPercent: 151 },
         { fillPercent: 80.5 },
-        { keyShift: 7 },
-        { keyShift: -7 },
-        { keyShift: 1.5 },
       ]) {
         expect((await patch(song.id, payload)).statusCode).toBe(400);
       }
@@ -271,6 +257,58 @@ describe('song routes', () => {
 
     it('answers 404 for an unknown song', async () => {
       expect((await patch('unknown', { title: 'X' })).statusCode).toBe(404);
+    });
+  });
+
+  describe('key of each singer', () => {
+    const keyOf = (songId: string, profileId: string) =>
+      app.inject({ method: 'GET', url: `/api/songs/${songId}/key?profileId=${profileId}` });
+    const saveKey = (songId: string, payload: object) =>
+      app.inject({ method: 'PUT', url: `/api/songs/${songId}/key`, payload });
+
+    it('keeps a key for each person in each song', async () => {
+      const song = await createSong();
+      const other = await createSong({ title: 'Outra' });
+      const ana = await prisma.profile.create({ data: { name: 'Ana', avatar: 'lion' } });
+      const bia = await prisma.profile.create({ data: { name: 'Bia', avatar: 'cat', isGuest: true } });
+
+      expect((await keyOf(song.id, ana.id)).json()).toEqual({ keyShift: 0 });
+      expect((await saveKey(song.id, { profileId: ana.id, keyShift: -2 })).json()).toEqual({ keyShift: -2 });
+      await saveKey(song.id, { profileId: bia.id, keyShift: 3 });
+
+      expect((await keyOf(song.id, ana.id)).json()).toEqual({ keyShift: -2 });
+      expect((await keyOf(song.id, bia.id)).json()).toEqual({ keyShift: 3 });
+      expect((await keyOf(other.id, ana.id)).json()).toEqual({ keyShift: 0 });
+    });
+
+    it('forgets the key when the person goes back to the original', async () => {
+      const song = await createSong();
+      const ana = await prisma.profile.create({ data: { name: 'Ana', avatar: 'lion' } });
+      await saveKey(song.id, { profileId: ana.id, keyShift: 4 });
+
+      await saveKey(song.id, { profileId: ana.id, keyShift: 0 });
+
+      expect(await prisma.singerSongKey.count()).toBe(0);
+      expect((await keyOf(song.id, ana.id)).json()).toEqual({ keyShift: 0 });
+    });
+
+    it('goes away with the person or the song', async () => {
+      const song = await createSong();
+      const ana = await prisma.profile.create({ data: { name: 'Ana', avatar: 'lion' } });
+      await saveKey(song.id, { profileId: ana.id, keyShift: 2 });
+
+      await prisma.profile.delete({ where: { id: ana.id } });
+
+      expect(await prisma.singerSongKey.count()).toBe(0);
+    });
+
+    it('rejects keys out of range and unknown people or songs', async () => {
+      const song = await createSong();
+      const ana = await prisma.profile.create({ data: { name: 'Ana', avatar: 'lion' } });
+      expect((await saveKey(song.id, { profileId: ana.id, keyShift: 7 })).statusCode).toBe(400);
+      expect((await saveKey(song.id, { profileId: ana.id, keyShift: 1.5 })).statusCode).toBe(400);
+      expect((await saveKey(song.id, { profileId: 'nao-existe', keyShift: 1 })).statusCode).toBe(404);
+      expect((await saveKey('nao-existe', { profileId: ana.id, keyShift: 1 })).statusCode).toBe(404);
     });
   });
 

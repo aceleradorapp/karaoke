@@ -95,7 +95,6 @@ model Song {
   lyricsNeedsReview Boolean     @default(false)
   lyricsOffsetMs   Int          @default(0)                // ajuste fino (+ atrasa a letra)
   fillPercent      Int          @default(100)              // tempo de preenchimento da letra: 100 = até o fim da linha (20..150)
-  keyShift         Int          @default(0)                // tom escolhido no player, em semitons (−6..+6, ADR-012)
 
   playCount        Int          @default(0)
   addedById        String?
@@ -156,6 +155,16 @@ model Job {
 
   @@index([status, position])
   @@map("jobs")
+}
+
+// Tom escolhido por cada pessoa em cada música (ADR-012). 0 = original (não guarda linha).
+model SingerSongKey {
+  profileId String   // cascata ao excluir a pessoa
+  songId    String   // cascata ao excluir a música
+  keyShift  Int      // −6..+6
+  updatedAt DateTime @updatedAt
+  @@id([profileId, songId])
+  @@map("singer_song_keys")
 }
 
 // Máquinas de processamento pareadas (ADR-015). O worker local não tem linha: é "local".

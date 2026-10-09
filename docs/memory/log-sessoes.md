@@ -2,6 +2,11 @@
 
 > Entradas mais recentes no topo. Use `/fim-sessao` para registrar.
 
+## 2026-10-09 (20) — Tom por pessoa
+- O Michael notou que guardar o tom por música não fazia sentido: outra pessoa começaria no tom de quem cantou antes. Agora fica guardado **por pessoa e por música**, na tabela `singer_song_keys`; a coluna `songs.keyShift` saiu (estava zerada em todas). ADR-012 atualizado.
+- Verificado no navegador: Casa −2, Teste 01 no original, Casa de novo em −2. Os dados de teste foram limpos.
+- Também nesta leva: limpeza do Docker (askbrain e cache, ~38 GB no C:), a pedido; o HapNexus v2 não usa Docker.
+
 ## 2026-10-07 (19) — "Anna Júlia" e dicas na sincronização
 - A frase "Ter que ver você, assim, sempre tão linda" se perdia depois da vírgula. O ímã adiantou a linha seguinte para a volta da voz depois de uma pausa e cortou a janela de palavras da linha atual. Agora a janela vai até onde a próxima linha estava antes do ímã (guia, seção 18).
 - No experimento com 5 músicas, só mudaram as palavras erradas. "Anna Júlia" e "Flores" foram refeitas e conferidas tocando.

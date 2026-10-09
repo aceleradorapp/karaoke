@@ -2,6 +2,7 @@ import { prisma } from '../src/db.js';
 
 export async function resetDatabase(): Promise<void> {
   await prisma.singRequest.deleteMany();
+  await prisma.singerSongKey.deleteMany();
   await prisma.competitionSong.deleteMany();
   await prisma.competitionParticipant.deleteMany();
   await prisma.vote.deleteMany();

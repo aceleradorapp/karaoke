@@ -1,10 +1,11 @@
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
-import { deleteManySongsSchema, saveLyricsSchema, updateSongSchema } from '@caraoke/shared';
+import { deleteManySongsSchema, saveLyricsSchema, singerKeySchema, updateSongSchema } from '@caraoke/shared';
 import { z } from 'zod';
 import { buildHome } from './home.js';
 import { getOriginalLyrics, restoreOriginalLyrics, saveLyrics } from './lyrics.js';
 import { enqueueResync } from '../jobs/resync.js';
+import { getSingerKey, saveSingerKey } from './singerKey.js';
 import { deleteManySongs, deleteSong, getSong, listSongs, updateSong } from './service.js';
 
 const NO_CONTENT = 204;
@@ -61,6 +62,16 @@ export async function songRoutes(app: FastifyInstance): Promise<void> {
   typedApp.post('/songs/:id/lyrics/restore', { schema: { params: idParamsSchema } }, async (request) =>
     restoreOriginalLyrics(request.params.id),
   );
+
+  typedApp.get(
+    '/songs/:id/key',
+    { schema: { params: idParamsSchema, querystring: z.object({ profileId: z.string().min(1) }) } },
+    async (request) => ({ keyShift: await getSingerKey(request.params.id, request.query.profileId) }),
+  );
+
+  typedApp.put('/songs/:id/key', { schema: { params: idParamsSchema, body: singerKeySchema } }, async (request) => ({
+    keyShift: await saveSingerKey(request.params.id, request.body),
+  }));
 
   typedApp.post('/songs/:id/lyrics/resync', { schema: { params: idParamsSchema } }, async (request, reply) =>
     reply.status(201).send(await enqueueResync(request.params.id)),
