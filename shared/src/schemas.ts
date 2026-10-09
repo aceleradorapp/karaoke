@@ -81,6 +81,13 @@ export type ImportYoutubeInput = z.infer<typeof importYoutubeSchema>;
 export const LYRICS_OFFSET_LIMIT_MS = 60000;
 export const KEY_SHIFT_LIMIT = 6;
 
+export const singerKeySchema = z.object({
+  profileId: z.string().min(1),
+  keyShift: z.number().int().min(-KEY_SHIFT_LIMIT).max(KEY_SHIFT_LIMIT),
+});
+
+export type SingerKeyInput = z.infer<typeof singerKeySchema>;
+
 export const WORKER_NAME_MAX_LENGTH = 60;
 export const PAIRING_CODE_PATTERN = /^\d{6}$/;
 
@@ -101,7 +108,6 @@ export const updateSongSchema = z
     artist: z.string().trim().min(1, 'Informe o artista').max(SONG_TEXT_MAX_LENGTH).optional(),
     lyricsOffsetMs: z.number().int().min(-LYRICS_OFFSET_LIMIT_MS).max(LYRICS_OFFSET_LIMIT_MS).optional(),
     fillPercent: z.number().int().min(FILL_PERCENT_MIN).max(FILL_PERCENT_MAX).optional(),
-    keyShift: z.number().int().min(-KEY_SHIFT_LIMIT).max(KEY_SHIFT_LIMIT).optional(),
   })
   .refine((changes) => Object.keys(changes).length > 0, 'Nenhuma alteração informada');
 

@@ -23,6 +23,7 @@ model Profile {
   singRequests       SingRequest[]
   competitionEntries CompetitionParticipant[]
   competitionSongs   CompetitionSong[]
+  songKeys           SingerSongKey[]
 
   @@map("profiles")
 }
@@ -66,7 +67,6 @@ model Song {
   lyricsOffsetMs    Int          @default(0)
   lyricsNotice      String?      @db.VarChar(20)
   fillPercent       Int          @default(100)
-  keyShift          Int          @default(0)
   playCount         Int          @default(0)
   addedById         String?
   addedBy           Profile?     @relation("SongAddedBy", fields: [addedById], references: [id], onDelete: SetNull)
@@ -79,6 +79,7 @@ model Song {
   performances     Performance[]
   singRequests     SingRequest[]
   competitionSongs CompetitionSong[]
+  singerKeys       SingerSongKey[]
 
   @@index([status])
   @@index([artist])
@@ -126,6 +127,20 @@ model Job {
 
   @@index([status, position])
   @@map("jobs")
+}
+
+// Tom escolhido por cada pessoa em cada música (ADR-012, atualizado em 2026-10-09).
+model SingerSongKey {
+  profileId String
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  songId    String
+  song      Song     @relation(fields: [songId], references: [id], onDelete: Cascade)
+  keyShift  Int
+  updatedAt DateTime @updatedAt
+
+  @@id([profileId, songId])
+  @@index([songId])
+  @@map("singer_song_keys")
 }
 
 model Worker {

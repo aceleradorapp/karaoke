@@ -538,16 +538,28 @@ describe('PlayerPage', () => {
       expect(screen.queryByRole('button', { name: 'Voltar ao tom original' })).not.toBeInTheDocument();
     });
 
-    it('starts in the key saved for the song', async () => {
-      renderPlayer(baseRoutes(readySong({ keyShift: -2 })));
+    it('starts in the key the singer chose for this song before', async () => {
+      renderPlayer(baseRoutes(readySong(), { 'GET /api/songs/s1/key?profileId=p1': { body: { keyShift: -2 } } }));
       await startSinging();
       expect(latestEngine().keyCalls).toEqual([-2]);
       expect(latestEngine().playCalls).toEqual([0]);
       expect(screen.getByLabelText('Tom da música')).toHaveTextContent('−2');
     });
 
-    it('changes the key with the buttons, applies only the last one and saves it on its own', async () => {
-      const { fetchMock } = renderPlayer();
+    it('starts in the original key for someone else, even when another person changed it', async () => {
+      renderPlayer(
+        baseRoutes(readySong(), {
+          'GET /api/songs/s1/key?profileId=p1': { body: { keyShift: -2 } },
+          'GET /api/songs/s1/key?profileId=p2': { body: { keyShift: 0 } },
+        }),
+      );
+      await startSinging('Bia');
+      expect(latestEngine().keyCalls).toEqual([]);
+      expect(screen.getByLabelText('Tom da música')).toHaveTextContent('Original');
+    });
+
+    it('changes the key with the buttons, applies only the last one and saves it for the singer', async () => {
+      const { fetchMock } = renderPlayer(baseRoutes(readySong(), { 'PUT /api/songs/s1/key': { body: { keyShift: 2 } } }));
       await startSinging();
 
       fireEvent.click(screen.getByRole('button', { name: 'Subir o tom' }));
@@ -557,14 +569,13 @@ describe('PlayerPage', () => {
 
       await waitFor(() => expect(latestEngine().keyCalls).toEqual([2]));
       await waitFor(() => expect(screen.queryByText('Mudando o tom…')).not.toBeInTheDocument());
-      await waitFor(() => expect(requestsTo(fetchMock, 'PATCH', '/api/songs/s1')).toHaveLength(1), {
-        timeout: 4000,
-      });
-      expect(bodyOf(fetchMock, 'PATCH', '/api/songs/s1')).toEqual({ keyShift: 2 });
+      await waitFor(() => expect(requestsTo(fetchMock, 'PUT', '/api/songs/s1/key')).toHaveLength(1));
+      expect(bodyOf(fetchMock, 'PUT', '/api/songs/s1/key')).toEqual({ profileId: 'p1', keyShift: 2 });
+      expect(requestsTo(fetchMock, 'PATCH', '/api/songs/s1')).toHaveLength(0);
     });
 
     it('goes back to the original key and stops at six semitones', async () => {
-      renderPlayer(baseRoutes(readySong({ keyShift: 6 })));
+      renderPlayer(baseRoutes(readySong(), { 'GET /api/songs/s1/key?profileId=p1': { body: { keyShift: 6 } } }));
       await startSinging();
 
       expect(screen.getByRole('button', { name: 'Subir o tom' })).toBeDisabled();

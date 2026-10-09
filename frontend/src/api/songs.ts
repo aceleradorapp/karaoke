@@ -67,6 +67,15 @@ export function useUpdateSongMutation(id: string) {
   });
 }
 
+export async function fetchSingerKey(songId: string, profileId: string): Promise<number> {
+  const params = new URLSearchParams({ profileId });
+  return (await apiGet<{ keyShift: number }>(`/songs/${songId}/key?${params}`)).keyShift;
+}
+
+export function saveSingerKey(songId: string, profileId: string, keyShift: number): Promise<{ keyShift: number }> {
+  return apiSend<{ keyShift: number }>('PUT', `/songs/${songId}/key`, { profileId, keyShift });
+}
+
 export function useDeleteSongMutation() {
   const queryClient = useQueryClient();
   return useMutation({

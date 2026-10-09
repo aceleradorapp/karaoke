@@ -36,7 +36,6 @@ import { usePlayerShortcuts } from './usePlayerShortcuts';
 
 const CONTROLS_IDLE_MS = 3000;
 const LYRICS_SAVE_DELAY_MS = 1000;
-const KEY_SAVE_DELAY_MS = 1000;
 
 function Backdrop({ song }: { song: SongDTO }) {
   return (
@@ -142,10 +141,6 @@ function PlayerSession({ song }: { song: SongDTO }) {
       isValid: (value) => Math.abs(baseOffsetMs.current + value) <= LYRICS_OFFSET_LIMIT_MS,
     },
   );
-
-  useAutoSave(session.keyShift, (value) => updateSong.mutateAsync({ keyShift: value }), {
-    delayMs: KEY_SAVE_DELAY_MS,
-  });
 
   const leave = useCallback(() => {
     session.stop();

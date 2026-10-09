@@ -148,7 +148,7 @@ type SongDTO = {
   vocalsUrl: string | null,
   lyricsUrl: string | null,       // "/media/<id>/letra.json"
   melodyUrl: string | null,
-  lyricsSource, lyricsNeedsReview, lyricsOffsetMs, fillPercent, keyShift, playCount, createdAt,
+  lyricsSource, lyricsNeedsReview, lyricsOffsetMs, fillPercent, playCount, createdAt,
   job?: JobDTO | null             // job ativo, se QUEUED/PROCESSING/ERROR
   isFavorite?: boolean            // quando a request traz ?profileId=
 }
@@ -184,8 +184,9 @@ type SongDTO = {
 | GET | `/api/songs?q=&status=&artist=&sort=recent\|title\|artist\|popular&limit=&cursor=&profileId=` | Lista/busca. `q` busca em título e artista (sem diferenciar maiúsculas/acentos) |
 | GET | `/api/songs/home?profileId=` | Fileiras do Início (ver 06 §6.6): `{ hero: SongDTO \| null, rows: [{ id, title, items: SongDTO[] }] }` |
 | GET | `/api/songs/:id?profileId=` | `SongDTO` |
-| PATCH | `/api/songs/:id` | `{ title?, artist?, lyricsOffsetMs?, fillPercent?, keyShift? }` (`fillPercent` inteiro 20..150; `keyShift` inteiro −6..+6) |
+| PATCH | `/api/songs/:id` | `{ title?, artist?, lyricsOffsetMs?, fillPercent? }` (`fillPercent` inteiro 20..150) |
 | DELETE | `/api/songs/:id` | Apaga a música + arquivos |
+| GET / PUT | `/api/songs/:id/key` | (palco) tom de uma pessoa nesta música: `GET ?profileId=` → `{ keyShift }` (0 se nunca mudou); `PUT { profileId, keyShift (−6..+6) }`, onde 0 apaga o registro (ADR-012) |
 | POST | `/api/songs/:id/lyrics/resync` | (palco, ADR-017) cria um job `kind: RESYNC` para "Este PC" e responde 201 com o `JobDTO`; 409 se já há job ativo, se a música não está pronta ou sem voz, ou se a letra não tem tempos |
 | POST | `/api/songs/delete-many` | `{ ids }` (1..200) → `{ deleted: string[], skipped: [{ id, title, reason }] }`. Apaga uma por uma com a mesma regra do DELETE; pula (sem falhar o resto) as que estão sendo processadas ou não existem |
 | PUT | `/api/songs/:id/lyrics` | Body `LyricsDoc` → grava `letra.json`, `lyricsSource=MANUAL`, `lyricsNeedsReview=false` |

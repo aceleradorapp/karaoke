@@ -126,7 +126,7 @@ export class KaraokeEngine {
 
 ### Mudar o tom (ADR-012)
 - **Controle:** "Tom" no player: − / valor ("Original", "+2", "−3") / + e ↺ voltar ao original. A faixa vai de −6 a +6 semitons (`KEY_SHIFT_LIMIT`).
-- **Salvo por música:** fica em `songs.keyShift`, com salvamento automático depois de 1 s, e a próxima vez a música já começa no tom escolhido. O tom é aplicado antes do play.
+- **Salvo por pessoa e por música** (`singer_song_keys`): ao começar, o player busca o tom de quem vai cantar (`GET /songs/:id/key?profileId=`) e aplica antes do play; ao mudar, salva para essa pessoa (`PUT /songs/:id/key`). Outra pessoa começa no tom dela (ou no original).
 - **Motor:** `KaraokeEngine.setKeyShift(n)` guarda as faixas originais.
   - Pede ao `Transposer` (padrão: `lib/audio/workerTransposer.ts`) o instrumental e a voz no novo tom e troca as faixas **no mesmo ponto** (`play(currentTime)`). Pausado, só troca os buffers.
   - Guarda os 2 últimos tons usados; voltar ao original não processa nada.
